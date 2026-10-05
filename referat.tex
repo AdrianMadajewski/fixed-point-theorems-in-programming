@@ -430,6 +430,80 @@ funkcji semantycznych.
 	zapis $\Cc\sem{c}$ oznacza \emph{denotację instrukcji} $c$.
 \end{definicja}
 
+Funkcje semantyczne różnią się przeciwdziedzinami (zob.\
+Rysunek~\ref{fig:funkcje_semantyczne}). Denotacja wyrażenia
+arytmetycznego przypisuje każdemu stanowi \emph{liczbę} --- wartość
+wyrażenia w tym stanie, a denotacja wyrażenia logicznego --- \emph{wartość
+logiczną}. Obie są funkcjami całkowitymi, bo wyrażenie ma wartość
+w każdym stanie. Jedynie denotacja instrukcji przenosi nas \emph{ze stanu
+w stan}: stanowi początkowemu przypisuje stan końcowy. Jest to przy tym
+funkcja częściowa --- jeżeli wykonanie instrukcji rozpoczęte w pewnym
+stanie się nie kończy, to temu stanowi nie odpowiada żaden stan końcowy
+(na rysunku stan $\sigma_3$).
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[>=stealth, font=\small,
+		pt/.style={inner sep=1.5pt},
+		set/.style={draw, rounded corners=10pt, thick, minimum width=1.5cm, minimum height=2.6cm}]
+		
+		% ---------- A[[a]] : Store -> Int ----------
+		\node[set] (S1) at (0,0) {};
+		\node[above] at (S1.north) {$\Store$};
+		\node[set] (T1) at (2.6,0) {};
+		\node[above] at (T1.north) {$\Int$};
+		\node[pt] (a1) at (0, 0.8) {$\sigma_1$};
+		\node[pt] (a2) at (0, 0.0) {$\sigma_2$};
+		\node[pt] (a3) at (0,-0.8) {$\sigma_3$};
+		\node[pt] (n1) at (2.6, 0.5) {$5$};
+		\node[pt] (n2) at (2.6,-0.5) {$7$};
+		\draw[->] (a1) -- (n1);
+		\draw[->] (a2) -- (n1);
+		\draw[->] (a3) -- (n2);
+		\node at (1.3,-1.9) {$\Aa\sem{a}:\Store\to\Int$};
+		
+		% ---------- B[[b]] : Store -> Bool ----------
+		\begin{scope}[shift={(5.2,0)}]
+			\node[set] (S2) at (0,0) {};
+			\node[above] at (S2.north) {$\Store$};
+			\node[set] (T2) at (2.6,0) {};
+			\node[above] at (T2.north) {$\Bool$};
+			\node[pt] (b1) at (0, 0.8) {$\sigma_1$};
+			\node[pt] (b2) at (0, 0.0) {$\sigma_2$};
+			\node[pt] (b3) at (0,-0.8) {$\sigma_3$};
+			\node[pt] (t) at (2.6, 0.5) {$\kw{true}$};
+			\node[pt] (f) at (2.6,-0.5) {$\kw{false}$};
+			\draw[->] (b1) -- (t);
+			\draw[->] (b2) -- (t);
+			\draw[->] (b3) -- (f);
+			\node at (1.3,-1.9) {$\Bb\sem{b}:\Store\to\Bool$};
+		\end{scope}
+		
+		% ---------- C[[c]] : Store -/-> Store ----------
+		\begin{scope}[shift={(10.4,0)}]
+			\node[set] (S3) at (0,0) {};
+			\node[above] at (S3.north) {$\Store$};
+			\node[set] (T3) at (2.6,0) {};
+			\node[above] at (T3.north) {$\Store$};
+			\node[pt] (c1) at (0, 0.8) {$\sigma_1$};
+			\node[pt] (c2) at (0, 0.0) {$\sigma_2$};
+			\node[pt] (c3) at (0,-0.8) {$\sigma_3$};
+			\node[pt] (d1) at (2.6, 0.8) {$\sigma_1'$};
+			\node[pt] (d2) at (2.6, 0.0) {$\sigma_2'$};
+			\draw[->] (c1) -- (d1);
+			\draw[->] (c2) -- (d2);
+			\draw[->, dashed, gray] (c3) -- ++(1.0,0) node[right, text=black, font=\footnotesize] {$\times$};
+			\node at (1.3,-1.9) {$\Cc\sem{c}:\Store\rightharpoonup\Store$};
+		\end{scope}
+	\end{tikzpicture}
+	\caption{Trzy funkcje semantyczne. Wyrażenia przyporządkowują stanom
+		liczby (lewa część) lub wartości logiczne (środkowa część), natomiast
+		instrukcje --- stany końcowe (prawa część). Dla stanu $\sigma_3$
+		wykonanie instrukcji $c$ się nie kończy, więc $\Cc\sem{c}(\sigma_3)$
+		jest nieokreślone.}
+	\label{fig:funkcje_semantyczne}
+\end{figure}
+
 Definicję tę szczegółowo zobrazujemy dla każdego z tych trzech podstawowych
 typów poniżej.
 
