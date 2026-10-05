@@ -1,0 +1,48 @@
+name: Kompilacja referatu
+
+# Uruchamiane przy każdej zmianie referat.tex lub tego pliku na gałęzi main
+# oraz ręcznie z zakładki "Actions".
+on:
+  push:
+    branches: [main]
+    paths:
+      - referat.tex
+      - .github/workflows/build-latex.yml
+  workflow_dispatch:
+
+# Uprawnienie do zapisu jest potrzebne, aby zatwierdzić wygenerowany PDF.
+permissions:
+  contents: write
+
+concurrency:
+  group: build-latex
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pobranie repozytorium
+        uses: actions/checkout@v4
+
+      - name: Kompilacja referat.tex (TeX Live, latexmk + pdflatex)
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: referat.tex
+
+      - name: Przeniesienie PDF do katalogu pdf/
+        run: |
+          mkdir -p pdf
+          cp referat.pdf pdf/referat.pdf
+
+      - name: Zapisanie PDF jako artefaktu
+        uses: actions/upload-artifact@v4
+        with:
+          name: referat-pdf
+          path: pdf/referat.pdf
+
+      - name: Zatwierdzenie PDF w repozytorium
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automatyczna kompilacja pdf/referat.pdf"
+          file_pattern: pdf/referat.pdf

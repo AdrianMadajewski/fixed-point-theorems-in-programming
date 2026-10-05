@@ -1,0 +1,6305 @@
+% !TeX program = pdflatex
+% !TeX encoding = UTF-8
+%==============================================================================
+%  REFERAT
+%  Semantyka denotacyjna i równania stałopunktowe
+%  (na podstawie: M. Gordon, "Denotacyjny opis języków programowania";
+%   Harvard CS152 Lecture 6; Cornell CS4110 Lecture 8)
+%
+%  Kompilacja:  pdflatex referat.tex   (dwa przebiegi --- spis treści i odsyłacze)
+%  Styl i środowiska analogiczne do pliku rownania_stalopunktowe.tex.
+%==============================================================================
+\documentclass[11pt,a4paper]{article}
+
+%----------------------------- Kodowanie i język ------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\usepackage{float}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{decorations.pathreplacing}
+
+%----------------------------- Matematyka -------------------------------------
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{stmaryrd}   % \llbracket \rrbracket  (nawiasy semantyczne)
+\usepackage{mathrsfs}   % \mathscr  (kaligrafia funkcji semantycznych)
+
+%----------------------------- Układ i odsyłacze ------------------------------
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{hypertexnames=false, colorlinks=true, linkcolor=blue!50!black, citecolor=blue!50!black}
+\usepackage{comment}
+
+
+%----------------------------- Środowiska twierdzeń ---------------------------
+% Każdy typ ma własny licznik numerowany w obrębie sekcji (np. Definicja 2.1).
+\theoremstyle{definition}
+\newtheorem{definicja}{Definicja}[section]
+\newtheorem{uwaga}[definicja]{Uwaga}
+\newtheorem{przyklad}[definicja]{Przykład}
+\newtheorem{oznaczenie}[definicja]{Oznaczenie}
+
+\theoremstyle{plain}
+\newtheorem{twierdzenie}[definicja]{Twierdzenie}
+\newtheorem{lemat}[definicja]{Lemat}
+\newtheorem{wniosek}[definicja]{Wniosek}
+\newtheorem{fakt}[definicja]{Fakt}
+
+% Nazwa dowodu po polsku
+\addto\captionspolish{\renewcommand{\proofname}{Dowód}}
+
+%----------------------------- Makra pomocnicze -------------------------------
+\newcommand{\bt}{\bot}                            % element najmniejszy
+\newcommand{\Fix}{\operatorname{Fix}}            % zbiór wszystkich punktów stałych
+\newcommand{\lfp}{\operatorname{lfp}}
+\newcommand{\dom}{\operatorname{dom}}
+% Nawiasy semantyczne: \sem{...}
+\DeclarePairedDelimiter{\semdelim}{\llbracket}{\rrbracket}
+\newcommand{\sem}[1]{\semdelim{#1}}
+% Funkcje semantyczne
+\newcommand{\Cc}{\mathscr{C}}   % instrukcje (Commands)
+\newcommand{\Aa}{\mathscr{A}}   % wyrażenia arytmetyczne (Arithmetic)
+\newcommand{\Bb}{\mathscr{B}}   % wyrażenia logiczne (Boolean)
+% Zbiory dziedzinowe
+\newcommand{\Store}{\textbf{Store}}
+\newcommand{\Int}{\textbf{Int}}
+\newcommand{\Var}{\textbf{Var}}
+\newcommand{\Bool}{\{\kw{true},\kw{false}\}}
+\newcommand{\kw}[1]{\ensuremath{\mathsf{#1}}} % slowa kluczowe / literaly IMP
+
+%==============================================================================
+\title{Twierdzenia o punktach stałych w programowaniu}
+\author{Adrian Madajewski}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{Wstęp}
+%==============================================================================
+
+Semantyka denotacyjna przypisuje konstrukcjom języka programowania obiekty matematyczne opisujące ich znaczenie, abstrahując od sposobu wykonania programu. Dla większości konstrukcji przypisanie to jest bezpośrednie, jednak pętla \kw{while} prowadzi do \emph{równania rekurencyjnego}, w którym znaczenie pętli występuje po obu stronach. Rozwiązania takiego równania poszukujemy jako \emph{najmniejszego punktu stałego} odpowiedniego odwzorowania. Celem niniejszego referatu jest zbudowanie aparatu nadającego temu pojęciu ścisły sens --- teorii zbiorów łańcuchowo zupełnych i funkcji ciągłych --- udowodnienie twierdzenia Kleenego o najmniejszym punkcie stałym oraz zastosowanie go do semantyki pętli \kw{while} w modelowym języku \texttt{IMP}. Prezentacja opiera się na monografii Gordona~\cite{gordon1979} oraz na notatkach do wykładów z~semantyki denotacyjnej~\cite{cs152denot,cs4110denot}.
+
+W dalszej części referatu przedstawione zostanie również alternatywne podejście do problemu punktów stałych, oparte na \emph{metrykach częściowych}. W tym ujęciu pojęcia przybliżenia i granicy nie są opisywane za pomocą porządku, lecz za pomocą odległości, która może również mierzyć stopień określenia elementu. Pozwala to sformułować odpowiednik klasycznego twierdzenia Banacha o punkcie stałym dla zupełnych przestrzeni metrycznych częściowych. Podejście to, związane z pracą Matthewsa~\cite{matthews1994}, zostanie przedstawione jako uzupełnienie podejścia porządkowego. Szczególną uwagę poświęcimy relacji pomiędzy porządkiem indukowanym przez metrykę częściową, ciągami Cauchy'ego oraz kresami górnymi łańcuchów.
+
+Oba podejścia prowadzą do konstrukcji punktów stałych za pomocą iteracji, lecz opierają się na innych założeniach. W przypadku twierdzenia Kleenego kluczową rolę odgrywają zupełność porządkowa oraz ciągłość odwzorowania, natomiast w przypadku twierdzenia Matthewsa --- zupełność metryczna i warunek kontrakcji. Pozwala to spojrzeć na problem punktów stałych z dwóch różnych perspektyw matematycznych oraz wskazać, które elementy konstrukcji są specyficzne dla semantyki denotacyjnej, a które mają charakter bardziej ogólny.
+
+
+%==============================================================================
+\section{Podstawowe pojęcia}
+%==============================================================================
+
+Przypomnijmy najpierw klasyczne pojęcie funkcji jako relacji.
+
+\begin{definicja}\label{def:funkcja}
+\emph{Funkcją} ze zbioru $A$ w zbiór $B$, oznaczaną $f:A\to B$, nazywamy relację
+$f\subseteq A\times B$ spełniającą dwa warunki:
+\begin{enumerate}
+  \item[(1)] \emph{całkowitość}: dla każdego $a\in A$ istnieje $b\in B$
+        takie, że $(a,b)\in f$;
+  \item[(2)] \emph{jednoznaczność}: jeśli $(a,b)\in f$ oraz $(a,b')\in f$,
+        to $b=b'$.
+\end{enumerate}
+Ten jedyny element $b$ oznaczamy $f(a)$, tzn.\ $(a,b)\in f \iff b=f(a)$.
+Ze względu na warunek~(1) (całkowitość) taką funkcję nazywamy tu \emph{funkcją
+całkowitą} --- w odróżnieniu od funkcji częściowej wprowadzonej niżej.
+\end{definicja}
+
+\begin{definicja}\label{def:funkcja-czesciowa}
+\emph{Funkcją częściową} ze zbioru $A$ w zbiór $B$, oznaczaną $f:A\rightharpoonup B$,
+nazywamy relację $f\subseteq A\times B$ spełniającą \emph{tylko} warunek
+jednoznaczności:
+\begin{enumerate}
+  \item[(2)] \emph{jednoznaczność}: jeśli $(a,b)\in f$ oraz $(a,b')\in f$, to $b=b'$.
+\end{enumerate}
+Warunku~(1) z Definicji~\ref{def:funkcja} (całkowitości) \emph{nie} wymagamy: dla
+niektórych $a\in A$ może nie istnieć żadna para $(a,b)\in f$; mówimy wtedy, że
+$f(a)$ jest \emph{nieokreślone}, a gdy $(a,b)\in f$, piszemy $b=f(a)$. Funkcję nigdzie
+nieokreśloną utożsamiamy z relacją pustą~$\varnothing$.
+\end{definicja}
+
+\begin{definicja}\label{def:dziedzina_okreslonosci}
+	\emph{Dziedziną określoności} funkcji częściowej $f:A\rightharpoonup B$ nazywamy zbiór tych argumentów, dla których $f$ jest określona, tzn.
+	\[
+	\dom(f)=\{a\in A:\ \exists b\in B\ (a,b)\in f\}\subseteq A.
+	\]
+	Funkcja całkowita (Definicja~\ref{def:funkcja}) jest szczególnym przypadkiem, w którym $\dom(f)=A$.
+\end{definicja}
+
+\begin{przyklad}\label{prz:poprzednik}
+Niech $\mathbb{N}=\{1,2,3,\dots\}$ oraz $\mathbb{N}_0=\mathbb{N}\cup\{0\}$. Funkcja
+poprzednika $p:\mathbb{N}_0\rightharpoonup\mathbb{N}_0$, $p(n)=n-1$, jest częściowa:
+$\dom(p)=\mathbb{N}=\{1,2,3,\dots\}$, a $p(0)$ jest nieokreślone (argument $0$ należy
+do $\mathbb{N}_0$, lecz $0-1\notin\mathbb{N}_0$).
+\end{przyklad}
+
+\begin{comment}
+	\begin{uwaga}
+		Częściowość jest kluczowa. Program może się \emph{nie zatrzymać}. Dla stanu
+		wejściowego, z którego obliczenie się zapętla, nie ma stanu wyjściowego --- funkcja
+		jest tam nieokreślona.
+	\end{uwaga}
+\end{comment}
+
+%==============================================================================
+\section{Język \texttt{IMP}: składnia i semantyka denotacyjna}
+%==============================================================================
+
+Modelowym językiem rozważanym w tym referacie jest \texttt{IMP}; jego składnię
+oraz semantykę denotacyjną przedstawiamy za notatkami do wykładów~\cite{cs152denot,cs4110denot}.
+
+\subsection{Składnia języka programowania}
+
+Przed zdefiniowaniem semantyki języka programowania należy określić jego składnię,
+czyli zbiór poprawnych programów, wyrażeń oraz innych konstrukcji językowych.
+W tym celu składnię można opisać za pomocą gramatyki formalnej, która określa
+sposób konstruowania poprawnych wyrażeń danego języka.
+
+W dalszej części będziemy posługiwać się zapisem reguł gramatycznych w notacji Backusa--Naura (BNF, ang. \emph{Backus--Naur Form}), wprowadzonej przez Johna Backusa w kontekście formalnego opisu składni języków programowania i rozwiniętej w opisie języka ALGOL 60 przez Petera Naura \cite{naur1960}. Reguły tej postaci zapisywane są jako
+\[
+\langle\text{wyrażenie}\rangle ::= \ldots
+\]
+gdzie symbol $\langle\text{wyrażenie}\rangle$ oznacza kategorię składniową,
+natomiast prawa strona reguły określa dopuszczalne sposoby konstruowania
+elementów należących do tej kategorii. Symbol $::=$ należy rozumieć jako
+„jest definiowane przez” lub „może być postaci”.
+
+Przykładowo, prostą klasę wyrażeń arytmetycznych można zdefiniować za pomocą
+reguł
+\[
+\begin{aligned}
+	\langle\text{wyrażenie}\rangle
+	&::=
+	\langle\text{liczba}\rangle
+	\mid
+	\langle\text{wyrażenie}\rangle
+	+
+	\langle\text{wyrażenie}\rangle,
+	\\
+	\langle\text{liczba}\rangle
+	&::=
+	0 \mid 1 \mid 2 \mid \ldots
+\end{aligned}
+\]
+Reguły te nie określają jeszcze znaczenia wyrażeń, lecz jedynie wskazują,
+które ciągi symboli są poprawnymi wyrażeniami języka.
+
+Takie podejście jest ogólne: poprzez odpowiednio dobraną gramatykę można
+formalnie określić składnię języka programowania. W szczególności reguły
+składniowe mogą opisywać zarówno proste języki rachunkowe, jak i języki
+zawierające zmienne, funkcje, instrukcje warunkowe czy konstrukcje iteracyjne.
+Dopiero po określeniu składni można przypisać poszczególnym konstrukcjom języka
+ich znaczenie za pomocą semantyki denotacyjnej.
+
+W dalszej części referatu skupimy się na prostym, modelowym języku
+programowania \texttt{IMP}. Jest to niewielki język imperatywny, zawierający
+podstawowe konstrukcje występujące w językach programowania, takie jak
+zmienne, przypisania, operacje arytmetyczne i logiczne, instrukcje warunkowe
+oraz pętle. Jego niewielki rozmiar pozwala w przejrzysty sposób przedstawić
+zasady konstruowania semantyki denotacyjnej.
+
+\subsection{Gramatyka języka \texttt{IMP}}
+
+Składnię języka \texttt{IMP} określamy za pomocą następującej gramatyki:
+\[
+\begin{aligned}
+	\langle a \rangle
+	&::=
+	x
+	\mid n
+	\mid \langle a \rangle + \langle a \rangle,
+	\\[2mm]
+	\langle b \rangle
+	&::=
+	\kw{true}
+	\mid \kw{false}
+	\mid \langle a \rangle < \langle a \rangle,
+	\\[2mm]
+	\langle c \rangle
+	&::=
+	\kw{skip}
+	\mid
+	x := \langle a \rangle
+	\mid
+	\langle c \rangle ; \langle c \rangle
+	\\
+	&\qquad\mid
+	\kw{if}\ \langle b\rangle\
+	\kw{then}\ \langle c\rangle\
+	\kw{else}\ \langle c\rangle
+	\mid
+	\kw{while}\ \langle b\rangle\
+	\kw{do}\ \langle c\rangle.
+\end{aligned}
+\]
+
+W powyższej gramatyce $\langle a\rangle$ oznacza wyrażenie arytmetyczne,
+$\langle b\rangle$ oznacza wyrażenie logiczne, natomiast $\langle c\rangle$
+oznacza instrukcję. Symbol $n$ oznacza stałą liczbową, a $x$ zmienną programu.
+
+Konstrukcja
+\[
+x := \langle a\rangle
+\]
+reprezentuje przypisanie wartości wyrażenia arytmetycznego do zmiennej.
+Średnik oznacza sekwencyjne wykonanie dwóch instrukcji. Konstrukcja
+\[
+\kw{if}\ \langle b\rangle\
+\kw{then}\ \langle c\rangle\
+\kw{else}\ \langle c\rangle
+\]
+reprezentuje instrukcję warunkową, natomiast
+\[
+\kw{while}\ \langle b\rangle\
+\kw{do}\ \langle c\rangle
+\]
+reprezentuje instrukcję iteracyjną.
+
+Na tym etapie gramatyka określa jedynie, jakie konstrukcje należą do języka
+\texttt{IMP}. Nie określa natomiast, jaki efekt wywołuje ich wykonanie. To
+właśnie jest przedmiotem semantyki denotacyjnej, która pozwoli każdej
+konstrukcji składniowej przypisać odpowiedni obiekt matematyczny opisujący
+jej znaczenie.
+
+
+Przez denotacyjny opis języka programowania rozumiemy w tym kontekście jego
+matematyczną interpretację, która abstrahuje od konkretnej składni języka
+i przypisuje poszczególnym konstrukcjom programistycznym ich formalne znaczenie.
+
+Skupimy się teraz na denotacyjnym opisie języka \texttt{IMP}. W tym celu
+wprowadzimy kilka podstawowych definicji.
+
+\begin{definicja}
+	Ustalamy dwa \emph{zbiory podstawowe} języka. Zbiór
+	$\Var$ jest przeliczalnym zbiorem nazw zmiennych (identyfikatorów),
+	które mogą wystąpić w programie, natomiast
+	\[
+	\Int=\mathbb{Z}
+	\]
+	jest zbiorem liczb całkowitych, stanowiących wartości wyrażeń
+	arytmetycznych oraz wartości przechowywane przez zmienne. Zbiory
+	$\Var$ i $\Int$ traktujemy jako dane i nie definiujemy ich
+	wewnętrznej struktury.
+\end{definicja}
+
+\begin{definicja}\label{def:store}
+	\emph{Stanem} nazywamy funkcję
+	$\sigma:\Var \to \Int$ przypisującą zmiennym ich wartości.
+	Zbiór wszystkich stanów oznaczamy przez $\Store$. Wartość zmiennej $x$
+	w stanie $\sigma$ oznaczamy przez $\sigma(x)$. Ponadto
+	\[
+	\big(\sigma[x\mapsto n]\big)(y)=
+	\begin{cases}
+		n & \text{gdy } y=x,\\
+		\sigma(y) & \text{gdy } y\neq x,
+	\end{cases}
+	\]
+	oznacza stan powstały z $\sigma$ przez przypisanie zmiennej $x$ wartości
+	$n$.
+\end{definicja}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[
+		>=stealth,
+		every node/.style={font=\small},
+		entry/.style={text height=1.5ex, text depth=0.25ex,
+			minimum width=1.2em, inner sep=2pt}
+		]
+		
+		% Store
+		\draw[rounded corners=8pt, thick] (-6.0,-2.7) rectangle (6.0,2.7);
+		\node[fill=white, inner sep=4pt] at (0,2.7)
+		{$\Store=\{\sigma\mid\sigma\colon\Var\to\Int\}$};
+		
+		% =========================================================
+		% sigma_1
+		% =========================================================
+		\begin{scope}[shift={(-4.0,0)}]
+			\draw[rounded corners=5pt, thick] (-1.6,-2.0) rectangle (1.6,1.9);
+			\node at (0,1.50) {$\sigma_1$};
+			
+			\node[entry] (x1) at (-0.85, 0.95) {$x$};
+			\node[entry] (y1) at (-0.85, 0.35) {$y$};
+			\node[entry] (z1) at (-0.85,-0.25) {$z$};
+			
+			\node[entry] (x1v) at (0.85, 0.95) {$3$};
+			\node[entry] (y1v) at (0.85, 0.35) {$5$};
+			\node[entry] (z1v) at (0.85,-0.25) {$1$};
+			
+			\draw[->] (x1) -- (x1v);
+			\draw[->] (y1) -- (y1v);
+			\draw[->] (z1) -- (z1v);
+			
+			\node at (-0.85,-0.80) {$\vdots$};
+			\node at ( 0.85,-0.80) {$\vdots$};
+			
+			\node at (0,-1.55) {$\sigma_1\colon\Var\to\Int$};
+		\end{scope}
+		
+		% =========================================================
+		% sigma_2
+		% =========================================================
+		\begin{scope}[shift={(-0.4,0)}]
+			\draw[rounded corners=5pt, thick] (-1.6,-2.0) rectangle (1.6,1.9);
+			\node at (0,1.50) {$\sigma_2$};
+			
+			\node[entry] (x2) at (-0.85, 0.95) {$x$};
+			\node[entry] (y2) at (-0.85, 0.35) {$y$};
+			\node[entry] (z2) at (-0.85,-0.25) {$z$};
+			
+			\node[entry] (x2v) at (0.85, 0.95) {$1$};
+			\node[entry] (y2v) at (0.85, 0.35) {$2$};
+			\node[entry] (z2v) at (0.85,-0.25) {$9$};
+			
+			\draw[->] (x2) -- (x2v);
+			\draw[->] (y2) -- (y2v);
+			\draw[->] (z2) -- (z2v);
+			
+			\node at (-0.85,-0.80) {$\vdots$};
+			\node at ( 0.85,-0.80) {$\vdots$};
+			
+			\node at (0,-1.55) {$\sigma_2\colon\Var\to\Int$};
+		\end{scope}
+		
+		% =========================================================
+		% sigma_3
+		% =========================================================
+		\begin{scope}[shift={(3.2,0)}]
+			\draw[rounded corners=5pt, thick] (-1.6,-2.0) rectangle (1.6,1.9);
+			\node at (0,1.50) {$\sigma_3$};
+			
+			\node[entry] (x3) at (-0.85, 0.95) {$x$};
+			\node[entry] (y3) at (-0.85, 0.35) {$y$};
+			\node[entry] (z3) at (-0.85,-0.25) {$z$};
+			
+			\node[entry] (x3v) at (0.85, 0.95) {$7$};
+			\node[entry] (y3v) at (0.85, 0.35) {$2$};
+			\node[entry] (z3v) at (0.85,-0.25) {$4$};
+			
+			\draw[->] (x3) -- (x3v);
+			\draw[->] (y3) -- (y3v);
+			\draw[->] (z3) -- (z3v);
+			
+			\node at (-0.85,-0.80) {$\vdots$};
+			\node at ( 0.85,-0.80) {$\vdots$};
+			
+			\node at (0,-1.55) {$\sigma_3\colon\Var\to\Int$};
+		\end{scope}
+		
+		% more states
+		\node at (5.45,0) {\large$\cdots$};
+		
+	\end{tikzpicture}
+	
+	\caption{Zbiór stanów $\Store$ jako zbiór funkcji $\sigma\colon\Var\to\Int$.}
+	\label{fig:store}
+\end{figure}
+\begin{przyklad}\label{prz:store}
+	Niech $\sigma$ będzie stanem takim, że
+	$\sigma(\texttt{foo})=3$ oraz $\sigma(\texttt{bar})=5$.
+	Wtedy
+	$\sigma[\texttt{foo}\mapsto 7]$ jest nowym stanem, w którym
+	$\texttt{foo}$ ma wartość $7$, a $\texttt{bar}$ nadal ma wartość $5$:
+	\[
+	\big(\sigma[\texttt{foo}\mapsto 7]\big)(\texttt{bar})=5.
+	\]
+\end{przyklad}
+
+Naszą uwagę powinniśmy przede wszystkim skupić na poniższym pojęciu
+funkcji semantycznych.
+
+\begin{definicja}\label{def:funkcje_semantyczne}
+	Definiujemy trzy podstawowe \emph{funkcje semantyczne}:
+	\[
+	\Aa\sem{a}:\Store\to\Int,\qquad
+	\Bb\sem{b}:\Store\to\Bool,\qquad
+	\Cc\sem{c}:\Store\rightharpoonup\Store,
+	\]
+	przy czym zapis $\Aa\sem{a}$ oznacza \emph{denotację wyrażenia arytmetycznego}
+	$a$, zapis $\Bb\sem{b}$ oznacza \emph{denotację wyrażenia logicznego} $b$, natomiast
+	zapis $\Cc\sem{c}$ oznacza \emph{denotację instrukcji} $c$.
+\end{definicja}
+
+Definicję tę szczegółowo zobrazujemy dla każdego z tych trzech podstawowych
+typów poniżej.
+
+\subsection{Denotacje wyrażeń}
+
+Znaczeniem wyrażenia jest funkcja przypisująca każdemu stanowi jego
+wartość. Zgodnie z Definicją~\ref{def:funkcja}, dla wygody zapisu
+funkcję tę przedstawiamy jako \emph{zbiór par} (relację). Para
+$(\sigma,n)\in\Aa\sem{a}$ oznacza, że w stanie $\sigma$ wyrażenie $a$
+przyjmuje wartość $n$.
+
+\subsubsection{Stała liczbowa}
+
+Denotację stałej liczbowej $n$ definiujemy jako
+\[
+\Aa\sem{n}=\{(\sigma,n)\mid \sigma\in\Store\}.
+\]
+Tutaj $n$ oznacza \emph{stałą liczbową} (numerał), czyli literał zapisany
+w programie, np.\ \texttt{0}, \texttt{7} lub \texttt{42}. Symbol $n$
+występujący w wyrażeniu oznacza zatem składniową postać stałej, natomiast
+$n$ występujący w parze $(\sigma,n)$ oznacza odpowiadającą jej liczbę
+całkowitą. Dla uproszczenia oba obiekty oznaczamy tą samą literą.
+Wartość stałej liczbowej nie zależy od stanu.
+
+\begin{przyklad}
+	\[
+	\Aa\sem{7}=\{(\sigma,7)\mid \sigma\in\Store\}.
+	\]
+	Zatem w każdym stanie $\sigma$ literał \texttt{7} przyjmuje wartość $7$.
+\end{przyklad}
+
+\subsubsection{Zmienna}
+
+Denotację zmiennej $x$ definiujemy jako
+\[
+\Aa\sem{x}=\{(\sigma,\sigma(x))\mid \sigma\in\Store\}.
+\]
+Wartość zmiennej $x$ jest więc określona przez stan $\sigma$, a zatem może
+zależeć od stanu.
+
+\begin{przyklad}
+	Jeżeli $\sigma(x)=5$, to
+	\[
+	(\sigma,5)\in\Aa\sem{x}.
+	\]
+	Oznacza to, że w stanie $\sigma$ zmienna $x$ przyjmuje wartość $5$.
+\end{przyklad}
+
+\subsubsection{Dodawanie}
+
+Denotację sumy dwóch wyrażeń arytmetycznych definiujemy jako
+\[
+\Aa\sem{a_1+a_2}
+=
+\left\{
+(\sigma,n)
+\;\middle|\;
+\begin{array}{c}
+	(\sigma,n_1)\in\Aa\sem{a_1}
+	\;\wedge\;
+	(\sigma,n_2)\in\Aa\sem{a_2}\\
+	{}\wedge\; n=n_1+n_2
+\end{array}
+\right\}.
+\]
+Definicja ta ma charakter kompozycyjny, ponieważ denotacja wyrażenia
+$a_1+a_2$ jest określona na podstawie denotacji jego podwyrażeń $a_1$
+i $a_2$. W stanie $\sigma$ najpierw wyznaczamy wartości $n_1$ i $n_2$
+podwyrażeń $a_1$ i $a_2$, a następnie wartość całego wyrażenia jest równa
+ich sumie:
+\[
+n=n_1+n_2.
+\]
+
+\begin{przyklad}\label{prz:wyr}
+	Niech $\sigma(x)=5$. Wówczas
+	\[
+	(\sigma,5)\in\Aa\sem{x}
+	\qquad\text{oraz}\qquad
+	(\sigma,2)\in\Aa\sem{2}.
+	\]
+	Zatem
+	\[
+	n=5+2=7,
+	\]
+	więc
+	\[
+	(\sigma,7)\in\Aa\sem{x+2}.
+	\]
+	Oznacza to, że w stanie, w którym $x$ przyjmuje wartość $5$, wyrażenie
+	$x+2$ przyjmuje wartość $7$.
+\end{przyklad}
+
+\subsubsection{Stała logiczna}
+
+Denotację stałej logicznej $\kw{true}$ definiujemy jako
+\[
+\Bb\sem{\kw{true}}
+=
+\{(\sigma,\kw{true})\mid \sigma\in\Store\}.
+\]
+Analogicznie
+\[
+\Bb\sem{\kw{false}}
+=
+\{(\sigma,\kw{false})\mid \sigma\in\Store\}.
+\]
+Wartość stałej logicznej jest niezależna od stanu.
+
+\subsubsection{Porównanie}
+
+Denotację porównania $a_1<a_2$ definiujemy jako
+\[
+\begin{aligned}
+	\Bb\sem{a_1<a_2}
+	={}&
+	\left\{
+	(\sigma,\kw{true})
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,n_1)\in\Aa\sem{a_1},\quad
+		(\sigma,n_2)\in\Aa\sem{a_2},\\
+		n_1<n_2
+	\end{array}
+	\right\}\\
+	&\cup
+	\left\{
+	(\sigma,\kw{false})
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,n_1)\in\Aa\sem{a_1},\quad
+		(\sigma,n_2)\in\Aa\sem{a_2},\\
+		n_1\geq n_2
+	\end{array}
+	\right\}.
+\end{aligned}
+\]
+Oznacza to, że w stanie $\sigma$ najpierw wyznaczamy wartości $n_1$ i $n_2$
+wyrażeń $a_1$ i $a_2$. Jeżeli
+\[
+n_1<n_2,
+\]
+to wyrażenie $a_1<a_2$ przyjmuje wartość $\kw{true}$, natomiast jeżeli
+\[
+n_1\geq n_2,
+\]
+to przyjmuje wartość $\kw{false}$.
+
+\begin{przyklad}
+	Niech $\sigma(x)=5$. Wówczas
+	\[
+	(\sigma,5)\in\Aa\sem{x}
+	\qquad\text{oraz}\qquad
+	(\sigma,1)\in\Aa\sem{1}.
+	\]
+	Ponieważ $5\not<1$, otrzymujemy
+	\[
+	(\sigma,\kw{false})\in\Bb\sem{x<1}.
+	\]
+	Jeżeli natomiast $\sigma(x)=0$, to $0<1$, a zatem
+	\[
+	(\sigma,\kw{true})\in\Bb\sem{x<1}.
+	\]
+\end{przyklad}
+
+\subsection{Denotacje instrukcji}
+
+Denotacją instrukcji jest funkcja \emph{częściowa}, która każdemu stanowi
+wejściowemu przypisuje stan końcowy, o ile wykonanie instrukcji kończy się.
+Zgodnie z Definicją~\ref{def:funkcja-czesciowa} funkcję tę przedstawiamy
+jako zbiór par uporządkowanych. Para
+$(\sigma,\sigma')\in\Cc\sem{c}$ oznacza, że wykonanie instrukcji $c$
+rozpoczęte w stanie $\sigma$ kończy się w stanie $\sigma'$.
+
+Funkcja ta jest częściowa, ponieważ wykonanie instrukcji rozpoczęte
+w pewnym stanie może nie zakończyć się. W takim przypadku dla danego
+stanu $\sigma$ funkcja $\Cc\sem{c}$ nie jest określona, czyli nie istnieje
+żaden stan $\sigma'$ taki, że
+\[
+(\sigma,\sigma')\in\Cc\sem{c}.
+\]
+Brak takiej pary oznacza zatem niezakończenie wykonania instrukcji
+rozpoczętego w stanie $\sigma$. 
+
+\subsubsection{Instrukcja pusta}
+
+Denotację instrukcji \kw{skip} definiujemy jako
+\[
+\Cc\sem{\kw{skip}}=\{(\sigma,\sigma)\mid \sigma\in\Store\}.
+\]
+Instrukcja \kw{skip} nie zmienia stanu, a więc stan początkowy i końcowy
+są identyczne. Oznacza to, że wykonanie instrukcji \kw{skip} w stanie $\sigma$
+kończy się w tym samym stanie $\sigma$.
+
+\subsubsection{Instrukcja przypisania}
+
+Denotację instrukcji przypisania definiujemy jako
+\[
+\Cc\sem{x:=a}
+=
+\left\{
+(\sigma,\sigma[x\mapsto n])
+\;\middle|\;
+(\sigma,n)\in\Aa\sem{a}
+\right\}.
+\]
+Oznacza to, że w stanie $\sigma$ najpierw wyznaczamy wartość $n$ wyrażenia
+$a$, a następnie otrzymujemy nowy stan $\sigma[x\mapsto n]$, w którym
+zmienna $x$ przyjmuje wartość $n$, natomiast wartości pozostałych zmiennych
+pozostają bez zmian.
+
+\begin{przyklad}\label{prz:instr}
+	Niech stan $\sigma$ spełnia
+	\[
+	\sigma(x)=5
+	\qquad\text{oraz}\qquad
+	\sigma(y)=9.
+	\]
+	Wówczas
+	\[
+	(\sigma,7)\in\Aa\sem{x+2},
+	\]
+	a zatem
+	\[
+	(\sigma,\sigma[x\mapsto7])\in\Cc\sem{x:=x+2}.
+	\]
+	W stanie $\sigma[x\mapsto7]$ zmienna $x$ przyjmuje wartość $7$,
+	natomiast zmienna $y$ nadal przyjmuje wartość $9$.
+\end{przyklad}
+
+\subsubsection{Złożenie instrukcji}
+
+Instrukcja $c_1;c_2$ oznacza wykonanie dwóch instrukcji kolejno:
+najpierw instrukcji $c_1$, a następnie instrukcji $c_2$. Denotację takiej
+instrukcji definiujemy przez złożenie denotacji obu instrukcji:
+\[
+\Cc\sem{c_1;c_2}
+=
+\Cc\sem{c_2}\circ\Cc\sem{c_1}.
+\]
+Oznacza to, że stan początkowy $\sigma$ najpierw poddajemy działaniu
+instrukcji $c_1$. Jeżeli jej wykonanie prowadzi do stanu $\sigma'$, a
+następnie wykonanie $c_2$ ze stanu $\sigma'$ prowadzi do stanu $\sigma''$,
+to całe złożenie $c_1;c_2$ prowadzi ze stanu $\sigma$ do stanu $\sigma''$:
+\[
+(\sigma,\sigma')\in\Cc\sem{c_1}
+\quad\land\quad
+(\sigma',\sigma'')\in\Cc\sem{c_2}
+\quad\Longrightarrow\quad
+(\sigma,\sigma'')\in\Cc\sem{c_1;c_2}.
+\]
+
+Ponieważ denotacje instrukcji są funkcjami częściowymi, formalnie
+$\circ$ oznacza tutaj składanie relacji:
+\[
+R_2\circ R_1
+=
+\left\{
+(\sigma,\sigma'')
+\;\middle|\;
+\exists\sigma'\,
+\big(
+(\sigma,\sigma')\in R_1
+\land
+(\sigma',\sigma'')\in R_2
+\big)
+\right\}.
+\]
+
+\begin{przyklad}\label{prz:zloz}
+	Rozważmy instrukcję
+	\[
+	x:=1;\ x:=x+2
+	\]
+	oraz stan $\sigma$ taki, że $\sigma(x)=5$.
+	
+	Z definicji denotacji instrukcji przypisania mamy
+	\[
+	(\sigma,\sigma[x\mapsto1])
+	\in
+	\Cc\sem{x:=1}.
+	\]
+	Oznaczmy stan pośredni przez
+	\[
+	\sigma'=\sigma[x\mapsto1].
+	\]
+	Wówczas $\sigma'(x)=1$, a zatem
+	\[
+	(\sigma',3)
+	\in
+	\Aa\sem{x+2}.
+	\]
+	Stąd, ponownie z definicji denotacji przypisania,
+	\[
+	(\sigma',\sigma'[x\mapsto3])
+	\in
+	\Cc\sem{x:=x+2}.
+	\]
+	Z definicji złożenia denotacji otrzymujemy więc
+	\[
+	(\sigma,\sigma'[x\mapsto3])
+	\in
+	\Cc\sem{x:=1;\ x:=x+2}.
+	\]
+	Ponieważ
+	\[
+	\sigma'=\sigma[x\mapsto1],
+	\]
+	a zmiana wartości zmiennej $x$ z $1$ na $3$ daje
+	\[
+	\sigma'[x\mapsto3]=\sigma[x\mapsto3],
+	\]
+	ostatecznie
+	\[
+	(\sigma,\sigma[x\mapsto3])
+	\in
+	\Cc\sem{x:=1;\ x:=x+2}.
+	\]
+\end{przyklad}
+
+\subsubsection{Instrukcja warunkowa \kw{if}}
+
+Denotację instrukcji warunkowej definiujemy jako
+\begin{align*}
+	\Cc\sem{\kw{if}\ b\ \kw{then}\ c_1\ \kw{else}\ c_2}
+	={}&
+	\left\{
+	(\sigma,\sigma')
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,\kw{true})\in\Bb\sem{b},\\
+		(\sigma,\sigma')\in\Cc\sem{c_1}
+	\end{array}
+	\right\}\\
+	&{}\cup
+	\left\{
+	(\sigma,\sigma')
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,\kw{false})\in\Bb\sem{b},\\
+		(\sigma,\sigma')\in\Cc\sem{c_2}
+	\end{array}
+	\right\}.
+\end{align*}
+
+Definicja ta rozpatruje dwa możliwe przypadki. Jeżeli w stanie $\sigma$
+wyrażenie logiczne $b$ przyjmuje wartość $\kw{true}$, wykonywana jest
+instrukcja $c_1$. Jeżeli natomiast $b$ przyjmuje wartość
+$\kw{false}$, wykonywana jest instrukcja $c_2$.
+
+\begin{przyklad}\label{prz:if}
+	Rozważmy instrukcję
+	\[
+	\kw{if}\ x<1\ \kw{then}\ y:=0\ \kw{else}\ y:=1
+	\]
+	oraz stan $\sigma$ taki, że
+	\[
+	\sigma(x)=5.
+	\]
+	
+	Z definicji denotacji porównania otrzymujemy
+	\[
+	(\sigma,\kw{false})\in\Bb\sem{x<1},
+	\]
+	ponieważ
+	\[
+	5\not<1.
+	\]
+	Zatem w definicji denotacji instrukcji warunkowej spełniony jest drugi
+	przypadek. Z definicji przypisania mamy
+	\[
+	(\sigma,\sigma[y\mapsto1])
+	\in
+	\Cc\sem{y:=1}.
+	\]
+	Wobec tego
+	\[
+	(\sigma,\sigma[y\mapsto1])
+	\in
+	\Cc\sem{
+		\kw{if}\ x<1\ \kw{then}\ y:=0\ \kw{else}\ y:=1
+	}.
+	\]
+	
+	Rozważmy teraz stan $\sigma'$ taki, że
+	\[
+	\sigma'(x)=0.
+	\]
+	Wówczas
+	\[
+	(\sigma',\kw{true})\in\Bb\sem{x<1},
+	\]
+	ponieważ
+	\[
+	0<1.
+	\]
+	Tym razem spełniony jest pierwszy przypadek definicji. Zatem
+	\[
+	(\sigma',\sigma'[y\mapsto0])
+	\in
+	\Cc\sem{y:=0},
+	\]
+	a w konsekwencji
+	\[
+	(\sigma',\sigma'[y\mapsto0])
+	\in
+	\Cc\sem{
+		\kw{if}\ x<1\ \kw{then}\ y:=0\ \kw{else}\ y:=1
+	}.
+	\]
+\end{przyklad}
+
+\subsubsection{Problem pętli \kw{while}}\label{subsec:problem_while}
+
+Semantykę instrukcji \kw{while} możemy najpierw opisać za pomocą
+poznanej wcześniej instrukcji warunkowej. Wykonanie
+\[
+\kw{while}\ b\ \kw{do}\ c
+\]
+możemy rozpatrywać w dwóch przypadkach. Jeżeli warunek $b$ jest fałszywy,
+pętla kończy działanie bez wykonania instrukcji $c$, co jest równoważne
+wykonaniu instrukcji \kw{skip}. Jeżeli natomiast warunek $b$ jest
+prawdziwy, wykonujemy instrukcję $c$, a następnie ponownie wykonujemy
+całą pętlę. Możemy zatem zapisać
+\[
+\boxed{
+	\kw{while}\ b\ \kw{do}\ c
+	\quad\equiv\quad
+	\kw{if}\ b\ \kw{then}\ (c;\kw{while}\ b\ \kw{do}\ c)
+	\ \kw{else}\ \kw{skip}.
+}
+\]
+
+Powyższa równoważność pozwala opisać denotację pętli za pomocą jej
+własnej denotacji. Oznaczmy przez
+\[
+W_{b,c}
+=
+\Cc\sem{\kw{while}\ b\ \kw{do}\ c}
+\]
+denotację instrukcji pętli
+$\kw{while}\ b\ \kw{do}\ c$. Korzystając z definicji denotacji
+instrukcji warunkowej oraz złożenia instrukcji, otrzymujemy następujące
+\emph{równanie denotacyjne}:
+\begin{equation}
+	\label{eq:while_denotacja}
+	\begin{aligned}
+		W_{b,c}
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		(\sigma,\kw{false})\in\Bb\sem{b}
+		\right\}\\
+		&{}\cup
+		\left\{
+		(\sigma,\sigma')
+		\;\middle|\;
+		\begin{array}{c}
+			(\sigma,\kw{true})\in\Bb\sem{b},\\
+			\exists\sigma''\in\Store\;
+			\big(
+			(\sigma,\sigma'')\in\Cc\sem{c}
+			\land
+			(\sigma'',\sigma')\in W_{b,c}
+			\big)
+		\end{array}
+		\right\}.
+	\end{aligned}
+	\tag{W}
+\end{equation}
+
+Pierwszy składnik odpowiada sytuacji, w której warunek $b$ jest fałszywy,
+a więc pętla kończy działanie bez zmiany stanu. Drugi składnik odpowiada
+sytuacji, w której warunek $b$ jest prawdziwy: najpierw wykonywana jest
+instrukcja $c$, prowadząc ze stanu $\sigma$ do stanu pośredniego
+$\sigma''$, a następnie pętla jest wykonywana ponownie, prowadząc ze
+stanu $\sigma''$ do stanu końcowego $\sigma'$.
+
+Otrzymaliśmy w ten sposób \emph{równanie rekurencyjne} opisujące obiekt,
+który chcemy zdefiniować. Nie jest to jednak jeszcze właściwa definicja
+denotacji instrukcji \kw{while}, ponieważ $W_{b,c}$ występuje zarówno
+po lewej, jak i po prawej stronie równania. Powstaje zatem problem
+istnienia oraz wyboru odpowiedniego rozwiązania równania~\eqref{eq:while_denotacja}.
+
+Do problemu tego powrócimy w dalszej części, po wprowadzeniu teorii punktów
+stałych, która pozwoli formalnie wyznaczyć właściwe rozwiązanie równania~\eqref{eq:while_denotacja}.
+
+%==============================================================================
+\section{Równania rekurencyjne i punkty stałe}
+%==============================================================================
+
+Zaczniemy od jednej z najważniejszych definicji tego referatu.
+
+\begin{definicja}\label{def:rownanie_stalopunktowe}
+	\emph{Równaniem stałopunktowym} nazywamy każde równanie w postaci
+	\begin{equation}
+		\label{eq:rownanie_stalopunktowe}
+		x=f(x)
+		\tag{FP}
+	\end{equation}
+	gdzie $f:D\to D$ dla pewnego zbioru $D$. Element $x\in D$ spełniający
+	równanie~\eqref{eq:rownanie_stalopunktowe} nazywamy \emph{punktem stałym} odwzorowania $f$. Zbiór wszystkich punktów
+	stałych odwzorowania $f$ oznaczamy przez
+	\[
+	\Fix(f)=\{x\in D:f(x)=x\}.
+	\]
+	Jeżeli w zbiorze $\Fix(f)$ istnieje element najmniejszy względem
+	ustalonego porządku na $D$, to nazywamy go \emph{najmniejszym punktem
+		stałym} odwzorowania $f$ i oznaczamy przez $\lfp(f)$.
+\end{definicja}
+
+Rozważmy na początek następujący przykład.
+
+\begin{przyklad}
+	Niech $f:\mathbb{N}_0\to\mathbb{N}_0$ będzie funkcją określoną rekurencyjnie
+	przez równanie
+	\begin{equation}\label{prz:kwadrat}
+		f(x)=
+		\begin{cases}
+			0 & x=0,\\
+			f(x-1)+2x-1 & \text{wpp.}
+		\end{cases}
+	\end{equation}
+	Chcemy zatem znaleźć funkcję $f$, która spełnia powyższą zależność
+	rekurencyjną. Powstaje pytanie, czy taka funkcja istnieje oraz czy jest
+	wyznaczona jednoznacznie.
+	
+	Spróbujmy skonstruować rozwiązanie poprzez kolejne przybliżenia. Załóżmy,
+	że $f$ jest funkcją częściową, tzn.
+	$f:\mathbb{N}_0\rightharpoonup\mathbb{N}_0$, i zdefiniujmy ciąg
+	$(f_k)_{k\in\mathbb{N}_0}$ kolejnych przybliżeń. Rozpoczynamy od funkcji
+	częściowej, która nie określa wartości dla żadnego argumentu:
+	\[
+	f_0=\varnothing.
+	\]
+	Następnie, korzystając z równania~\eqref{prz:kwadrat}, otrzymujemy
+	\begin{align*}
+		f_1
+		&=
+		\begin{cases}
+			0 & \text{gdy }x=0,\\
+			f_0(x-1)+2x-1 & \text{wpp.}
+		\end{cases}
+		=\{(0,0)\},\\[2pt]
+		f_2
+		&=
+		\begin{cases}
+			0 & \text{gdy }x=0,\\
+			f_1(x-1)+2x-1 & \text{wpp.}
+		\end{cases}
+		=\{(0,0),(1,1)\},\\[2pt]
+		f_3
+		&=
+		\begin{cases}
+			0 & \text{gdy }x=0,\\
+			f_2(x-1)+2x-1 & \text{wpp.}
+		\end{cases}
+		=\{(0,0),(1,1),(2,4)\},\\[2pt]
+		&\;\;\vdots
+	\end{align*}
+	
+	Widzimy zatem, że kolejne przybliżenia prowadzą do funkcji
+	$f(x)=x^2$, która spełnia równanie~\eqref{prz:kwadrat}, ponieważ
+	\[
+	(x-1)^2+2x-1=x^2
+	\]
+	dla każdego $x\in\mathbb{N}$.
+	
+	Spójrzmy na ten przykład z nieco innej strony. Poszukujemy odwzorowania,
+	które na podstawie danego przybliżenia rozwiązania $f_k$ wyznacza kolejne
+	przybliżenie $f_{k+1}$. W istocie poszukujemy więc funkcjonału wyższego rzędu
+	\[
+	F:
+	(\mathbb{N}_0\rightharpoonup\mathbb{N}_0)
+	\to
+	(\mathbb{N}_0\rightharpoonup\mathbb{N}_0)
+	\]
+	takiego, że
+	\[
+	(F(f))(x)=
+	\begin{cases}
+		0 & \text{gdy }x=0,\\
+		f(x-1)+2x-1 & \text{wpp.}
+	\end{cases}
+	\]
+	Wówczas kolejne przybliżenia możemy zapisać w postaci
+	\[
+	f_0=\varnothing,
+	\qquad
+	f_{k+1}=F(f_k).
+	\]
+	
+	Rozwiązanie równania~\eqref{prz:kwadrat} jest więc funkcją $f$ spełniającą
+	równanie
+	\[
+	F(f)=f.
+	\]
+	Innymi słowy, rozwiązanie jest punktem stałym odwzorowania $F$.
+	
+	Przeszliśmy zatem od rekurencyjnego równania określającego funkcję $f$
+	do równania stałopunktowego, w którym szukamy punktu stałego odwzorowania
+	$F$. Pozostaje odpowiedzieć na szereg pytań związanych z powyższym
+	równaniem: kiedy rozwiązanie istnieje oraz --- jeśli rozwiązań jest więcej
+	--- które z nich powinniśmy wybrać, aby odpowiadało ono naszym
+	oczekiwaniom. Na te pytania postaramy się odpowiedzieć w dalszej części
+	niniejszego referatu. Zastanowimy się bowiem, w jakiej klasie obiektów,
+	zbiorów i funkcji rozwiązanie równania~\eqref{eq:rownanie_stalopunktowe}
+	istnieje i spełnia nasze oczekiwania.
+\end{przyklad}
+
+%==============================================================================
+\section{Zbiory łańcuchowo zupełne}\label{sec:cpo}
+%==============================================================================
+
+Będziemy poruszać się w terminologii zbiorów łańcuchowo zupełnych~\cite{gordon1979}; aby jednak
+wprowadzić to pojęcie, potrzebujemy szeregu wcześniejszych definicji, które
+zilustrujemy konkretnymi przykładami.
+
+\subsection{Podstawowe pojęcia}
+
+\begin{definicja}\label{def:czesciowy_porzadek}
+\emph{Zbiorem częściowo uporządkowanym} nazywamy parę $(D,\sqsubseteq)$, gdzie $D$
+jest dowolnym zbiorem, a $\sqsubseteq$ jest \emph{relacją binarną} na $D$ (tzn.\
+${\sqsubseteq}\subseteq D\times D$), zwaną \emph{częściowym porządkiem}, spełniającą
+dla dowolnych $a,b,c\in D$ następujące warunki:
+\begin{itemize}
+  \item[(1)] \emph{zwrotność}: $a\sqsubseteq a$;
+  \item[(2)] \emph{przechodniość}: $a\sqsubseteq b \,\land\, b\sqsubseteq c \implies a\sqsubseteq c$;
+  \item[(3)] \emph{antysymetryczność}: $a\sqsubseteq b \,\land\, b\sqsubseteq a \implies a=b$.
+\end{itemize}
+Zapis $x\sqsubseteq y$ czytamy „$x$ jest co najwyżej tak określone jak $y$”
+(\emph{porządek informacyjny}). Jeżeli z kolei nie zachodzi ani $a \sqsubseteq b$, ani $b \sqsubseteq a$, to mówimy, że $a$ i $b$ są \emph{nieporównywalne}.
+\end{definicja}
+
+\begin{przyklad}\label{prz:alfabet}
+Niech $A=\{a_1,a_2,\ldots,a_n\}$ dla pewnego $n\in\mathbb{N}$ będzie dowolnym
+alfabetem i niech $A^*$ oznacza zbiór wszystkich słów skończonych nad $A$ wraz ze
+słowem pustym $\varepsilon$. \emph{Porządkiem przedrostkowym} w $A^*$ nazywamy
+relację $P\subseteq A^*\times A^*$ zdefiniowaną dla dowolnych $x,y\in A^*$ wzorem
+\[
+	x \, P \, y \iff y = xz \ \text{ dla pewnego } z\in A^*,
+\]
+tzn.\ $x$ jest \emph{przedrostkiem} słowa $y$. Wobec Definicji~\ref{def:czesciowy_porzadek}
+relacja $P$ jest częściowym porządkiem w $A^*$. Dla ilustracji rozważmy ciąg
+\[
+	\texttt{3} \ P \ \texttt{3,1} \ P \ \texttt{3,14} \ P \ \cdots,
+\]
+stanowiący ciąg rozwinięć dziesiętnych kolejnych przybliżeń liczby $\pi$. Mówiąc, że
+$\texttt{3,1}$ \emph{aproksymuje} $\texttt{3,14}$, mamy na myśli, że $\texttt{3,1}$
+jest gorszym przybliżeniem liczby $\pi$ niż $\texttt{3,14}$. Zauważmy jeszcze, że w
+tym przypadku słowa $\texttt{3,14}$ i $\texttt{3,15}$ są nieporównywalne (żadne nie
+jest przedrostkiem drugiego).
+\end{przyklad}
+
+\begin{przyklad}\label{prz:potegowy}
+	Niech $\mathcal{P}(D)$ oznacza zbiór wszystkich podzbiorów zbioru $D$. Zbiór ten jest częściowo uporządkowany ze względu na relację zawierania się zbiorów $\subseteq$. 
+\end{przyklad}
+
+Kluczowym w dalszych rozważaniach będzie pojęcie \emph{łańcucha}.
+
+\begin{definicja}
+	\emph{Łańcuchem} w zbiorze częściowo uporządkowanym $(D, \sqsubseteq)$ nazywamy ciąg $(d_n)_{n \in \mathbb{N}}$ elementów zbioru $D$ taki, że
+	\[
+	\forall n \in \mathbb{N} \quad d_n \sqsubseteq d_{n+1}.
+	\]
+\end{definicja}
+
+Intuicyjnie elementy łańcucha stanowią coraz to lepsze \emph{aproksymacje} elementu granicznego, o ile taki element istnieje w rozważanym zbiorze. 
+
+Wróćmy do Przykładu~\ref{prz:alfabet}. Łańcuch elementów zbioru $A^*$
+\[
+	a_1 \, P \, a_1a_1 \, P \, a_1a_1a_1 \, P \, \ldots
+\]
+nie ma w $A^*$ \emph{granicy}, ponieważ $A^*$ zawiera wyłącznie słowa skończone, podczas gdy \emph{granicą} tego łańcucha byłoby słowo nieskończone $a_1a_1a_1\ldots$. Gdybyśmy jednak rozszerzyli $A^*$ o wszystkie nieskończone ciągi nad $A$, to ten nieskończony ciąg można by uznać za \emph{granicę} naszego łańcucha.
+
+Zdefiniujemy teraz dokładnie pojęcie granicy dla łańcucha.
+
+\begin{definicja}
+	\emph{Kresem górnym} lub \emph{granicą} łańcucha $(d_n)_{n \in \mathbb{N}}$  elementów zbioru częściowo uporządkowanego $(D, \sqsubseteq)$ nazywamy element $d \in D$ spełniający następujące dwa warunki:
+	\begin{itemize}
+		\item [(1)] $d_i \sqsubseteq d$ dla $i = 1,2,\ldots$, tzn. $d$ jest \emph{górnym ograniczeniem łańcucha},
+		\item [(2)] dla każdego innego ograniczenia górnego $d'$ łańcucha zachodzi $d \sqsubseteq d'$.
+	\end{itemize}
+	przy czym kres górny łańcucha $(d_n)_{n \in \mathbb{N}}$ oznaczamy przez $\bigsqcup_{n=1}^{\infty} d_n.$
+\end{definicja}
+
+Finalnie możemy zdefiniować główny twór naszych rozważań. 
+
+\begin{definicja}
+	\emph{Zbiorem łańcuchowo zupełnym} nazywamy dowolny zbiór częściowo uporządkowany $(D, \sqsubseteq)$, w którym:
+	\begin{itemize}
+		\item [(1)] każdy łańcuch elementów z $D$ ma kres górny (granicę),
+		\item [(2)] istnieje w $D$ element najmniejszy $\bt$, tzn. $\bt \sqsubseteq d$ dla każdego $d \in D$.
+	\end{itemize}
+\end{definicja}
+
+Wprowadzimy dodatkowo następujące oznaczenie zbiorów łańcuchowo zupełnych.
+
+\begin{oznaczenie}
+	Niech $\boldsymbol{D} = (D, \sqsubseteq_D, \bt_D)$ jako trójka uporządkowana oznacza zbiór łańcuchowo zupełny, w którym $D$ nazwiemy \emph{nośnikiem}, $\sqsubseteq_D$ relacją porządku oraz $\bt_D$ elementem najmniejszym.
+\end{oznaczenie}
+
+\begin{comment}
+
+\subsection{Operacje mnogościowe na zbiorach łańcuchowo zupełnych}
+
+W semantyce denotacyjnej często spotykamy się z sytuacją, gdy mając dany zbiór łańcuchowo zupełny, chcemy utworzyć nowy zbiór łańcuchowo zupełny, przy czym zwykle operacje teoriomnogościowe na zbiorach są niewystarczające.
+
+Ustalmy dwa zbiory łańcuchowo zupełne $\boldsymbol{A} = (A, \sqsubseteq_A, \bt_A)$ i $\boldsymbol{B} = (B, \sqsubseteq_B, \bt_B)$, aby nie powielać ich w kolejnych definicjach.
+
+\begin{definicja}
+	\emph{Sumą rozłączną} zbiorów łańcuchowo zupełnych $\boldsymbol{A}$ i $\boldsymbol{B}$ nazwiemy zbiór
+	\[
+	\boldsymbol{A} + \boldsymbol{B}
+	=
+	\left(
+	\left(A - \{\bt_A\}\right)
+	+
+	\left(B - \{\bt_B\}\right)
+	+
+	\{\bt\},
+	\sqsubseteq,
+	\bt
+	\right),
+	\]
+	gdzie:
+	\begin{itemize}
+		\item [(1)] Nośnik $\boldsymbol{A} + \boldsymbol{B}$ powstaje z nośników wyjściowych przez usunięcie z nich elementów najmniejszych, zsumowanie ich w sposób rozłączny, tzn. jeżeli $A$ i $B$ są rozłączne, to korzystamy ze zwykłej sumy teoriomnogościowej, w przeciwnym wypadku rozważamy sumę
+		\[
+		(A \times \{0\}) + (B \times \{1\}),
+		\]
+		a następnie uzupełniamy ją o nowy, dodatkowy, wyróżniony element $\bt$, który następnie uznajemy za element najmniejszy w zbiorze łańcuchowo zupełnym $\boldsymbol{A} + \boldsymbol{B}$.
+			\item [(2)] Porządek w zbiorze $\boldsymbol{A} + \boldsymbol{B}$ definiujemy przez zachowanie w zbiorach $A$ i $B$ odpowiednich porządków, przyjmując, że elementy zbiorów $A$ i $B$ są ze sobą nieporównywalne, oraz uznając element $\bt$ za element najmniejszy dla całej sumy, tzn.
+		\[
+		x \sqsubseteq y \iff x = \bt \text{ lub } (x,y \in A \text{ oraz } x \sqsubseteq_A y) \text{ lub } (x,y \in B \text{ oraz } x \sqsubseteq_B y).
+		\]
+	\end{itemize}
+	
+	Nieformalnie widzimy, że suma rozłączna zbiorów łańcuchowo zupełnych zachowuje relacje wśród elementów składowych zbiorów, uznając elementy różnych zbiorów za nieporównywalne, oraz \emph{skleja} ze sobą elementy najmniejsze dwóch zbiorów w jeden.
+\end{definicja}
+
+\begin{definicja}
+	Iloczynem kartezjańskim zbiorów łańcuchowo zupełnych $\boldsymbol{A}$ i $\boldsymbol{B}$ nazywamy zbiór
+	\[
+	\boldsymbol{A} \times \boldsymbol{B}
+	=
+	\left(A \times B, \sqsubseteq, (\bt_A,\bt_B)\right),
+	\]
+	gdzie:
+	\begin{itemize}
+			\item [(1)] $A \times B$ jest zwykłym iloczynem kartezjańskim zbiorów,
+			\item [(2)] porządek w $\boldsymbol{A} \times \boldsymbol{B}$ definiujemy po współrzędnych, tzn.
+			\[
+			(a_1,b_1) \sqsubseteq (a_2,b_2)
+			\iff
+			a_1 \sqsubseteq_A a_2 \land b_1 \sqsubseteq_B b_2,
+			\]
+			\item [(3)] $(\bt_A,\bt_B)$ stanowi element najmniejszy zbioru $\boldsymbol{A} \times \boldsymbol{B}$.
+		\end{itemize}
+\end{definicja}
+
+\end{comment}
+%
+\subsection{Porządek płaski}
+%------------------------------------------------------------------------------
+
+Najprostszy sposób nadania dowolnemu zbiorowi struktury zbioru łańcuchowo
+zupełnego polega na dołożeniu jednego elementu najmniejszego, reprezentującego
+brak informacji.
+
+\begin{definicja}\label{def:zbior_plaski}
+	Niech $D$ będzie dowolnym zbiorem. Rozszerzmy go o nowy element
+	$\bt\notin D$, tworząc zbiór
+	\[
+	D_\bt = D \cup \{\bt\}.
+	\]
+	Parę $(D_\bt,\sqsubseteq)$ nazywamy \emph{płaską} (a porządek
+	$\sqsubseteq$ --- \emph{płaskim}), jeżeli
+	\begin{itemize}
+		\item [(1)] $\bt$ jest elementem najmniejszym zbioru $D_\bt$,
+		\item [(2)] $d_1 \sqsubseteq d_2 \iff d_1 = \bt \ \text{lub}\ d_1 = d_2$.
+	\end{itemize}
+\end{definicja}
+
+Powyższą definicję można łatwo zilustrować na diagramie (Rysunek~\ref{fig:porzadek_plaski}), na którym odpowiednie strzałki oznaczają relację $\sqsubseteq$.
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[node distance=2cm]
+		\node (bottom) {$\bt$};
+		\node (a) [above left=of bottom] {$d_1$};
+		\node (b) [above=of bottom] {$d_2$};
+		\node (c) [above right=of bottom] {$d_3$};
+		\draw[->] (bottom) -- (a);
+		\draw[->] (bottom) -- (b);
+		\draw[->] (bottom) -- (c);
+	\end{tikzpicture}
+	\caption{Porządek płaski na zbiorze $D_\bt=\{\bt,d_1,d_2,d_3\}$.}
+	\label{fig:porzadek_plaski}
+\end{figure}
+
+Elementy $d_1,d_2,d_3$ są parami nieporównywalne --- jedynym elementem leżącym
+poniżej pozostałych jest $\bt$.
+
+\begin{uwaga}\label{uw:lancuchy_plaskie}
+	Każdy zbiór płaski $D_\bt$ jest łańcuchowo zupełny. W łańcuchu nie mogą
+	bowiem wystąpić dwa różne elementy różne od $\bt$ (byłyby
+	nieporównywalne), więc każdy łańcuch ma postać
+	\[
+	\bt\sqsubseteq\ldots\sqsubseteq\bt\sqsubseteq d\sqsubseteq d\sqsubseteq\ldots
+	\]
+	(co najwyżej jedna wartość $d\neq\bt$); jest zatem od pewnego miejsca stały,
+	a jego kresem górnym jest $d$ (lub $\bt$, gdy wszystkie wyrazy są równe
+	$\bt$). Elementem najmniejszym jest $\bt$.
+\end{uwaga}
+
+%------------------------------------------------------------------------------
+\subsection{Porządki w zbiorach funkcji}
+%------------------------------------------------------------------------------
+
+Zbiory funkcji można porządkować na dwa naturalne sposoby, prowadzące do dwóch
+różnych --- choć, jak się okaże, powiązanych --- konstrukcji zbiorów łańcuchowo
+zupełnych.
+
+\subsubsection{Porządek poziomy}
+
+\begin{definicja}\label{def:zbior_funkcji_czesciowych}
+	Niech $A \rightharpoonup B$ oznacza zbiór funkcji częściowych ze zbioru $A$ w zbiór $B$. 
+\end{definicja}
+
+Zbiór ten możemy naturalnie uporządkować relacją inkluzji:
+
+\begin{twierdzenie}\label{tw:zbior_funkcji_czesciowych_czesciowo_uporzadkowany}
+	Zbiór funkcji częściowych $A \rightharpoonup B$ można częściowo uporządkować relacją zawierania się wykresów
+	\[
+		f\sqsubseteq g \iff f\subseteq g.
+	\]
+\end{twierdzenie}
+
+\begin{proof}
+	Każdą funkcję częściową $f:A\rightharpoonup B$ utożsamiamy z jej
+	wykresem, czyli relacją $f\subseteq A\times B$, spełniającą warunek
+	jednoznaczności
+	\[
+	(a,b)\in f\land(a,b')\in f
+	\implies b=b'.
+	\]
+	Na zbiorze funkcji częściowych rozważamy relację
+	\[
+	f\sqsubseteq g
+	\iff
+	f\subseteq g.
+	\]
+	Relacja ta jest częściowym porządkiem, ponieważ inkluzja zbiorów jest
+	zwrotna, antysymetryczna i przechodnia.
+\end{proof}
+
+\begin{definicja}\label{def:porzadek_poziomy}
+	Porządek w zbiorze funkcji częściowych $A \rightharpoonup B$ z relacją częściowego porządku daną wzorem 
+	\[
+		f\sqsubseteq g \iff f\subseteq g
+	\]
+	nazywamy \emph{porządkiem poziomym}. Intuicyjnie $f\sqsubseteq g$ znaczy, że $g$ jest \emph{co najmniej tak określona} jak $f$ --- ma
+	dziedzinę nie mniejszą niż $f$ i zgadza się z $f$ tam, gdzie $f$ jest określona (zob.\ Rysunek~\ref{fig:porzadek_poziomy}).
+\end{definicja}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[>=stealth, scale=1]
+		\draw[->] (-1.6,0) -- (1.6,0) node[right] {$A$};
+		\draw[->] (0,-0.3) -- (0,2.8) node[above] {$B$};
+		\draw[thick] (-1.1,0.45) -- (-0.6,0.75) -- (-0.1,1.05) -- (0.35,1.35);
+		\draw[thick,dashed] (0.35,1.35) -- (0.75,1.65) -- (1.15,1.9) -- (1.4,2.2);
+		\node[above left] at (-0.6,0.75) {$f=g$};
+		\node[above left] at (0.9,1.8) {$g$};
+		\draw[dashed] (-1.1,0) -- (-1.1,-0.8);
+		\draw[dashed] (0.35,0) -- (0.35,-0.8);
+		\draw[dashed] (-1.1,-0.8) -- (0.35,-0.8);
+		\node[below] at (-0.375,-0.8) {$\dom(f)$};
+		\draw[dashed] (-1.1,-0.05) -- (-1.1,-1.35);
+		\draw[dashed] (1.4,0) -- (1.4,-1.35);
+		\draw[dashed] (-1.1,-1.35) -- (1.4,-1.35);
+		\node[below] at (0.15,-1.35) {$\dom(g)$};
+	\end{tikzpicture}
+	\caption{Porządek poziomy: $f\sqsubseteq g \iff f\subseteq g$. Funkcja $g$ (linia ciągła i przerywana) rozszerza $f$ (linia ciągła): pokrywa się z $f$ na $\dom(f)\subseteq\dom(g)$ i jest dodatkowo określona poza $\dom(f)$.}
+	\label{fig:porzadek_poziomy}
+\end{figure}
+
+\begin{twierdzenie}\label{tw:funkcje_czesciowe_cpo}
+	Dla dowolnych zbiorów $A$ i $B$ zbiór funkcji częściowych
+	\[
+	\boldsymbol{A\rightharpoonup B} = (A \rightharpoonup B, \subseteq, \varnothing),
+	\]
+	uporządkowany relacją inkluzji wykresów, jest zbiorem łańcuchowo
+	zupełnym. Elementem najmniejszym jest funkcja pusta $\varnothing$,
+	a kres górny każdego łańcucha $(f_n)_{n\in\mathbb{N}}$ jest równy
+	\[
+	\bigsqcup_{n=1}^{\infty} f_n
+	=
+	\bigcup_{n=1}^{\infty} f_n.
+	\]
+\end{twierdzenie}
+
+\begin{proof}
+	\emph{Częściowy porządek}. Istotnie wobec Twierdzenia~\ref{tw:zbior_funkcji_czesciowych_czesciowo_uporzadkowany} zbiór funkcji częściowych $A \rightharpoonup B$ jest zbiorem częściowo uporządkowanym. 
+	
+	\emph{Element najmniejszy}. Funkcja pusta $\varnothing$ jest elementem najmniejszym, gdyż
+	\[
+	\varnothing\subseteq f
+	\]
+	dla każdej funkcji częściowej $f:A\rightharpoonup B$.
+	
+	\emph{Kres górny łańcucha}. Niech
+	\[
+	f_1\sqsubseteq f_2\sqsubseteq f_3\sqsubseteq\ldots
+	\]
+	będzie dowolnym łańcuchem funkcji częściowych $A\rightharpoonup B$.
+	Zdefiniujmy relację
+	\[
+	f=\bigcup_{n=1}^{\infty}f_n.
+	\]
+	
+	Najpierw pokażemy, że $f$ jest funkcją częściową. Ponieważ
+	$f_n\subseteq A\times B$ dla każdego $n\in\mathbb{N}$, otrzymujemy
+	\[
+	f\subseteq A\times B.
+	\]
+	Niech
+	\[
+	(a,b)\in f
+	\quad\land\quad
+	(a,b')\in f.
+	\]
+	Z definicji sumy zbiorów istnieją $i,j\in\mathbb{N}$ takie, że
+	\[
+	(a,b)\in f_i
+	\quad\land\quad
+	(a,b')\in f_j.
+	\]
+	Ponieważ $(f_n)_{n\in\mathbb{N}}$ jest łańcuchem, elementy $f_i$
+	i $f_j$ są porównywalne, zatem
+	\[
+	f_i\subseteq f_j
+	\quad\lor\quad
+	f_j\subseteq f_i.
+	\]
+	Bez straty ogólności załóżmy, że
+	\[
+	f_i\subseteq f_j.
+	\]
+	Wówczas
+	\[
+	(a,b)\in f_i
+	\implies
+	(a,b)\in f_j.
+	\]
+	Zatem
+	\[
+	(a,b)\in f_j
+	\quad\land\quad
+	(a,b')\in f_j.
+	\]
+	Ponieważ $f_j$ jest funkcją częściową, otrzymujemy
+	\[
+	b=b'.
+	\]
+	Stąd $f$ spełnia warunek jednoznaczności, a więc
+	\[
+	f\in A\rightharpoonup B.
+	\]
+	
+	Następnie pokażemy, że $f$ jest ograniczeniem górnym łańcucha.
+	Dla każdego $n\in\mathbb{N}$ z definicji sumy zbiorów mamy
+	\[
+	f_n\subseteq\bigcup_{k=1}^{\infty}f_k=f.
+	\]
+	Zatem
+	\[
+	\forall n\in\mathbb{N}\quad f_n\sqsubseteq f,
+	\]
+	co oznacza, że $f$ jest ograniczeniem górnym łańcucha.
+	
+	Pozostaje wykazać, że $f$ jest najmniejszym ograniczeniem górnym.
+	Niech $g:A\rightharpoonup B$ będzie dowolnym ograniczeniem górnym
+	łańcucha $(f_n)_{n\in\mathbb{N}}$. Wówczas
+	\[
+	\forall n\in\mathbb{N}\quad f_n\subseteq g.
+	\]
+	Weźmy dowolny element $(a,b)\in f$. Z definicji sumy zbiorów
+	istnieje $n\in\mathbb{N}$ takie, że
+	\[
+	(a,b)\in f_n.
+	\]
+	Ponieważ $f_n\subseteq g$, otrzymujemy
+	\[
+	(a,b)\in g.
+	\]
+	Zatem
+	\[
+	f\subseteq g.
+	\]
+	Stąd
+	\[
+	f\sqsubseteq g
+	\]
+	dla każdego ograniczenia górnego $g$ tego łańcucha. W konsekwencji
+	$f$ jest jego najmniejszym ograniczeniem górnym, czyli
+	\[
+	\bigsqcup_{n=1}^{\infty}f_n
+	=
+	\bigcup_{n=1}^{\infty}f_n.
+	\]
+	
+	Ostatecznie $A\rightharpoonup B$ jest częściowo uporządkowany,
+	posiada element najmniejszy $\varnothing$, a każdy jego łańcuch
+	posiada kres górny. Zatem
+	\[
+	\boldsymbol{A\rightharpoonup B}
+	=
+	(A\rightharpoonup B,\subseteq,\varnothing)
+	\]
+	jest zbiorem łańcuchowo zupełnym.
+\end{proof}
+
+Analogicznie można pokazać, że zbiór $\mathcal{P}(D)$ z Przykładu \ref{prz:potegowy} jest zbiorem łańcuchowo zupełnym.
+
+\subsubsection{Porządek pionowy}
+
+\begin{definicja}\label{def:zbior_funkcji_calkowitych}
+	Niech $A \to B$ oznacza zbiór wszystkich funkcji całkowitych ze zbioru $A$ w zbiór $B$.
+\end{definicja}
+
+Zdefiniujemy teraz porządek w zbiorze funkcji całkowitych.
+
+\begin{twierdzenie}\label{tw:zbior_funkcji_calkowitych_czesciowo_uporzadkowany}
+	Niech $(B, \sqsubseteq_B)$ będzie zbiorem częściowo uporządkowanym. Wówczas zbiór funkcji całkowitych $A \to B$ możemy uporządkować relacją częściowego porządku
+	\[
+		f\sqsubseteq g \iff \forall a\in A\quad f(a)\sqsubseteq_B g(a).
+	\]
+\end{twierdzenie}
+
+\begin{proof}
+	Relacja $\sqsubseteq$ jest zadana punktowo, więc dziedziczy własności po $\sqsubseteq_B$. Dla dowolnych $f,g,h:A\to B$:
+	\begin{itemize}
+		\item[(1)] \emph{zwrotność}: dla każdego $a\in A$ mamy
+		$f(a)\sqsubseteq_B f(a)$, zatem $f\sqsubseteq f$;
+		\item[(2)] \emph{przechodniość}: jeżeli $f\sqsubseteq g$ oraz
+		$g\sqsubseteq h$, to dla każdego $a \in A$ zachodzi
+		$f(a)\sqsubseteq_B g(a)\sqsubseteq_B h(a)$, skąd
+		$f(a)\sqsubseteq_B h(a)$, czyli $f\sqsubseteq h$;
+		\item[(3)] \emph{antysymetryczność}: jeżeli $f\sqsubseteq g$ oraz
+		$g\sqsubseteq f$, to dla każdego $a \in A$ mamy $f(a)\sqsubseteq_B g(a)$
+		i $g(a)\sqsubseteq_B f(a)$. Stąd z antysymetrii $\sqsubseteq_B$ wynika
+		$f(a)=g(a)$, a więc $f=g$.
+	\end{itemize}
+\end{proof}
+
+\begin{definicja}\label{def:porzadek_pionowy}
+	Niech $(B, \sqsubseteq_B)$ będzie zbiorem częściowo uporządkowanym. Porządek w zbiorze funkcji całkowitych $A \to B$ zadany relacją 
+	\[
+	f\sqsubseteq g \iff \forall a\in A\quad f(a)\sqsubseteq_B g(a),
+	\]
+	nazywamy \emph{porządkiem pionowym}. Intuicyjnie $f\sqsubseteq g$ znaczy, że wykres $g$
+	leży ,,nad'' wykresem $f$ w sensie porządku $\sqsubseteq_B$ na wartościach
+	(zob.\ Rysunek~\ref{fig:porzadek_pionowy}).
+\end{definicja}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[>=stealth, scale=1]
+		
+		% ============================================================
+		% PORZĄDEK PIONOWY
+		% ============================================================
+		\draw[->] (4.4,0) -- (7.6,0) node[right] {$A$};
+		\draw[->] (6,-0.3) -- (6,2.8) node[above] {$B$};
+		
+		% f
+		\draw[thick]
+		(4.8,0.55) -- (5.5,0.95) -- (6.3,1.25) -- (7.2,1.6);
+		
+		% g
+		\draw[thick,dashed]
+		(4.8,0.95) -- (5.5,1.35) -- (6.3,1.65) -- (7.2,2.0);
+		
+		\node[right] at (7.2,1.6) {$f$};
+		\node[right] at (7.2,2.0) {$g$};
+		
+	\end{tikzpicture}
+	\caption{Porządek pionowy: $f\sqsubseteq g \iff \forall a\in A\ f(a)\sqsubseteq_B g(a)$. Wykres funkcji $g$ (linia przerywana) leży nad wykresem funkcji $f$ (linia ciągła).}
+	\label{fig:porzadek_pionowy}
+\end{figure}
+
+\begin{twierdzenie}\label{tw:funkcje_calkowite_cpo}
+	Niech $A$ będzie dowolnym zbiorem, a $\boldsymbol{B}=(B,\sqsubseteq_B,\bt_B)$
+	--- zbiorem łańcuchowo zupełnym. Wówczas zbiór funkcji całkowitych
+	$\boldsymbol{A\to B}=(A\to B,\sqsubseteq,\varphi)$ z porządkiem pionowym jest zbiorem łańcuchowo
+	zupełnym. Kres górny łańcucha wyznaczamy punktowo,
+	\[
+	\Big(\bigsqcup_{n=1}^{\infty} f_n\Big)(a)=\bigsqcup_{n=1}^{\infty} f_n(a)
+	\qquad(a\in A),
+	\]
+	a elementem najmniejszym jest funkcja stała $\varphi(a)=\bt_B$ dla dowolnego $a \in A$.
+\end{twierdzenie}
+
+\begin{proof}
+	\emph{Częściowy porządek.} Istotnie wobec Twierdzenia~\ref{tw:zbior_funkcji_calkowitych_czesciowo_uporzadkowany} zbiór funkcji całkowitych jest zbiorem częściowo uporządkowanym względem relacji $\sqsubseteq$. 
+	
+	\emph{Element najmniejszy.}
+	Funkcja $\varphi:A\to B$ jest określona wzorem
+	\[
+	\varphi(a)=\bt_B
+	\qquad(a\in A).
+	\]
+	Niech $f:A\to B$ będzie dowolną funkcją. Ponieważ $\bt_B$ jest
+	elementem najmniejszym zbioru $\boldsymbol{B}$, zachodzi
+	\[
+	\bt_B\sqsubseteq_B f(a)
+	\qquad(a\in A).
+	\]
+	Stąd
+	\[
+	\varphi(a)\sqsubseteq_B f(a)
+	\qquad(a\in A),
+	\]
+	a zatem, z definicji porządku pionowego,
+	\[
+	\varphi\sqsubseteq f.
+	\]
+	Ponieważ $f\in A\to B$ było dowolne, $\varphi$ jest elementem
+	najmniejszym zbioru $A\to B$.
+	
+	\emph{Kres górny łańcucha.}
+	Niech
+	\[
+	f_1\sqsubseteq f_2\sqsubseteq f_3\sqsubseteq\ldots
+	\]
+	będzie dowolnym łańcuchem w $A\to B$.
+	
+	Pokażemy najpierw, że dla każdego $a\in A$ ciąg
+	\[
+	f_1(a)\sqsubseteq_B f_2(a)\sqsubseteq_B f_3(a)\sqsubseteq_B\ldots
+	\]
+	jest łańcuchem w $\boldsymbol{B}$. Istotnie, z
+	\[
+	f_n\sqsubseteq f_{n+1}
+	\]
+	oraz z definicji porządku punktowego wynika
+	\[
+	f_n(a)\sqsubseteq_B f_{n+1}(a)
+	\qquad(a\in A).
+	\]
+	
+	Ponieważ $\boldsymbol{B}$ jest zbiorem łańcuchowo zupełnym, dla każdego
+	$a\in A$ istnieje kres górny powyższego łańcucha. Definiujemy zatem
+	funkcję $f:A\to B$ wzorem
+	\[
+	f(a)
+	:=
+	\bigsqcup_{n=1}^{\infty}f_n(a)
+	\qquad(a\in A).
+	\]
+	Jest to poprawnie określona funkcja całkowita, ponieważ
+	\[
+	f(a)\in B
+	\]
+	dla każdego $a\in A$.
+	
+	Pokażemy, że funkcja $f$ jest kresem górnym łańcucha
+	$(f_n)_{n\in\mathbb{N}}$.
+	
+	Najpierw wykażemy, że $f$ jest ograniczeniem górnym. Niech
+	$n\in\mathbb{N}$. Z definicji kresu górnego w $\boldsymbol{B}$ mamy
+	\[
+	f_n(a)
+	\sqsubseteq_B
+	\bigsqcup_{k=1}^{\infty}f_k(a)
+	=
+	f(a)
+	\qquad(a\in A).
+	\]
+	Zatem
+	\[
+	\forall a\in A\quad f_n(a)\sqsubseteq_B f(a),
+	\]
+	a więc
+	\[
+	f_n\sqsubseteq f.
+	\]
+	Ponieważ $n$ było dowolne, otrzymujemy
+	\[
+	\forall n\in\mathbb{N}\quad f_n\sqsubseteq f.
+	\]
+	Zatem $f$ jest ograniczeniem górnym rozważanego łańcucha.
+	
+	Pozostaje wykazać, że $f$ jest najmniejszym ograniczeniem górnym.
+	Niech
+	\[
+	g:A\to B
+	\]
+	będzie dowolnym ograniczeniem górnym łańcucha $(f_n)_{n\in\mathbb{N}}$.
+	Wtedy
+	\[
+	\forall n\in\mathbb{N}\quad f_n\sqsubseteq g.
+	\]
+	Z definicji porządku punktowego otrzymujemy
+	\[
+	\forall n\in\mathbb{N}\;\forall a\in A\quad
+	f_n(a)\sqsubseteq_B g(a).
+	\]
+	
+	Ustalmy $a\in A$. Wówczas
+	\[
+	f_n(a)\sqsubseteq_B g(a)
+	\qquad(n\in\mathbb{N}),
+	\]
+	co oznacza, że $g(a)$ jest ograniczeniem górnym łańcucha
+	\[
+	f_1(a)\sqsubseteq_B f_2(a)\sqsubseteq_B\ldots
+	\]
+	w $\boldsymbol{B}$. Ponieważ $f(a)$ jest jego najmniejszym
+	ograniczeniem górnym, otrzymujemy
+	\[
+	f(a)
+	=
+	\bigsqcup_{n=1}^{\infty}f_n(a)
+	\sqsubseteq_B g(a).
+	\]
+	Ponieważ $a\in A$ było dowolne, mamy
+	\[
+	\forall a\in A\quad f(a)\sqsubseteq_B g(a).
+	\]
+	Z definicji porządku punktowego wynika stąd
+	\[
+	f\sqsubseteq g.
+	\]
+	Zatem $f$ jest najmniejszym ograniczeniem górnym łańcucha
+	$(f_n)_{n\in\mathbb{N}}$.
+	
+	W konsekwencji
+	\[
+	\bigsqcup_{n=1}^{\infty}f_n=f,
+	\]
+	przy czym kres górny jest wyznaczany punktowo:
+	\[
+	\left(\bigsqcup_{n=1}^{\infty}f_n\right)(a)
+	=
+	\bigsqcup_{n=1}^{\infty}f_n(a).
+	\]
+	
+	Zatem $\boldsymbol{A\to B}$ posiada element najmniejszy oraz kres
+	górny każdego łańcucha, a więc jest zbiorem łańcuchowo zupełnym.
+\end{proof}
+
+\begin{wniosek}
+	W szczególności, biorąc za $\boldsymbol{B}$ zbiór płaski $\boldsymbol{B} = (B_\bt, \sqsubseteq, \bt)$ otrzymujemy, że zbiór funkcji całkowitych $A\to B_\bt$ jest zbiorem
+łańcuchowo zupełnym.
+\end{wniosek}
+
+\subsection{Izomorfizm zbiorów łańcuchowo zupełnych}
+
+Okazuje się, że oba spojrzenia opisują ten sam obiekt: funkcje częściowe
+$A\rightharpoonup B$ z porządkiem poziomym to dokładnie funkcje całkowite
+$A\to B_\bt$ z porządkiem pionowym. Stąd możemy mówić o ich \emph{izomorfizmie}. 
+
+\begin{definicja}
+	\emph{Izomorfizmem} zbiorów łańcuchowo zupełnych $\boldsymbol{A}$ i
+	$\boldsymbol{B}$ nazywamy bijekcję $\alpha$ zbioru $A$ na $B$
+	zachowującą porządek w obie strony oraz element najmniejszy, tzn.
+	\begin{itemize}
+		\item [(1)] $a_1 \sqsubseteq_A a_2 \iff \alpha(a_1)\sqsubseteq_B\alpha(a_2)$
+		dla dowolnych $a_1,a_2\in A$,
+		\item [(2)] $\alpha(\bt_A)=\bt_B$.
+	\end{itemize}
+\end{definicja}
+
+\begin{twierdzenie}\label{tw:izomorfizm_czesciowe_calkowite}
+	Niech $A,B$ będą dowolnymi zbiorami, a $B_\bt$ --- płaskim zbiorem
+	powstałym z $B$. Wówczas zbiory łańcuchowo
+	zupełne
+	\[
+	(A\rightharpoonup B,\ \subseteq,\ \varnothing)
+	\qquad\text{oraz}\qquad
+	(A\to B_\bt,\ \sqsubseteq,\ \varphi)
+	\]
+	są izomorficzne.
+\end{twierdzenie}
+
+\begin{proof}
+	Zdefiniujmy odwzorowanie
+	\[
+	\alpha:(A\rightharpoonup B)\longrightarrow(A\to B_\bt)
+	\]
+	wzorem
+	\[
+	\alpha(f)(a)=
+	\begin{cases}
+		f(a),&a\in\dom(f),\\
+		\bt,&a\notin\dom(f).
+	\end{cases}
+	\]
+	Odwzorowanie $\alpha$ uzupełnia więc funkcję częściową $f$ wartością
+	$\bt$ we wszystkich punktach, w których $f$ nie jest określona.
+	
+	Zdefiniujmy również odwzorowanie w przeciwną stronę,
+	\[
+	\beta:(A\to B_\bt)\longrightarrow(A\rightharpoonup B),
+	\]
+	które z funkcji całkowitej $g:A\to B_\bt$ ,,wycina'' punkty, w których
+	przyjmuje ona wartość $\bt$:
+	\[
+	\beta(g)=\{(a,g(a))\mid a\in A,\ g(a)\neq\bt\}.
+	\]
+	Sprawdźmy, że $\beta(g)$ jest rzeczywiście funkcją częściową z $A$
+	w $B$.
+	\begin{itemize}
+		\item $\beta(g)\subseteq A\times B$. Istotnie, jeżeli
+		$(a,b)\in\beta(g)$, to $b=g(a)$ oraz $g(a)\neq\bt$. Ponieważ
+		$g(a)\in B_\bt=B\cup\{\bt\}$, otrzymujemy $b\in B$.
+		\item Warunek jednoznaczności. Jeżeli $(a,b)\in\beta(g)$ oraz
+		$(a,b')\in\beta(g)$, to z definicji $\beta$ mamy $b=g(a)$ oraz
+		$b'=g(a)$, a więc $b=b'$.
+	\end{itemize}
+	Ponadto z definicji
+	\[
+	\dom\big(\beta(g)\big)=\{a\in A:\ g(a)\neq\bt\},
+	\qquad
+	\beta(g)(a)=g(a)\quad\text{dla }a\in\dom\big(\beta(g)\big).
+	\]
+	
+	\emph{Bijektywność.} Pokażemy, że $\beta$ jest odwrotnością $\alpha$,
+	tzn.
+	\[
+	\beta(\alpha(f))=f
+	\quad\text{dla każdej } f:A\rightharpoonup B
+	\qquad\text{oraz}\qquad
+	\alpha(\beta(g))=g
+	\quad\text{dla każdej } g:A\to B_\bt.
+	\]
+	
+	\emph{(i) Równość $\beta(\alpha(f))=f$.} Obie strony są podzbiorami
+	$A\times B$, więc wystarczy pokazać, że mają te same elementy. Niech
+	$(a,b)\in A\times B$. Z definicji $\beta$
+	\[
+	(a,b)\in\beta(\alpha(f))
+	\iff
+	\alpha(f)(a)=b
+	\ \land\
+	\alpha(f)(a)\neq\bt.
+	\]
+	Ponieważ $b\in B$, mamy $b\neq\bt$, więc drugi warunek wynika
+	z pierwszego i
+	\[
+	(a,b)\in\beta(\alpha(f))
+	\iff
+	\alpha(f)(a)=b.
+	\]
+	Jeżeli $a\notin\dom(f)$, to $\alpha(f)(a)=\bt\neq b$, więc równość
+	$\alpha(f)(a)=b$ może zachodzić tylko dla $a\in\dom(f)$, a wtedy
+	$\alpha(f)(a)=f(a)$. Zatem
+	\[
+	\alpha(f)(a)=b
+	\iff
+	a\in\dom(f)\ \land\ f(a)=b
+	\iff
+	(a,b)\in f.
+	\]
+	Stąd $\beta(\alpha(f))=f$.
+	
+	\emph{(ii) Równość $\alpha(\beta(g))=g$.} Obie strony są funkcjami
+	całkowitymi z $A$ w $B_\bt$, więc wystarczy porównać ich wartości
+	w dowolnym punkcie $a\in A$. Rozważmy dwa przypadki.
+	\begin{itemize}
+		\item Jeżeli $g(a)\neq\bt$, to $a\in\dom(\beta(g))$ oraz
+		$\beta(g)(a)=g(a)$. Z definicji $\alpha$
+		\[
+		\alpha(\beta(g))(a)=\beta(g)(a)=g(a).
+		\]
+		\item Jeżeli $g(a)=\bt$, to $a\notin\dom(\beta(g))$, więc
+		z definicji $\alpha$
+		\[
+		\alpha(\beta(g))(a)=\bt=g(a).
+		\]
+	\end{itemize}
+	W obu przypadkach $\alpha(\beta(g))(a)=g(a)$, a ponieważ $a$ było
+	dowolne, $\alpha(\beta(g))=g$.
+	
+	Z (i) wynika, że $\alpha$ jest różnowartościowe: jeżeli
+	$\alpha(f)=\alpha(f')$, to
+	\[
+	f=\beta(\alpha(f))=\beta(\alpha(f'))=f'.
+	\]
+	Z (ii) wynika, że $\alpha$ jest ,,na'': każda funkcja $g:A\to B_\bt$
+	jest postaci $g=\alpha(\beta(g))$. Zatem $\alpha$ jest bijekcją,
+	a $\beta$ jest do niej odwrotna.
+	
+	\emph{Zachowanie porządku.} Pokażemy, że dla dowolnych
+	$f,g:A\rightharpoonup B$
+	\[
+	f\subseteq g
+	\iff
+	\alpha(f)\sqsubseteq\alpha(g).
+	\]
+	
+	($\Rightarrow$) Załóżmy, że $f\subseteq g$, i ustalmy $a\in A$.
+	\begin{itemize}
+		\item Jeżeli $a\notin\dom(f)$, to $\alpha(f)(a)=\bt$, a ponieważ
+		$\bt$ jest elementem najmniejszym $B_\bt$, mamy
+		$\alpha(f)(a)\sqsubseteq\alpha(g)(a)$.
+		\item Jeżeli $a\in\dom(f)$, to $(a,f(a))\in f\subseteq g$, więc
+		$a\in\dom(g)$ oraz $g(a)=f(a)$. Stąd
+		\[
+		\alpha(f)(a)=f(a)=g(a)=\alpha(g)(a),
+		\]
+		a w szczególności $\alpha(f)(a)\sqsubseteq\alpha(g)(a)$.
+	\end{itemize}
+	Ponieważ $a$ było dowolne, z definicji porządku pionowego
+	$\alpha(f)\sqsubseteq\alpha(g)$.
+	
+	($\Leftarrow$) Załóżmy, że $\alpha(f)\sqsubseteq\alpha(g)$, i niech
+	$(a,b)\in f$. Wtedy $a\in\dom(f)$ oraz $f(a)=b$, więc
+	$\alpha(f)(a)=b$, przy czym $b\neq\bt$, bo $b\in B$. Z założenia
+	\[
+	b=\alpha(f)(a)\sqsubseteq\alpha(g)(a).
+	\]
+	W porządku płaskim element różny od $\bt$ jest mniejszy lub równy
+	jedynie samemu sobie (Definicja~\ref{def:zbior_plaski}), zatem
+	$\alpha(g)(a)=b\neq\bt$. Oznacza to, że $a\in\dom(g)$ oraz
+	$g(a)=\alpha(g)(a)=b$, czyli $(a,b)\in g$. Ponieważ $(a,b)\in f$ było
+	dowolne, $f\subseteq g$.
+	
+	\emph{Element najmniejszy.} Funkcja pusta nie jest nigdzie określona,
+	tzn.\ $\dom(\varnothing)=\varnothing$. Zatem dla każdego $a\in A$
+	mamy $a\notin\dom(\varnothing)$ i
+	\[
+	\alpha(\varnothing)(a)=\bt=\varphi(a),
+	\]
+	czyli $\alpha(\varnothing)=\varphi$.
+	
+	Wykazaliśmy, że $\alpha$ jest bijekcją, zachowuje porządek w obie
+	strony oraz przeprowadza element najmniejszy $\varnothing$ na element
+	najmniejszy $\varphi$. Zatem
+	\[
+	(A\rightharpoonup B,\subseteq,\varnothing)
+	\cong
+	(A\to B_\bt,\sqsubseteq,\varphi).
+	\]
+\end{proof}
+
+\begin{wniosek}\label{wn:izomorfizm}
+	Każdą funkcję częściową możemy utożsamić z odpowiednią funkcją całkowitą.	
+\end{wniosek}
+
+\section{Funkcje w zbiorach łańcuchowo zupełnych}
+
+\subsection{Monotoniczność i ciągłość}
+
+Do przejścia do sedna naszych rozważań będziemy potrzebować jeszcze dwóch kluczowych pojęć.
+
+\begin{definicja}
+	Funkcję całkowitą $f : \boldsymbol{A} \to \boldsymbol{B}$ nazywamy \emph{monotoniczną}, jeżeli zachodzi
+	\[
+	a_1 \sqsubseteq_A a_2
+	\implies
+	f(a_1) \sqsubseteq_B f(a_2)
+	\]
+	dla dowolnych $a_1, a_2 \in A$.
+\end{definicja}
+
+Analogicznie wprowadzamy definicję ciągłości funkcji w zbiorze łańcuchowo zupełnym.
+
+\begin{definicja}
+	Funkcję całkowitą $f : \boldsymbol{A} \to \boldsymbol{B}$ nazywamy \emph{ciągłą}, jeżeli przenosi ona łańcuchy wraz z ich granicami z $\boldsymbol{A}$ do $\boldsymbol{B}$, tzn.
+	\begin{itemize}
+		\item [(1)] dla każdego łańcucha
+		\[
+		a_1 \sqsubseteq_A a_2 \sqsubseteq_A a_3 \sqsubseteq_A \ldots
+		\]
+		w $\boldsymbol{A}$ jego obraz
+		\[
+		f(a_1), f(a_2), f(a_3), \ldots
+		\]
+		jest łańcuchem w $\boldsymbol{B}$, tzn:
+		\[
+			f(a_1) \sqsubseteq_B f(a_2) \sqsubseteq_B f(a_3) \sqsubseteq_B \ldots
+		\]
+		\item [(2)] funkcja $f$ zachowuje granice łańcuchów, tzn.
+		\[
+		f\left(\bigsqcup_{i=1}^{\infty} a_i\right)
+		=
+		\bigsqcup_{i=1}^{\infty} f(a_i).
+		\]
+	\end{itemize}
+\end{definicja}
+
+\begin{twierdzenie}\label{tw:ciagla_monotoniczna}
+	Każda funkcja ciągła jest monotoniczna.
+\end{twierdzenie}
+
+\begin{proof}
+	Niech $f : \boldsymbol{A} \to \boldsymbol{B}$ będzie funkcją ciągłą. Ustalmy dowolne
+	$a_1,a_2\in A$ takie, że
+	\[
+	a_1\sqsubseteq_A a_2.
+	\]
+	Wówczas ciąg
+	\[
+	a_1,a_2,a_2,a_2,\ldots
+	\]
+	jest łańcuchem w $\boldsymbol{A}$, którego granicą jest $a_2$, tzn.
+	\[
+	\bigsqcup_{i=1}^{\infty} a_i = a_2.
+	\]
+	Z ciągłości funkcji $f$ wynika, że ciąg
+	\[
+	f(a_1),f(a_2),f(a_2),f(a_2),\ldots
+	\]
+	jest łańcuchem w $\boldsymbol{B}$ oraz
+	\[
+	f\left(\bigsqcup_{i=1}^{\infty} a_i\right)
+	=
+	\bigsqcup_{i=1}^{\infty} f(a_i).
+	\]
+	Zatem
+	\[
+	f(a_2)
+	=
+	\bigsqcup_{i=1}^{\infty} f(a_i),
+	\]
+	a więc w szczególności
+	\[
+	f(a_1)\sqsubseteq_B f(a_2).
+	\]
+	Stąd
+	\[
+	a_1\sqsubseteq_A a_2
+	\implies
+	f(a_1)\sqsubseteq_B f(a_2),
+	\]
+	co oznacza, że $f$ jest monotoniczna.
+\end{proof}
+
+Twierdzenie~\ref{tw:ciagla_monotoniczna} mówi, że z ciągłości wynika
+monotoniczność. Zapytajmy teraz w drugą stronę: co wynika z samej
+monotoniczności? Okazuje się, że funkcja monotoniczna spełnia
+automatycznie warunek~(1) definicji ciągłości oraz jedną z dwóch
+nierówności składających się na równość z warunku~(2).
+
+\begin{lemat}\label{lem:monotoniczna_lancuchy}
+	Niech $\boldsymbol{A}$ i $\boldsymbol{B}$ będą zbiorami łańcuchowo
+	zupełnymi, a $f:\boldsymbol{A}\to\boldsymbol{B}$ funkcją monotoniczną.
+	Niech ponadto
+	\[
+	a_1\sqsubseteq_A a_2\sqsubseteq_A a_3\sqsubseteq_A\ldots
+	\]
+	będzie dowolnym łańcuchem w $\boldsymbol{A}$. Wówczas:
+	\begin{itemize}
+		\item[(a)] ciąg $f(a_1),f(a_2),f(a_3),\ldots$ jest łańcuchem
+		w $\boldsymbol{B}$, a zatem posiada kres górny;
+		\item[(b)] zachodzi nierówność
+		\[
+		\bigsqcup_{n=1}^{\infty}f(a_n)\sqsubseteq_B f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big).
+		\]
+	\end{itemize}
+\end{lemat}
+
+\begin{proof}
+	\emph{(a)} Ustalmy $n\in\mathbb N$. Ponieważ $(a_n)_{n\in\mathbb N}$
+	jest łańcuchem, mamy
+	\[
+	a_n\sqsubseteq_A a_{n+1}.
+	\]
+	Z monotoniczności funkcji $f$ otrzymujemy
+	\[
+	f(a_n)\sqsubseteq_B f(a_{n+1}).
+	\]
+	Ponieważ $n$ było dowolne,
+	\[
+	f(a_1)\sqsubseteq_B f(a_2)\sqsubseteq_B f(a_3)\sqsubseteq_B\ldots,
+	\]
+	czyli ciąg $(f(a_n))_{n\in\mathbb N}$ jest łańcuchem w $\boldsymbol{B}$.
+	Ponieważ $\boldsymbol{B}$ jest zbiorem łańcuchowo zupełnym, łańcuch ten
+	posiada kres górny
+	\[
+	\bigsqcup_{n=1}^{\infty}f(a_n)\in B.
+	\]
+	
+	\emph{(b)} Oznaczmy kres górny łańcucha $(a_n)_{n\in\mathbb N}$ przez
+	\[
+	a=\bigsqcup_{n=1}^{\infty}a_n.
+	\]
+	Z definicji kresu górnego $a$ jest ograniczeniem górnym tego łańcucha,
+	tzn.
+	\[
+	a_n\sqsubseteq_A a
+	\qquad(n\in\mathbb N).
+	\]
+	Z monotoniczności funkcji $f$ wynika zatem
+	\[
+	f(a_n)\sqsubseteq_B f(a)
+	\qquad(n\in\mathbb N).
+	\]
+	Oznacza to, że $f(a)$ jest ograniczeniem górnym łańcucha
+	$(f(a_n))_{n\in\mathbb N}$ z punktu (a). Ponieważ kres górny jest
+	najmniejszym ograniczeniem górnym, otrzymujemy
+	\[
+	\bigsqcup_{n=1}^{\infty}f(a_n)
+	\sqsubseteq_B
+	f(a)
+	=
+	f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big).
+	\]
+\end{proof}
+
+Z lematu wynika, że przy badaniu ciągłości funkcji monotonicznej nie
+trzeba sprawdzać całej równości z warunku~(2) --- wystarczy jedna
+nierówność, bo druga zachodzi zawsze.
+
+\begin{wniosek}\label{wn:ciaglosc_monotonicznej}
+	Niech $\boldsymbol{A}$ i $\boldsymbol{B}$ będą zbiorami łańcuchowo
+	zupełnymi. Funkcja monotoniczna $f:\boldsymbol{A}\to\boldsymbol{B}$
+	jest ciągła wtedy i tylko wtedy, gdy dla każdego łańcucha
+	$(a_n)_{n\in\mathbb N}$ w $\boldsymbol{A}$ zachodzi
+	\[
+	f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)\sqsubseteq_B\bigsqcup_{n=1}^{\infty}f(a_n).
+	\]
+\end{wniosek}
+
+\begin{proof}
+	($\Rightarrow$) Jeżeli $f$ jest ciągła, to z warunku~(2) definicji
+	ciągłości zachodzi równość
+	$f\big(\bigsqcup_{n}a_n\big)=\bigsqcup_{n}f(a_n)$, a więc
+	w szczególności żądana nierówność.
+	
+	($\Leftarrow$) Załóżmy, że $f$ jest monotoniczna i spełnia powyższą
+	nierówność dla każdego łańcucha. Sprawdzimy oba warunki definicji
+	ciągłości.
+	
+	Warunek~(1): na mocy Lematu~\ref{lem:monotoniczna_lancuchy}(a) obraz
+	dowolnego łańcucha w $\boldsymbol{A}$ jest łańcuchem w $\boldsymbol{B}$.
+	
+	Warunek~(2): ustalmy łańcuch $(a_n)_{n\in\mathbb N}$. Z założenia
+	\[
+	f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)\sqsubseteq_B\bigsqcup_{n=1}^{\infty}f(a_n),
+	\]
+	a z Lematu~\ref{lem:monotoniczna_lancuchy}(b)
+	\[
+	\bigsqcup_{n=1}^{\infty}f(a_n)\sqsubseteq_B f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big).
+	\]
+	Z antysymetrii porządku $\sqsubseteq_B$ otrzymujemy
+	\[
+	f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)=\bigsqcup_{n=1}^{\infty}f(a_n).
+	\]
+	Zatem $f$ spełnia oba warunki definicji ciągłości, czyli jest ciągła.
+\end{proof}
+
+\subsection{Przestrzeń funkcji ciągłych}
+
+\begin{definicja}
+	Niech $\boldsymbol{A}$ i $\boldsymbol{B}$ będą zbiorami łańcuchowo
+	zupełnymi. Zbiór wszystkich funkcji ciągłych z $\boldsymbol{A}$ do
+	$\boldsymbol{B}$ oznaczamy przez
+	\[
+	\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})
+	=
+	\{f:\boldsymbol{A}\to\boldsymbol{B}\mid f\text{ jest ciągła}\}.
+	\]
+	Na zbiorze tym rozważamy porządek pionowy określony przez
+	\[
+	f\sqsubseteq g
+	\iff
+	\forall a\in A\quad
+	f(a)\sqsubseteq_B g(a).
+	\]
+\end{definicja}
+
+\begin{twierdzenie}\label{tw:funkcje_ciagle_cpo}
+	Niech $\boldsymbol{A}$ i $\boldsymbol{B}$ będą zbiorami łańcuchowo
+	zupełnymi. Wówczas
+	\[
+	\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})
+	\]
+	z porządkiem pionowym jest zbiorem łańcuchowo zupełnym.
+	Elementem najmniejszym jest funkcja stała
+	\[
+	\varphi(a)=\bt_B,
+	\]
+	a kres górny każdego łańcucha funkcji ciągłych wyznaczamy punktowo:
+	\[
+	\left(\bigsqcup_{n=1}^{\infty}f_n\right)(a)
+	=
+	\bigsqcup_{n=1}^{\infty}f_n(a).
+	\]
+\end{twierdzenie}
+
+\begin{proof}
+	\emph{Częściowy porządek.} Zbiór
+	$\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})$ jest podzbiorem zbioru
+	$A\to B$, a relacja $\sqsubseteq$ na nim jest obcięciem porządku
+	pionowego. Zwrotność, przechodniość i antysymetryczność zachodzą dla
+	wszystkich funkcji z $A\to B$
+	(Twierdzenie~\ref{tw:zbior_funkcji_calkowitych_czesciowo_uporzadkowany}),
+	więc tym bardziej dla funkcji ciągłych.
+	
+	\emph{Kres górny łańcucha.} Niech
+	\[
+	f_1\sqsubseteq f_2\sqsubseteq f_3\sqsubseteq\ldots
+	\]
+	będzie łańcuchem w $\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})$.
+	Jest to w szczególności łańcuch w $\boldsymbol{A\to B}$, więc na mocy
+	Twierdzenia~\ref{tw:funkcje_calkowite_cpo} posiada on kres górny
+	w $\boldsymbol{A\to B}$, równy funkcji
+	\[
+	f(a)=\bigsqcup_{n=1}^{\infty}f_n(a)
+	\qquad(a\in A).
+	\]
+	Kres ten został jednak wyznaczony w większym zbiorze $A\to B$.
+	Pokażemy, że jeżeli $f$ jest ciągła, to jest również kresem górnym
+	łańcucha w mniejszym zbiorze $\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})$.
+	\begin{itemize}
+		\item $f$ jest ograniczeniem górnym łańcucha, bo $f_n\sqsubseteq f$
+		dla każdego $n$ (jest kresem w $A\to B$).
+		\item Niech $g\in\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})$ będzie
+		dowolnym ograniczeniem górnym łańcucha. Wtedy $g\in A\to B$ oraz
+		$f_n\sqsubseteq g$ dla każdego $n$, więc $g$ jest ograniczeniem
+		górnym łańcucha także w $A\to B$. Ponieważ $f$ jest najmniejszym
+		ograniczeniem górnym w $A\to B$, otrzymujemy $f\sqsubseteq g$.
+	\end{itemize}
+	Pozostaje zatem wykazać, że $f$ jest ciągła. Na mocy
+	Wniosku~\ref{wn:ciaglosc_monotonicznej} wystarczy pokazać, że
+	\begin{itemize}
+		\item[(I)] $f$ jest monotoniczna,
+		\item[(II)] dla każdego łańcucha $(a_n)_{n\in\mathbb N}$ w
+		$\boldsymbol{A}$ zachodzi
+		$f\big(\bigsqcup_{n}a_n\big)\sqsubseteq_B\bigsqcup_{n}f(a_n)$.
+	\end{itemize}
+	
+	\emph{(I) Monotoniczność $f$.} Niech $a\sqsubseteq_A a'$ i ustalmy
+	$i\in\mathbb N$. Funkcja $f_i$ jest ciągła, a więc na mocy
+	Twierdzenia~\ref{tw:ciagla_monotoniczna} monotoniczna, skąd
+	\[
+	f_i(a)\sqsubseteq_B f_i(a').
+	\]
+	Ponadto $f_i\sqsubseteq f$ w porządku pionowym, czyli w szczególności
+	\[
+	f_i(a')\sqsubseteq_B f(a').
+	\]
+	Z przechodniości otrzymujemy
+	\[
+	f_i(a)\sqsubseteq_B f(a').
+	\]
+	Ponieważ $i$ było dowolne, element $f(a')$ jest ograniczeniem górnym
+	łańcucha $\big(f_i(a)\big)_{i\in\mathbb N}$. Kresem górnym tego
+	łańcucha jest z definicji $f(a)$, a kres jest najmniejszym
+	ograniczeniem górnym, więc
+	\[
+	f(a)\sqsubseteq_B f(a').
+	\]
+	
+	\emph{(II) Nierówność dla kresów.} Niech $(a_n)_{n\in\mathbb N}$ będzie
+	łańcuchem w $\boldsymbol{A}$ i niech
+	\[
+	a=\bigsqcup_{n=1}^{\infty}a_n.
+	\]
+	Na mocy (I) oraz Lematu~\ref{lem:monotoniczna_lancuchy}(a) ciąg
+	$\big(f(a_n)\big)_{n\in\mathbb N}$ jest łańcuchem w $\boldsymbol{B}$,
+	więc istnieje jego kres górny
+	\[
+	s=\bigsqcup_{n=1}^{\infty}f(a_n).
+	\]
+	Ustalmy $i\in\mathbb N$. Dla każdego $n\in\mathbb N$ mamy
+	\[
+	f_i(a_n)\sqsubseteq_B f(a_n)\sqsubseteq_B s,
+	\]
+	gdzie pierwsza nierówność wynika z $f_i\sqsubseteq f$, a druga z tego,
+	że $s$ jest ograniczeniem górnym łańcucha $\big(f(a_n)\big)_n$.
+	Zatem $s$ jest ograniczeniem górnym łańcucha
+	$\big(f_i(a_n)\big)_{n\in\mathbb N}$, skąd, korzystając z ciągłości
+	$f_i$,
+	\[
+	f_i(a)
+	=
+	f_i\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)
+	=
+	\bigsqcup_{n=1}^{\infty}f_i(a_n)
+	\sqsubseteq_B
+	s.
+	\]
+	Ponieważ $i$ było dowolne, $s$ jest ograniczeniem górnym łańcucha
+	$\big(f_i(a)\big)_{i\in\mathbb N}$, którego kresem jest $f(a)$. Stąd
+	\[
+	f(a)
+	=
+	\bigsqcup_{i=1}^{\infty}f_i(a)
+	\sqsubseteq_B
+	s
+	=
+	\bigsqcup_{n=1}^{\infty}f(a_n).
+	\]
+	Na mocy Wniosku~\ref{wn:ciaglosc_monotonicznej} funkcja $f$ jest
+	ciągła, a więc $f$ jest kresem górnym łańcucha
+	$(f_n)_{n\in\mathbb N}$ w $\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})$.
+	
+	\emph{Element najmniejszy.} Pokażemy najpierw, że funkcja stała
+	$\varphi(a)=\bt_B$ jest ciągła. Jest ona monotoniczna, bo
+	$\varphi(a)=\bt_B\sqsubseteq_B\bt_B=\varphi(a')$ dla dowolnych $a,a'$.
+	Dla łańcucha $(a_n)_{n\in\mathbb N}$ ciąg $\varphi(a_n)$ jest stały
+	i równy $\bt_B$, więc jego kresem jest $\bt_B$ i
+	\[
+	\varphi\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)
+	=
+	\bt_B
+	=
+	\bigsqcup_{n=1}^{\infty}\varphi(a_n).
+	\]
+	Zatem $\varphi\in\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})$.
+	Ponadto na mocy Twierdzenia~\ref{tw:funkcje_calkowite_cpo} funkcja
+	$\varphi$ jest elementem najmniejszym całego zbioru $A\to B$, więc
+	$\varphi\sqsubseteq f$ dla każdej funkcji ciągłej $f$. Zatem $\varphi$
+	jest elementem najmniejszym zbioru
+	$\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})$.
+	
+	Wykazaliśmy, że $\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})$ jest
+	częściowo uporządkowany, każdy jego łańcuch ma kres górny wyznaczany
+	punktowo i istnieje element najmniejszy $\varphi$. Jest to więc zbiór
+	łańcuchowo zupełny.
+\end{proof}
+
+\subsection{Funkcje na zbiorach płaskich}
+
+\begin{twierdzenie}\label{tw:monotonna_plaska_ciagla}
+	Niech $\boldsymbol{A}$ będzie płaskim zbiorem łańcuchowo zupełnym,
+	a $\boldsymbol{B}$ dowolnym zbiorem łańcuchowo zupełnym. Wówczas każda
+	monotoniczna funkcja
+	\[
+	f:\boldsymbol{A}\to\boldsymbol{B}
+	\]
+	jest ciągła.
+\end{twierdzenie}
+
+\begin{proof}
+	Niech
+	\[
+	a_1\sqsubseteq_A a_2\sqsubseteq_A a_3\sqsubseteq_A\ldots
+	\]
+	będzie dowolnym łańcuchem w $\boldsymbol{A}$. Ponieważ $f$ jest
+	monotoniczna, na mocy Lematu~\ref{lem:monotoniczna_lancuchy}(a) ciąg
+	$\big(f(a_n)\big)_{n\in\mathbb N}$ jest łańcuchem w $\boldsymbol{B}$,
+	a na mocy Wniosku~\ref{wn:ciaglosc_monotonicznej} wystarczy wykazać
+	nierówność
+	\[
+	f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)
+	\sqsubseteq_B
+	\bigsqcup_{n=1}^{\infty}f(a_n).
+	\]
+	
+	Pokażemy najpierw, że istnieje indeks $k\in\mathbb N$ taki, że
+	\[
+	\bigsqcup_{n=1}^{\infty}a_n=a_k.
+	\]
+	Rozważmy dwa przypadki (por.\ Uwaga~\ref{uw:lancuchy_plaskie}).
+	\begin{itemize}
+		\item Jeżeli $a_n=\bt_A$ dla wszystkich $n$, to łańcuch jest stały,
+		jego kresem jest $\bt_A$ i możemy przyjąć $k=1$.
+		\item W przeciwnym razie niech $k$ będzie najmniejszym indeksem
+		takim, że $a_k\neq\bt_A$. Dla $n\geq k$ mamy $a_k\sqsubseteq_A a_n$,
+		a ponieważ w zbiorze płaskim element różny od $\bt_A$ jest mniejszy
+		lub równy tylko samemu sobie, otrzymujemy $a_n=a_k$. Zatem łańcuch
+		ma postać
+		\[
+		\bt_A,\ldots,\bt_A,a_k,a_k,a_k,\ldots
+		\]
+		Element $a_k$ jest jego ograniczeniem górnym (bo $\bt_A\sqsubseteq_A a_k$
+		i $a_k\sqsubseteq_A a_k$), a każde ograniczenie górne $u$ spełnia
+		w szczególności $a_k\sqsubseteq_A u$. Zatem
+		$\bigsqcup_{n}a_n=a_k$.
+	\end{itemize}
+	
+	W obu przypadkach
+	\[
+	f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)=f(a_k).
+	\]
+	Kres górny $\bigsqcup_{n}f(a_n)$ jest ograniczeniem górnym wszystkich
+	wyrazów łańcucha $\big(f(a_n)\big)_{n\in\mathbb N}$, w szczególności
+	wyrazu $f(a_k)$. Stąd
+	\[
+	f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)
+	=
+	f(a_k)
+	\sqsubseteq_B
+	\bigsqcup_{n=1}^{\infty}f(a_n),
+	\]
+	co na mocy Wniosku~\ref{wn:ciaglosc_monotonicznej} kończy dowód
+	ciągłości $f$.
+\end{proof}
+
+\begin{wniosek}\label{wn:plaskie_monotoniczne_ciagle}
+	Niech $\boldsymbol{A}$ będzie płaskim zbiorem łańcuchowo zupełnym,
+	a $\boldsymbol{B}$ dowolnym zbiorem łańcuchowo zupełnym. Jeżeli funkcja
+	\[
+	f:\boldsymbol{A}\to\boldsymbol{B}
+	\]
+	zachowuje elementy najmniejsze, tj.
+	\[
+	f(\bt_A)=\bt_B,
+	\]
+	to $f$ jest monotoniczna, a w konsekwencji jest ciągła.
+\end{wniosek}
+
+\begin{proof}
+	Pokażemy, że $f$ jest monotoniczna. Niech $a_1,a_2\in A$ oraz
+	\[
+	a_1\sqsubseteq_A a_2.
+	\]
+	Rozważmy dwa przypadki.
+	\begin{itemize}
+		\item Jeżeli $a_1=\bt_A$, to z założenia $f(a_1)=f(\bt_A)=\bt_B$,
+		a ponieważ $\bt_B$ jest elementem najmniejszym $\boldsymbol{B}$,
+		\[
+		f(a_1)=\bt_B\sqsubseteq_B f(a_2).
+		\]
+		\item Jeżeli $a_1\neq\bt_A$, to z płaskości $\boldsymbol{A}$
+		(Definicja~\ref{def:zbior_plaski}) warunek $a_1\sqsubseteq_A a_2$
+		oznacza $a_1=a_2$. Wtedy $f(a_1)=f(a_2)$, a więc z zwrotności
+		$f(a_1)\sqsubseteq_B f(a_2)$.
+	\end{itemize}
+	W obu przypadkach $f(a_1)\sqsubseteq_B f(a_2)$, czyli $f$ jest
+	monotoniczna. Ponieważ $\boldsymbol{A}$ jest płaski, na mocy
+	Twierdzenia~\ref{tw:monotonna_plaska_ciagla} funkcja $f$ jest ciągła.
+\end{proof}
+
+\begin{wniosek}\label{wn:funkcje_czesciowe_jako_ciagle}
+	Niech $A$ i $B$ będą dowolnymi zbiorami, a
+	\[
+	A_\bt=A\cup\{\bt_A\},
+	\qquad
+	B_\bt=B\cup\{\bt_B\}
+	\]
+	będą płaskimi zbiorami łańcuchowo zupełnymi otrzymanymi przez dodanie
+	elementów najmniejszych. Każda funkcja częściowa
+	\[
+	f:A\rightharpoonup B
+	\]
+	wyznacza \emph{kanoniczne rozszerzenie}
+	\[
+	\widehat{f}:A_\bt\to B_\bt
+	\]
+	określone wzorem
+	\[
+	\widehat{f}(a)=
+	\begin{cases}
+		f(a),&a\in\dom(f),\\
+		\bt_B,&a\in A\setminus\dom(f),\\
+		\bt_B,&a=\bt_A.
+	\end{cases}
+	\]
+	Funkcja $\widehat{f}$ zachowuje element najmniejszy, a zatem jest
+	ciągła.
+\end{wniosek}
+
+\begin{proof}
+	Najpierw zauważmy, że $\widehat{f}$ jest poprawnie określoną funkcją
+	całkowitą z $A_\bt$ w $B_\bt$: każdy element $a\in A_\bt$ spełnia
+	dokładnie jeden z warunków $a\in\dom(f)$, $a\in A\setminus\dom(f)$,
+	$a=\bt_A$, a w każdym przypadku przypisana wartość należy do
+	$B_\bt$ (bo $f(a)\in B$).
+	
+	Funkcja $\widehat{f}$ jest rozszerzeniem $f$, bo z pierwszego wiersza
+	definicji $\widehat{f}(a)=f(a)$ dla każdego $a\in\dom(f)$. Z trzeciego
+	wiersza definicji
+	\[
+	\widehat{f}(\bt_A)=\bt_B,
+	\]
+	czyli $\widehat{f}$ zachowuje element najmniejszy.
+	
+	Zbiór $A_\bt$ jest płaskim zbiorem łańcuchowo zupełnym, a $B_\bt$ ---
+	zbiorem łańcuchowo zupełnym (Uwaga~\ref{uw:lancuchy_plaskie}). Zatem
+	na mocy Wniosku~\ref{wn:plaskie_monotoniczne_ciagle} funkcja
+	$\widehat{f}$ jest monotoniczna i ciągła.
+	
+	Zauważmy jeszcze, że wartości $\widehat{f}$ poza $\dom(f)$ nie są
+	wymuszone przez $f$ --- przyjęcie $\bt_B$ wyraża właśnie to, że $f$
+	nie jest tam określona. Na $A$ funkcja $\widehat{f}$ pokrywa się
+	z funkcją $\alpha(f)$ z Twierdzenia~\ref{tw:izomorfizm_czesciowe_calkowite}.
+\end{proof}
+
+%==============================================================================
+\section{Równania stałopunktowe w zbiorach łańcuchowo zupełnych}
+%==============================================================================
+
+Niniejszy rozdział poświęcimy w pełni zagadnieniu znajdowania punktu stałego
+dowolnego odwzorowania ciągłego między zbiorami łańcuchowo zupełnymi. Wrócimy na
+chwilę do równania~\eqref{eq:rownanie_stalopunktowe} i postarajmy się odpowiedzieć na
+zadane wcześniej pytania, tzn.\ o istnienie rozwiązania równania stałopunktowego oraz
+o wybór właściwego rozwiązania, gdy jest ich więcej. Dysponujemy już wszystkimi pojęciami --- zbiorem łańcuchowo zupełnym oraz funkcją ciągłą --- potrzebnymi, aby wykazać istnienie rozwiązania równania~\eqref{eq:rownanie_stalopunktowe} i wskazać wśród rozwiązań jedno wyróżnione: najmniejszy punkt stały. Twierdzenie to nie orzeka natomiast, że rozwiązanie jest jedyne.
+
+Przejdziemy teraz do głównego twierdzenia niniejszego referatu --- twierdzenia Kleenego\footnote{Stephen Cole Kleene (1909--1994) --- amerykański matematyk i~logik, jeden z~twórców teorii rekursji, czyli teorii funkcji obliczalnych. Doktorat uzyskał w~1934~r.\ w~Princeton pod kierunkiem Alonzo Churcha, a~większość kariery naukowej związał z~University of Wisconsin--Madison. Zajmował się m.in.\ funkcjami częściowo rekurencyjnymi, hierarchią arytmetyczną, realizowalnością w~logice intuicjonistycznej oraz wyrażeniami regularnymi --- od jego nazwiska pochodzi nazwa \emph{gwiazdki Kleenego} $A^*$, użytej w~Przykładzie~\ref{prz:alfabet}. Jest autorem klasycznej monografii \emph{Introduction to Metamathematics} (1952)~\cite{kleene1952}. Omawiane twierdzenie nawiązuje do jego \emph{pierwszego twierdzenia o~rekursji}, według którego definicja rekurencyjna wyznacza najmniejszy punkt stały odpowiedniego operatora; sformułowanie w~języku zbiorów łańcuchowo zupełnych pochodzi z~późniejszych prac nad semantyką denotacyjną.} --- łączącego teorię punktu stałego z wprowadzonym pojęciem zbioru łańcuchowo zupełnego.
+
+\begin{twierdzenie}[Kleene]\label{tw:kleene}
+	Każda funkcja ciągła $f:\boldsymbol{A}\to\boldsymbol{A}$ ma najmniejszy
+	punkt stały. Co więcej, najmniejszy punkt stały jest kresem górnym
+	łańcucha kolejnych iteracji tej funkcji na elemencie najmniejszym, tzn.
+	\[
+	\lfp(f)=\bigsqcup_{i=1}^\infty f^i(\bt),
+	\]
+	gdzie
+	\[
+	f^1(\bt)=f(\bt),
+	\qquad
+	f^{i+1}(\bt)=f\!\left(f^i(\bt)\right)
+	\]
+	dla $i=1,2,3,\ldots$.
+\end{twierdzenie}
+
+\begin{proof}
+	Niech $\boldsymbol{A}=(A,\sqsubseteq,\bt)$ oraz niech
+	$f:\boldsymbol{A}\to\boldsymbol{A}$ będzie funkcją ciągłą. Dowód przeprowadzimy w kilku kluczowych krokach.
+	
+	Najpierw pokażemy, że rodzina
+	\[
+	\left\{f^i(\bt)\right\}_{i=1}^{\infty}
+	\]
+	jest łańcuchem. Ponieważ $\bt$ jest elementem najmniejszym w $A$, mamy
+	\[
+	\bt\sqsubseteq f(\bt).
+	\]
+	Ponieważ $f$ jest ciągła, wobec Twierdzenia~\ref{tw:ciagla_monotoniczna} jest monotoniczna, a więc
+	\[
+		f(\bt)\sqsubseteq f(f(\bt))=f^2(\bt).
+	\]
+	Załóżmy indukcyjnie, że dla pewnego $i\in\mathbb{N}$ zachodzi
+	\[
+	f^i(\bt)\sqsubseteq f^{i+1}(\bt).
+	\]
+	Wobec Twierdzenia~\ref{tw:ciagla_monotoniczna} ciągłość funkcji $f$
+	implikuje jej monotoniczność, zatem
+	\[
+	f\left(f^i(\bt)\right)
+	\sqsubseteq
+	f\left(f^{i+1}(\bt)\right).
+	\]
+	Stąd
+	\[
+	f^{i+1}(\bt)\sqsubseteq f^{i+2}(\bt).
+	\]
+	Na mocy zasady indukcji matematycznej
+	\[
+	f^1(\bt)\sqsubseteq f^2(\bt)\sqsubseteq f^3(\bt)
+	\sqsubseteq\ldots,
+	\]
+	czyli rodzina $\left\{f^i(\bt)\right\}_{i=1}^{\infty}$ jest łańcuchem.
+	
+	Z łańcuchowej zupełności $\boldsymbol{A}$ wynika istnienie kresu górnego
+	łańcucha $\left\{f^i(\bt)\right\}_{i=1}^{\infty}$. Oznaczmy go przez
+	\[
+	x=\bigsqcup_{i=1}^{\infty}f^i(\bt).
+	\]
+	
+	Ponieważ $f$ jest funkcją ciągłą, zachowuje kresy górne łańcuchów, zatem
+	\[
+		f(x)
+		=f\left(\bigsqcup_{i=1}^{\infty}f^i(\bt)\right)
+		=\bigsqcup_{i=1}^{\infty}f\left(f^i(\bt)\right)
+		=\bigsqcup_{i=1}^{\infty}f^{i+1}(\bt)
+		=\bigsqcup_{i=2}^{\infty}f^i(\bt).
+	\]
+	
+	Ponieważ
+	\[
+	f^1(\bt)\sqsubseteq f^2(\bt)\sqsubseteq f^3(\bt)
+	\sqsubseteq\ldots,
+	\]
+	element $f^1(\bt)$ jest elementem najmniejszym tego łańcucha.
+	Dodanie go do łańcucha
+	$\left\{f^i(\bt)\right\}_{i=2}^{\infty}$ nie zmienia jego kresu górnego.
+	Stąd
+	\[
+	\bigsqcup_{i=2}^{\infty}f^i(\bt)
+	=
+	\bigsqcup_{i=1}^{\infty}f^i(\bt)
+	=x.
+	\]
+	W konsekwencji
+	\[
+	f(x)=x,
+	\]
+	czyli $x$ jest punktem stałym odwzorowania $f$.
+	
+	Pozostaje wykazać, że $x$ jest najmniejszym punktem stałym odwzorowania $f$.
+	Weźmy dowolny punkt stały $a\in\Fix(f)$, tj.
+	\[
+	f(a)=a.
+	\]
+	Ponieważ $\bt$ jest elementem najmniejszym w $A$, mamy
+	\[
+	\bt\sqsubseteq a.
+	\]
+	Z monotoniczności funkcji $f$ otrzymujemy
+	\[
+	f(\bt)\sqsubseteq f(a)=a,
+	\]
+	czyli
+	\[
+	f^1(\bt)\sqsubseteq a.
+	\]
+	
+	Załóżmy indukcyjnie, że dla pewnego $i \in \mathbb{N}$ zachodzi
+	\[
+	f^i(\bt)\sqsubseteq a.
+	\]
+	Z monotoniczności funkcji $f$ otrzymujemy
+	\[
+	f\left(f^i(\bt)\right)\sqsubseteq f(a)=a,
+	\]
+	a więc
+	\[
+	f^{i+1}(\bt)\sqsubseteq a.
+	\]
+	Na mocy zasady indukcji matematycznej
+	\[
+	f^i(\bt)\sqsubseteq a
+	\]
+	dla każdego $i \in \mathbb{N}$.
+	
+	Zatem $a$ jest ograniczeniem górnym łańcucha
+	$\left\{f^i(\bt)\right\}_{i=1}^{\infty}$. Ponieważ
+	\[
+	x=\bigsqcup_{i=1}^{\infty}f^i(\bt)
+	\]
+	jest jego najmniejszym ograniczeniem górnym, otrzymujemy
+	\[
+	x\sqsubseteq a.
+	\]
+	
+	Ponieważ $a$ było dowolnym punktem stałym odwzorowania $f$, otrzymujemy,
+	że $x$ jest elementem najmniejszym zbioru $\Fix(f)$. Zatem
+	\[
+	x=\lfp(f).
+	\]
+\end{proof}
+
+\subsection{Sformułowanie równania stałopunktowego}
+
+Wróćmy teraz do zagadnienia semantyki pętli \kw{while}, rozważanego
+w podrozdziale~\ref{subsec:problem_while}. Przypomnijmy, że denotację
+instrukcji reprezentujemy jako funkcję częściową
+\[
+\Cc\sem{c}:\Store\rightharpoonup\Store.
+\]
+Jak wyjaśniono wcześniej, częściowość tej funkcji pozwala uwzględnić
+możliwość niezakończenia wykonania instrukcji. Jeżeli dla pewnego stanu
+$\sigma$ nie istnieje stan $\sigma'$ taki, że
+\[
+(\sigma,\sigma')\in\Cc\sem{c},
+\]
+oznacza to, że wykonanie instrukcji $c$ rozpoczęte w stanie $\sigma$
+nie kończy się.
+
+W szczególności również denotację pętli
+\[
+\kw{while}\ b\ \kw{do}\ c
+\]
+będziemy szukać w przestrzeni funkcji częściowych
+\[
+\Store\rightharpoonup\Store.
+\]
+Oznaczmy przez
+\[
+W_{b,c}
+=
+\Cc\sem{\kw{while}\ b\ \kw{do}\ c}
+\]
+denotację tej pętli.
+
+W podrozdziale~\ref{subsec:problem_while} otrzymaliśmy równanie
+opisujące $W_{b,c}$, w którym denotacja pętli występuje po obu stronach
+równania. Wynika to bezpośrednio z charakteru instrukcji \kw{while}:
+jeżeli warunek $b$ jest prawdziwy, po wykonaniu ciała $c$ należy ponownie
+wykonać całą pętlę.
+
+Aby formalnie rozwiązać to równanie, wprowadzimy funkcjonał
+\[
+\mathcal{F}:
+(\Store\rightharpoonup\Store)
+\longrightarrow
+(\Store\rightharpoonup\Store).
+\]
+Argumentem funkcjonału $\mathcal{F}$ będzie dowolna funkcja częściowa
+$f:\Store\rightharpoonup\Store$, która reprezentuje proponowaną
+denotację dalszego wykonania pętli. Wartość $\mathcal{F}(f)$ opisuje
+jedno rozwinięcie pętli: sprawdzenie warunku $b$, wykonanie ciała $c$
+w przypadku prawdziwego warunku oraz dalsze wykonanie opisane przez
+$f$.
+
+Funkcjonał $\mathcal{F}$ definiujemy następująco:
+\[
+\begin{aligned}
+	\mathcal{F}(f)
+	={}&
+	\left\{
+	(\sigma,\sigma)
+	\;\middle|\;
+	(\sigma,\kw{false})\in\Bb\sem{b}
+	\right\}\\
+	&{}\cup
+	\left\{
+	(\sigma,\sigma')
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,\kw{true})\in\Bb\sem{b},\\
+		\exists\sigma''\in\Store\;
+		\big(
+		(\sigma,\sigma'')\in\Cc\sem{c}
+		\land
+		(\sigma'',\sigma')\in f
+		\big)
+	\end{array}
+	\right\}.
+\end{aligned}
+\]
+
+Pierwszy składnik opisuje sytuację, w której warunek $b$ jest fałszywy.
+Wówczas wykonanie pętli kończy się bez wykonania jej ciała, dlatego stan
+końcowy jest równy stanowi początkowemu:
+\[
+(\sigma,\sigma)\in\mathcal{F}(f).
+\]
+
+Drugi składnik opisuje sytuację, w której warunek $b$ jest prawdziwy.
+Najpierw wykonywana jest instrukcja $c$, prowadząc ze stanu $\sigma$
+do stanu pośredniego $\sigma''$. Następnie dalsze wykonanie pętli jest
+reprezentowane przez funkcję $f$, która prowadzi ze stanu $\sigma''$ do
+stanu końcowego $\sigma'$. Wówczas
+\[
+(\sigma,\sigma')\in\mathcal{F}(f).
+\]
+
+Jeżeli teraz jako argument funkcjonału przyjmiemy właściwą denotację
+pętli, czyli $f=W_{b,c}$, otrzymujemy
+\[
+\begin{aligned}
+	\mathcal{F}(W_{b,c})
+	={}&
+	\left\{
+	(\sigma,\sigma)
+	\;\middle|\;
+	(\sigma,\kw{false})\in\Bb\sem{b}
+	\right\}\\
+	&{}\cup
+	\left\{
+	(\sigma,\sigma')
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,\kw{true})\in\Bb\sem{b},\\
+		\exists\sigma''\in\Store\;
+		\big(
+		(\sigma,\sigma'')\in\Cc\sem{c}
+		\land
+		(\sigma'',\sigma')\in W_{b,c}
+		\big)
+	\end{array}
+	\right\}.
+\end{aligned}
+\]
+
+Zgodnie z równaniem opisującym działanie pętli otrzymujemy zatem
+\[
+W_{b,c}=\mathcal{F}(W_{b,c}).
+\]
+Denotacja $W_{b,c}$ jest więc punktem stałym funkcjonału $\mathcal F$.
+
+Nie każdy punkt stały musi jednak odpowiadać właściwej denotacji pętli.
+Rozważmy na przykład pętlę
+\[
+\kw{while}\ \kw{true}\ \kw{do}\ \kw{skip},
+\]
+czyli $b=\kw{true}$ oraz $c=\kw{skip}$. Obliczmy funkcjonał
+$\mathcal F$ dla tej pętli. Z definicji denotacji stałej logicznej
+\[
+\Bb\sem{\kw{true}}=\{(\sigma,\kw{true})\mid\sigma\in\Store\},
+\]
+więc nie istnieje stan $\sigma$, dla którego
+$(\sigma,\kw{false})\in\Bb\sem{\kw{true}}$. Pierwszy składnik w
+definicji $\mathcal F(f)$ jest zatem zbiorem pustym:
+\[
+\left\{
+(\sigma,\sigma)
+\;\middle|\;
+(\sigma,\kw{false})\in\Bb\sem{\kw{true}}
+\right\}
+=\varnothing.
+\]
+W drugim składniku warunek $(\sigma,\kw{true})\in\Bb\sem{\kw{true}}$
+jest spełniony dla każdego $\sigma$. Ponadto
+$\Cc\sem{\kw{skip}}=\{(\sigma,\sigma)\mid\sigma\in\Store\}$, więc
+warunek $(\sigma,\sigma'')\in\Cc\sem{\kw{skip}}$ oznacza dokładnie
+$\sigma''=\sigma$. Wobec tego
+\[
+\exists\sigma''\in\Store\;
+\big(
+(\sigma,\sigma'')\in\Cc\sem{\kw{skip}}
+\land
+(\sigma'',\sigma')\in f
+\big)
+\iff
+(\sigma,\sigma')\in f.
+\]
+Otrzymujemy
+\[
+\mathcal F(f)
+=
+\varnothing
+\cup
+\left\{(\sigma,\sigma')\;\middle|\;(\sigma,\sigma')\in f\right\}
+=
+f
+\]
+dla każdej funkcji częściowej $f:\Store\rightharpoonup\Store$. Zatem
+\emph{każda} funkcja częściowa jest punktem stałym funkcjonału
+$\mathcal F$ --- na przykład funkcja pusta $\varnothing$, ale także
+identyczność $\{(\sigma,\sigma)\mid\sigma\in\Store\}$.
+
+Które z tych rozwiązań jest właściwe? Pętla
+$\kw{while}\ \kw{true}\ \kw{do}\ \kw{skip}$ nie kończy się dla żadnego
+stanu początkowego, więc jej denotacja nie powinna zawierać żadnej pary
+$(\sigma,\sigma')$ --- powinna to być funkcja pusta $\varnothing$.
+Identyczność byłaby błędna: twierdziłaby, że pętla kończy się
+natychmiast, nie zmieniając stanu. Funkcja pusta jest przy tym
+\emph{najmniejszym} punktem stałym, bo $\varnothing\subseteq f$ dla
+każdej $f$. Ogólnie, najmniejszy punkt stały zawiera tylko te pary,
+których istnienie wymusza równanie, a więc nie przypisuje pętli wyników,
+których obliczenie w rzeczywistości nie osiąga.
+
+Dlatego za denotację pętli przyjmujemy najmniejszy punkt stały względem
+porządku inkluzji. Z twierdzenia Kleenego będzie on dany przez
+\[
+\lfp(\mathcal F)
+=
+\bigsqcup_{n=1}^{\infty}\mathcal F^n(\varnothing),
+\]
+o ile wykażemy, że $\mathcal F$ jest funkcjonałem ciągłym na
+łańcuchowo zupełnym zbiorze
+$(\Store\rightharpoonup\Store,\subseteq,\varnothing)$.
+
+Aby zastosować twierdzenie Kleenego, musimy zatem wykazać, że przestrzeń
+\[
+\Store\rightharpoonup\Store
+\]
+jest zbiorem łańcuchowo zupełnym oraz że funkcjonał $\mathcal F$ jest
+ciągły. Pierwszy z tych warunków wynika z
+Twierdzenia~\ref{tw:funkcje_czesciowe_cpo}. Stosując to twierdzenie do
+$A=B=\Store$, otrzymujemy, że
+\[
+\boldsymbol{\Store\rightharpoonup\Store}
+=
+(\Store\rightharpoonup\Store,\subseteq,\varnothing)
+\]
+jest zbiorem łańcuchowo zupełnym. Jego elementem najmniejszym jest
+funkcja pusta $\varnothing$, a kres górny każdego łańcucha jest równy
+sumie jego elementów:
+\[
+\bigsqcup_{n=1}^{\infty}f_n
+=
+\bigcup_{n=1}^{\infty}f_n.
+\]
+
+\subsection{Własności funkcjonału}
+
+Pozostaje zatem zbadać własności funkcjonału $\mathcal{F}$, w
+szczególności jego monotoniczność i ciągłość. 
+
+Zaczniemy jednak od sprawdzenia jego poprawności. 
+
+\begin{lemat}\label{lemat:F_dobrze_okreslony}
+	Funkcjonał
+	\[
+	\mathcal{F}:
+	(\Store\rightharpoonup\Store)
+	\longrightarrow
+	(\Store\rightharpoonup\Store)
+	\]
+	jest dobrze określony.
+\end{lemat}
+
+\begin{proof}
+	Niech
+	\[
+	f:\Store\rightharpoonup\Store
+	\]
+	będzie dowolną funkcją częściową. Musimy wykazać, że
+	\[
+	\mathcal{F}(f)
+	\]
+	jest również funkcją częściową z $\Store$ do $\Store$.
+	
+	Z definicji
+	\[
+	\begin{aligned}
+		\mathcal{F}(f)
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		(\sigma,\kw{false})\in\Bb\sem{b}
+		\right\}\\
+		&{}\cup
+		\left\{
+		(\sigma,\sigma')
+		\;\middle|\;
+		\begin{array}{c}
+			(\sigma,\kw{true})\in\Bb\sem{b},\\
+			\exists\sigma''\in\Store\;
+			\big(
+			(\sigma,\sigma'')\in\Cc\sem{c}
+			\land
+			(\sigma'',\sigma')\in f
+			\big)
+		\end{array}
+		\right\}.
+	\end{aligned}
+	\]
+	
+	Najpierw zauważmy, że
+	\[
+	\mathcal{F}(f)\subseteq\Store\times\Store,
+	\]
+	ponieważ wszystkie stany występujące w definicji $\mathcal{F}(f)$
+	należą do $\Store$. Pozostaje zatem wykazać warunek jednoznaczności,
+	tzn. że dla każdego $\sigma\in\Store$ istnieje co najwyżej jeden
+	$\sigma'\in\Store$ taki, że
+	\[
+	(\sigma,\sigma')\in\mathcal{F}(f).
+	\]
+	
+	Niech więc
+	\[
+	(\sigma,\sigma_1)\in\mathcal{F}(f)
+	\quad\land\quad
+	(\sigma,\sigma_2)\in\mathcal{F}(f).
+	\]
+	Pokażemy, że
+	\[
+	\sigma_1=\sigma_2.
+	\]
+	
+	Wartość warunku $b$ dla ustalonego stanu $\sigma$ jest jednoznacznie
+	określona. Rozpatrujemy zatem dwa przypadki.
+	
+	\emph{Przypadek 1.}
+	Załóżmy, że
+	\[
+	(\sigma,\kw{false})\in\Bb\sem{b}.
+	\]
+	Wówczas obie pary należą do pierwszego składnika definicji
+	$\mathcal{F}(f)$, ponieważ drugi składnik wymaga spełnienia warunku
+	\[
+	(\sigma,\kw{true})\in\Bb\sem{b}.
+	\]
+	Zatem
+	\[
+	\sigma_1=\sigma
+	\quad\land\quad
+	\sigma_2=\sigma,
+	\]
+	a więc
+	\[
+	\sigma_1=\sigma_2.
+	\]
+	
+	\emph{Przypadek 2.}
+	Załóżmy, że
+	\[
+	(\sigma,\kw{true})\in\Bb\sem{b}.
+	\]
+	Wówczas, z definicji $\mathcal{F}(f)$, istnieją
+	\[
+	\sigma_1'',\sigma_2''\in\Store
+	\]
+	takie, że
+	\[
+	(\sigma,\sigma_1'')\in\Cc\sem{c}
+	\quad\land\quad
+	(\sigma_1'',\sigma_1)\in f
+	\]
+	oraz
+	\[
+	(\sigma,\sigma_2'')\in\Cc\sem{c}
+	\quad\land\quad
+	(\sigma_2'',\sigma_2)\in f.
+	\]
+	
+	Ponieważ $\Cc\sem{c}$ jest funkcją częściową, dla ustalonego stanu
+	$\sigma$ istnieje co najwyżej jeden stan końcowy. Stąd
+	\[
+	(\sigma,\sigma_1'')\in\Cc\sem{c}
+	\quad\land\quad
+	(\sigma,\sigma_2'')\in\Cc\sem{c}
+	\implies
+	\sigma_1''=\sigma_2''.
+	\]
+	Oznaczmy wspólny stan przez $\sigma''$. Otrzymujemy wtedy
+	\[
+	(\sigma'',\sigma_1)\in f
+	\quad\land\quad
+	(\sigma'',\sigma_2)\in f.
+	\]
+	Ponieważ $f$ jest funkcją częściową, dla ustalonego stanu $\sigma''$
+	istnieje co najwyżej jeden stan końcowy. Zatem
+	\[
+	\sigma_1=\sigma_2.
+	\]
+	
+	W obu przypadkach otrzymujemy
+	\[
+	(\sigma,\sigma_1)\in\mathcal{F}(f)
+	\quad\land\quad
+	(\sigma,\sigma_2)\in\mathcal{F}(f)
+	\implies
+	\sigma_1=\sigma_2.
+	\]
+	Zatem $\mathcal{F}(f)$ spełnia warunek jednoznaczności funkcji
+	częściowej, a więc
+	\[
+	\mathcal{F}(f):\Store\rightharpoonup\Store.
+	\]
+	Ponieważ $f:\Store\rightharpoonup\Store$ było dowolne, funkcjonał
+	$\mathcal{F}$ jest dobrze określony.
+\end{proof}
+
+Aby móc zastosować twierdzenie Kleenego (Twierdzenie \ref{tw:kleene}), oprócz dobrego określenia
+funkcjonału $\mathcal{F}$ musimy zbadać jego zachowanie względem
+porządku na przestrzeni
+\[
+\Store\rightharpoonup\Store.
+\]
+Pierwszą z potrzebnych własności jest monotoniczność. Intuicyjnie,
+jeżeli funkcja $g$ zawiera więcej informacji niż funkcja $f$, tzn.
+\[
+f\subseteq g,
+\]
+to zastosowanie funkcjonału $\mathcal{F}$ do $g$ nie powinno prowadzić
+do utraty żadnej z par uzyskanych dla $f$. Pokażemy zatem, że
+\[
+f\subseteq g
+\implies
+\mathcal{F}(f)\subseteq\mathcal{F}(g).
+\]
+
+\begin{lemat}\label{lemat:F_monotoniczny}
+	Funkcjonał $\mathcal{F}$ jest monotoniczny względem inkluzji wykresów,
+	tzn. dla dowolnych funkcji częściowych
+	\[
+	f,g:\Store\rightharpoonup\Store
+	\]
+	zachodzi
+	\[
+	f\subseteq g
+	\implies
+	\mathcal{F}(f)\subseteq\mathcal{F}(g).
+	\]
+\end{lemat}
+
+\begin{proof}
+	Załóżmy, że
+	\[
+	f\subseteq g.
+	\]
+	Weźmy dowolną parę
+	\[
+	(\sigma,\sigma')\in\mathcal{F}(f).
+	\]
+	Pokażemy, że
+	\[
+	(\sigma,\sigma')\in\mathcal{F}(g).
+	\]
+	
+	Z definicji funkcjonału $\mathcal{F}$ rozpatrujemy dwa przypadki
+	zależnie od wartości warunku $b$ w stanie $\sigma$.
+	
+	\emph{Przypadek 1.}
+	Załóżmy, że
+	\[
+	(\sigma,\kw{false})\in\Bb\sem{b}.
+	\]
+	Wówczas z definicji $\mathcal{F}(f)$ otrzymujemy
+	\[
+	\sigma'=\sigma.
+	\]
+	Zatem
+	\[
+	(\sigma,\sigma')
+	=
+	(\sigma,\sigma)
+	\in\mathcal{F}(g),
+	\]
+	ponieważ pierwszy składnik definicji $\mathcal{F}(g)$ nie zależy od
+	jej argumentu.
+	
+	\emph{Przypadek 2.}
+	Załóżmy, że
+	\[
+	(\sigma,\kw{true})\in\Bb\sem{b}.
+	\]
+	Wówczas z definicji $\mathcal{F}(f)$ istnieje
+	\[
+	\sigma''\in\Store
+	\]
+	takie, że
+	\[
+	(\sigma,\sigma'')\in\Cc\sem{c}
+	\]
+	oraz
+	\[
+	(\sigma'',\sigma')\in f.
+	\]
+	Z założenia
+	\[
+	f\subseteq g
+	\]
+	wynika
+	\[
+	(\sigma'',\sigma')\in g.
+	\]
+	Wobec tego
+	\[
+	(\sigma,\sigma'')\in\Cc\sem{c}
+	\quad\land\quad
+	(\sigma'',\sigma')\in g,
+	\]
+	a zatem, na mocy definicji funkcjonału $\mathcal{F}$,
+	\[
+	(\sigma,\sigma')\in\mathcal{F}(g).
+	\]
+	
+	W obu przypadkach otrzymujemy
+	\[
+	(\sigma,\sigma')\in\mathcal{F}(f)
+	\implies
+	(\sigma,\sigma')\in\mathcal{F}(g).
+	\]
+	Ponieważ $(\sigma,\sigma')$ było dowolnym elementem
+	$\mathcal{F}(f)$, wynika stąd
+	\[
+	\mathcal{F}(f)\subseteq\mathcal{F}(g).
+	\]
+	Zatem $\mathcal{F}$ jest monotoniczny.
+\end{proof}
+
+Aby zastosować twierdzenie Kleenego do funkcjonału $\mathcal{F}$, musimy
+wykazać, że jest on ciągły. Ciągłość oznacza, że $\mathcal{F}$ zachowuje
+kresy górne łańcuchów. W rozważanej przestrzeni funkcji częściowych kres
+górny łańcucha jest równy sumie jego elementów, dlatego dla dowolnego
+łańcucha
+\[
+f_1\subseteq f_2\subseteq f_3\subseteq\ldots
+\]
+wystarczy wykazać równość
+\[
+\mathcal{F}
+\left(
+\bigcup_{n=1}^{\infty}f_n
+\right)
+=
+\bigcup_{n=1}^{\infty}\mathcal{F}(f_n).
+\]
+Pokażemy ją, dowodząc obu inkluzji.
+
+\begin{twierdzenie}\label{tw:F_ciagly}
+	Funkcjonał
+	\[
+	\mathcal{F}:
+	(\Store\rightharpoonup\Store)
+	\longrightarrow
+	(\Store\rightharpoonup\Store)
+	\]
+	jest ciągły względem porządku inkluzji wykresów.
+\end{twierdzenie}
+
+\begin{proof}
+	Niech
+	\[
+	f_1\subseteq f_2\subseteq f_3\subseteq\ldots
+	\]
+	będzie dowolnym łańcuchem funkcji częściowych
+	\[
+	f_n:\Store\rightharpoonup\Store.
+	\]
+	Z Twierdzenia~\ref{tw:funkcje_czesciowe_cpo} mamy
+	\[
+	\bigsqcup_{n=1}^{\infty}f_n
+	=
+	\bigcup_{n=1}^{\infty}f_n.
+	\]
+	
+	Z Lematu~\ref{lemat:F_monotoniczny} funkcjonał $\mathcal{F}$ jest
+	monotoniczny, zatem
+	\[
+	\mathcal{F}(f_1)
+	\subseteq
+	\mathcal{F}(f_2)
+	\subseteq
+	\mathcal{F}(f_3)
+	\subseteq\ldots.
+	\]
+	Wobec tego
+	\[
+	\bigsqcup_{n=1}^{\infty}\mathcal{F}(f_n)
+	=
+	\bigcup_{n=1}^{\infty}\mathcal{F}(f_n).
+	\]
+	
+	Pokażemy więc, że
+	\[
+	\mathcal{F}
+	\left(
+	\bigcup_{n=1}^{\infty}f_n
+	\right)
+	=
+	\bigcup_{n=1}^{\infty}\mathcal{F}(f_n).
+	\]
+	
+	Najpierw wykażemy inkluzję
+	\[
+	\mathcal{F}
+	\left(
+	\bigcup_{n=1}^{\infty}f_n
+	\right)
+	\subseteq
+	\bigcup_{n=1}^{\infty}\mathcal{F}(f_n).
+	\]
+	
+	Niech
+	\[
+	(\sigma,\sigma')
+	\in
+	\mathcal{F}
+	\left(
+	\bigcup_{n=1}^{\infty}f_n
+	\right).
+	\]
+	
+	\emph{Przypadek 1.}
+	Jeżeli
+	\[
+	(\sigma,\kw{false})\in\Bb\sem{b},
+	\]
+	to z definicji $\mathcal{F}$ mamy
+	\[
+	\sigma'=\sigma.
+	\]
+	Ten warunek nie zależy od argumentu funkcjonału, a więc
+	\[
+	(\sigma,\sigma')
+	\in
+	\mathcal{F}(f_n)
+	\]
+	dla każdego $n\in\mathbb{N}$. W szczególności
+	\[
+	(\sigma,\sigma')
+	\in
+	\bigcup_{n=1}^{\infty}\mathcal{F}(f_n).
+	\]
+	
+	\emph{Przypadek 2.}
+	Jeżeli
+	\[
+	(\sigma,\kw{true})\in\Bb\sem{b},
+	\]
+	to z definicji $\mathcal{F}$ istnieje
+	$\sigma''\in\Store$ takie, że
+	\[
+	(\sigma,\sigma'')\in\Cc\sem{c}
+	\]
+	oraz
+	\[
+	(\sigma'',\sigma')
+	\in
+	\bigcup_{n=1}^{\infty}f_n.
+	\]
+	Z definicji sumy zbiorów istnieje $k\in\mathbb{N}$ takie, że
+	\[
+	(\sigma'',\sigma')\in f_k.
+	\]
+	Wówczas
+	\[
+	(\sigma,\sigma'')\in\Cc\sem{c}
+	\quad\land\quad
+	(\sigma'',\sigma')\in f_k,
+	\]
+	a więc
+	\[
+	(\sigma,\sigma')\in\mathcal{F}(f_k).
+	\]
+	Stąd
+	\[
+	(\sigma,\sigma')
+	\in
+	\bigcup_{n=1}^{\infty}\mathcal{F}(f_n).
+	\]
+	
+	Zatem
+	\[
+	\mathcal{F}
+	\left(
+	\bigcup_{n=1}^{\infty}f_n
+	\right)
+	\subseteq
+	\bigcup_{n=1}^{\infty}\mathcal{F}(f_n).
+	\]
+	
+	Inkluzja przeciwna
+	\[
+	\bigcup_{n=1}^{\infty}\mathcal{F}(f_n)
+	\subseteq
+	\mathcal{F}
+	\left(
+	\bigcup_{n=1}^{\infty}f_n
+	\right)
+	\]
+	wynika z monotoniczności $\mathcal{F}$. Ustalmy $k\in\mathbb N$.
+	Z definicji sumy zbiorów
+	\[
+	f_k\subseteq\bigcup_{n=1}^{\infty}f_n,
+	\]
+	więc na mocy Lematu~\ref{lemat:F_monotoniczny}
+	\[
+	\mathcal{F}(f_k)
+	\subseteq
+	\mathcal{F}\left(\bigcup_{n=1}^{\infty}f_n\right).
+	\]
+	Ponieważ $k$ było dowolne, każdy ze zbiorów $\mathcal{F}(f_k)$ jest
+	zawarty w $\mathcal{F}\left(\bigcup_{n}f_n\right)$, a więc również ich
+	suma:
+	\[
+	\bigcup_{k=1}^{\infty}\mathcal{F}(f_k)
+	\subseteq
+	\mathcal{F}\left(\bigcup_{n=1}^{\infty}f_n\right).
+	\]
+	(Jest to dokładnie nierówność z Lematu~\ref{lem:monotoniczna_lancuchy}(b)
+	zapisana w porządku inkluzji.)
+	
+	Z obu inkluzji wynika
+	\[
+	\mathcal{F}
+	\left(
+	\bigcup_{n=1}^{\infty}f_n
+	\right)
+	=
+	\bigcup_{n=1}^{\infty}\mathcal{F}(f_n).
+	\]
+	Zatem
+	\[
+	\mathcal{F}
+	\left(
+	\bigsqcup_{n=1}^{\infty}f_n
+	\right)
+	=
+	\bigsqcup_{n=1}^{\infty}\mathcal{F}(f_n).
+	\]
+	Wobec tego $\mathcal{F}$ jest ciągły.
+\end{proof}
+
+%==============================================================================
+\subsection{Wyznaczenie denotacji pętli \kw{while}}
+%==============================================================================
+
+Możemy teraz zastosować twierdzenie Kleenego do równania
+\[
+W_{b,c}=\mathcal{F}\left(W_{b,c}\right).
+\]
+W tym celu sprawdziliśmy wszystkie wymagane założenia. Z
+Twierdzenia~\ref{tw:funkcje_czesciowe_cpo} wynika, że przestrzeń
+\[
+\boldsymbol{\Store\rightharpoonup\Store}
+=
+(\Store\rightharpoonup\Store,\subseteq,\varnothing)
+\]
+jest zbiorem łańcuchowo zupełnym z elementem najmniejszym $\varnothing$.
+Z Lematu~\ref{lemat:F_dobrze_okreslony} wynika, że funkcjonał
+\[
+\mathcal{F}:
+(\Store\rightharpoonup\Store)
+\longrightarrow
+(\Store\rightharpoonup\Store)
+\]
+jest dobrze określony, natomiast na mocy
+Lematu~\ref{lemat:F_monotoniczny} oraz
+Twierdzenia~\ref{tw:F_ciagly} jest on ciągły.
+
+Wszystkie założenia twierdzenia Kleenego są zatem spełnione. Wynika stąd,
+że $\mathcal{F}$ posiada najmniejszy punkt stały, który jest równy kresowi
+górnemu ciągu kolejnych przybliżeń od elementu najmniejszego:
+\[
+\lfp(\mathcal{F})
+=
+\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing).
+\]
+
+Zgodnie z wcześniejszymi rozważaniami \emph{definiujemy} denotację pętli
+jako ten najmniejszy punkt stały:
+\[
+	W_{b,c}
+	:=
+	\lfp(\mathcal{F})
+	=
+	\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing).
+\]
+
+Na mocy Twierdzenia~\ref{tw:funkcje_czesciowe_cpo} kres górny łańcucha
+funkcji częściowych jest równy sumie jego elementów, dlatego
+\[
+	W_{b,c}
+	=
+	\bigcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing).
+\]
+
+Możemy teraz jawnie zobaczyć, jak powstają kolejne przybliżenia.
+
+Pierwsze przybliżenie otrzymujemy przez zastosowanie funkcjonału
+$\mathcal{F}$ do funkcji pustej:
+\[
+\begin{aligned}
+	\mathcal{F}^1(\varnothing)
+	=
+	\mathcal{F}(\varnothing)
+	=
+	\left\{
+	(\sigma,\sigma)
+	\;\middle|\;
+	(\sigma,\kw{false})\in\Bb\sem{b}
+	\right\}.
+\end{aligned}
+\]
+Opisuje ono wszystkie wykonania pętli, które kończą się bez wykonania
+ciała $c$.
+
+Drugie przybliżenie ma postać
+\[
+\begin{aligned}
+	\mathcal{F}^2(\varnothing)
+	={}&
+	\left\{
+	(\sigma,\sigma)
+	\;\middle|\;
+	(\sigma,\kw{false})\in\Bb\sem{b}
+	\right\}
+	\\
+	&{}\cup
+	\left\{
+	(\sigma,\sigma')
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,\kw{true})\in\Bb\sem{b},\\
+		(\sigma,\sigma')\in\Cc\sem{c},\\
+		(\sigma',\kw{false})\in\Bb\sem{b}
+	\end{array}
+	\right\}.
+\end{aligned}
+\]
+Zawiera ono wszystkie wykonania, które kończą się bez wykonania ciała
+albo po wykonaniu ciała $c$ dokładnie jeden raz.
+
+Trzecie przybliżenie jest równe
+\[
+\begin{aligned}
+	\mathcal{F}^3(\varnothing)
+	={}&
+	\left\{
+	(\sigma,\sigma)
+	\;\middle|\;
+	(\sigma,\kw{false})\in\Bb\sem{b}
+	\right\}
+	\\
+	&{}\cup
+	\left\{
+	(\sigma,\sigma')
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,\kw{true})\in\Bb\sem{b},\\
+		(\sigma,\sigma')\in\Cc\sem{c},\\
+		(\sigma',\kw{false})\in\Bb\sem{b}
+	\end{array}
+	\right\}
+	\\
+	&{}\cup
+	\left\{
+	(\sigma,\sigma'')
+	\;\middle|\;
+	\begin{array}{c}
+		(\sigma,\kw{true})\in\Bb\sem{b},\\
+		\exists\sigma'\in\Store\;
+		\big(
+		(\sigma,\sigma')\in\Cc\sem{c}
+		\land
+		(\sigma',\kw{true})\in\Bb\sem{b}
+		\\
+		\qquad\qquad\qquad
+		\land
+		(\sigma',\sigma'')\in\Cc\sem{c}
+		\land
+		(\sigma'',\kw{false})\in\Bb\sem{b}
+		\big)
+	\end{array}
+	\right\}.
+\end{aligned}
+\]
+
+Widzimy zatem, że kolejne przybliżenia tworzą łańcuch
+\[
+\mathcal{F}^1(\varnothing)
+\subseteq
+\mathcal{F}^2(\varnothing)
+\subseteq
+\mathcal{F}^3(\varnothing)
+\subseteq\ldots.
+\]
+Przybliżenie $\mathcal{F}^i(\varnothing)$ zawiera wszystkie wykonania
+pętli, które mogą zakończyć się po co najwyżej $i-1$ wykonaniach jej
+ciała. Każde kolejne zastosowanie funkcjonału może zatem dodać wykonania
+wymagające jeszcze jednego przejścia przez ciało pętli.
+
+W konsekwencji semantyka pętli jest dana przez sumę wszystkich tych
+przybliżeń:
+\[
+	W_{b,c}
+	=
+	\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing)
+	=
+	\bigcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing).
+\]
+
+Ostatecznie otrzymujemy jawną postać denotacji:
+\[
+	\Cc\sem{\kw{while}\ b\ \kw{do}\ c}
+	=
+	\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing)
+	=
+	\bigcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing).
+\]
+
+
+
+\begin{przyklad}
+	Rozważmy przykład
+	\[
+	\kw{while}\ \texttt{foo}<5\ \kw{do}\ 
+	\texttt{foo}:=\texttt{foo}+1.
+	\]
+	Mamy zatem
+	\[
+	b=\texttt{foo}<5,
+	\qquad
+	c=\texttt{foo}:=\texttt{foo}+1.
+	\]
+	
+	Dla pierwszego przybliżenia otrzymujemy
+	\[
+	\begin{aligned}
+		\mathcal{F}(\varnothing)
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		(\sigma,\kw{false})\in\Bb\sem{b}
+		\right\}\\
+		&{}\cup
+		\left\{
+		(\sigma,\sigma')
+		\;\middle|\;
+		\begin{array}{c}
+			(\sigma,\kw{true})\in\Bb\sem{b},\\
+			\exists\sigma''\;
+			\big(
+			(\sigma,\sigma'')\in\Cc\sem{c}
+			\land
+			(\sigma'',\sigma')\in\varnothing
+			\big)
+		\end{array}
+		\right\}\\
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		\sigma(\texttt{foo})\geq5
+		\right\}.
+	\end{aligned}
+	\]
+	
+	Drugie przybliżenie ma postać
+	\[
+	\begin{aligned}
+		\mathcal{F}^2(\varnothing)
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		(\sigma,\kw{false})\in\Bb\sem{b}
+		\right\}\\
+		&{}\cup
+		\left\{
+		(\sigma,\sigma')
+		\;\middle|\;
+		\begin{array}{c}
+			(\sigma,\kw{true})\in\Bb\sem{b},\\
+			\exists\sigma''\;
+			\big(
+			(\sigma,\sigma'')\in\Cc\sem{c}
+			\land
+			(\sigma'',\sigma')\in\mathcal{F}(\varnothing)
+			\big)
+		\end{array}
+		\right\}\\
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		\sigma(\texttt{foo})\geq5
+		\right\}\\
+		&{}\cup
+		\left\{
+		\left(
+		\sigma,
+		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+1]
+		\right)
+		\;\middle|\;
+		\begin{array}{c}
+			\sigma(\texttt{foo})<5,\\
+			\sigma(\texttt{foo})+1\geq5
+		\end{array}
+		\right\}.
+	\end{aligned}
+	\]
+	
+	Ponieważ
+	\[
+	\sigma(\texttt{foo})<5
+	\quad\land\quad
+	\sigma(\texttt{foo})+1\geq5
+	\]
+	implikuje
+	\[
+	\sigma(\texttt{foo})+1=5,
+	\]
+	otrzymujemy
+	\[
+	\mathcal{F}^2(\varnothing)
+	=
+	\left\{
+	(\sigma,\sigma)
+	\;\middle|\;
+	\sigma(\texttt{foo})\geq5
+	\right\}
+	\cup
+	\left\{
+	\left(
+	\sigma,
+	\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+1]
+	\right)
+	\;\middle|\;
+	\sigma(\texttt{foo})+1=5
+	\right\}.
+	\]
+	
+	Trzecie przybliżenie otrzymujemy analogicznie:
+	\[
+	\begin{aligned}
+		\mathcal{F}^3(\varnothing)
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		\sigma(\texttt{foo})\geq5
+		\right\}\\
+		&{}\cup
+		\left\{
+		\left(
+		\sigma,
+		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+1]
+		\right)
+		\;\middle|\;
+		\sigma(\texttt{foo})+1=5
+		\right\}\\
+		&{}\cup
+		\left\{
+		\left(
+		\sigma,
+		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+2]
+		\right)
+		\;\middle|\;
+		\sigma(\texttt{foo})+2=5
+		\right\}.
+	\end{aligned}
+	\]
+	
+	Czwarte przybliżenie ma postać
+	\[
+	\begin{aligned}
+		\mathcal{F}^4(\varnothing)
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		\sigma(\texttt{foo})\geq5
+		\right\}\\
+		&{}\cup
+		\left\{
+		\left(
+		\sigma,
+		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+1]
+		\right)
+		\;\middle|\;
+		\sigma(\texttt{foo})+1=5
+		\right\}\\
+		&{}\cup
+		\left\{
+		\left(
+		\sigma,
+		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+2]
+		\right)
+		\;\middle|\;
+		\sigma(\texttt{foo})+2=5
+		\right\}\\
+		&{}\cup
+		\left\{
+		\left(
+		\sigma,
+		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+3]
+		\right)
+		\;\middle|\;
+		\sigma(\texttt{foo})+3=5
+		\right\}.
+	\end{aligned}
+	\]
+	
+	Biorąc sumę wszystkich przybliżeń, otrzymujemy
+	\[
+	\begin{aligned}
+		W_{b,c}
+		={}&
+		\bigcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing)\\
+		={}&
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		\sigma(\texttt{foo})\geq5
+		\right\}\\
+		&{}\cup
+		\left\{
+		\left(
+		\sigma,
+		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+n]
+		\right)
+		\;\middle|\;
+		\sigma(\texttt{foo})+n=5
+		\land
+		n\geq1
+		\right\}.
+	\end{aligned}
+	\]
+	
+	Ostatnią równość możemy zapisać w postaci zamkniętej:
+	\[
+		W_{b,c}
+		=
+		\left\{
+		(\sigma,\sigma)
+		\;\middle|\;
+		\sigma(\texttt{foo})\geq5
+		\right\}
+		\cup
+		\left\{
+		\left(
+		\sigma,
+		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+n]
+		\right)
+		\;\middle|\;
+		n=5-\sigma(\texttt{foo})
+		\land
+		n\geq1
+		\right\}.
+	\]
+	
+	W szczególności, jeżeli początkowo
+	\[
+	\sigma(\texttt{foo})=1,
+	\]
+	to
+	\[
+	n=5-1=4,
+	\]
+	a więc
+	\[
+	\Cc\sem{\kw{while}\ \texttt{foo}<5\ \kw{do}\
+		\texttt{foo}:=\texttt{foo}+1}(\sigma)
+	=
+	\sigma[\texttt{foo}\mapsto5].
+	\]
+\end{przyklad}
+
+%==============================================================================
+\subsection{Rekurencyjna definicja silni}
+%==============================================================================
+
+Konstrukcję najmniejszego punktu stałego można zastosować również do
+rekurencyjnych definicji funkcji. 
+
+Rozważmy klasyczną definicję silni:
+\[
+\operatorname{silnia}(0)=1,
+\qquad
+\operatorname{silnia}(n+1)
+=
+(n+1)\cdot\operatorname{silnia}(n).
+\]
+
+Dziedziną funkcji silnia jest zbiór
+\[
+\mathbb{N}_0=\{0,1,2,\ldots\}.
+\]
+Oznaczmy wartość silni dla argumentu $n$ przez
+\[
+S_n:=n!.
+\]
+Wówczas
+\[
+S_0=1,
+\qquad
+S_{n+1}=(n+1) \cdot S_n.
+\]
+
+Niech
+\[
+D:=\mathbb{N}_{0,\bt}
+=
+\mathbb{N}_0\cup\{\bt\}
+\]
+będzie płaskim zbiorem łańcuchowo zupełnym otrzymanym przez dodanie
+elementu najmniejszego $\bt$.
+
+Rozważamy przestrzeń wszystkich funkcji całkowitych
+\[
+D\to D
+\]
+uporządkowaną porządkiem pionowym
+\[
+f\sqsubseteq g
+\iff
+\forall x\in D\quad
+f(x)\sqsubseteq_D g(x).
+\]
+Na mocy Twierdzenia~\ref{tw:funkcje_calkowite_cpo} przestrzeń
+\[
+\boldsymbol{D\to D}
+=
+(D\to D,\sqsubseteq,\varphi)
+\]
+jest zbiorem łańcuchowo zupełnym, gdzie elementem najmniejszym jest
+funkcja stała
+\[
+\varphi(x)=\bt \quad (x \in D).
+\]
+
+Niech
+\[
+S:D\to D
+\]
+oznacza poszukiwaną denotację funkcji $\operatorname{silnia}$. Z jej
+definicji rekurencyjnej oczekujemy
+\[
+S(0)=1
+\]
+oraz
+\[
+S(n+1)=(n+1)\cdot S(n).
+\]
+Możemy zatem zapisać tę definicję jako równanie stałopunktowe
+\[
+S=\mathcal{F}(S),
+\]
+gdzie
+\[
+\mathcal{F}:
+(D\to D)
+\longrightarrow
+(D\to D)
+\]
+jest funkcjonałem określonym wzorem
+\[
+\mathcal{F}(f)(x)
+=
+\begin{cases}
+	\bt,&x=\bt,\\
+	1,&x=0,\\
+	(n+1)\cdot f(n),&x=n+1,\quad n\in\mathbb{N}_0.
+\end{cases}
+\]
+W powyższym wzorze przyjmujemy dodatkowo
+\[
+(n+1)\cdot\bt=\bt
+\qquad(n\in\mathbb{N}_0).
+\]
+Dzięki temu dla każdej funkcji
+\[
+f:D\to D
+\]
+funkcja $\mathcal{F}(f)$ jest również funkcją całkowitą
+\[
+\mathcal{F}(f):D\to D.
+\]
+
+Aby zastosować twierdzenie Kleenego, musimy wykazać, że funkcjonał
+$\mathcal{F}$ jest ciągły względem porządku pionowego.
+
+\begin{twierdzenie}\label{tw:silnia_funkcjonal_ciagly}
+	Funkcjonał
+	\[
+	\mathcal{F}:(D\to D)\longrightarrow(D\to D)
+	\]
+	określony powyższym wzorem jest ciągły.
+\end{twierdzenie}
+
+\begin{proof}
+	\emph{Krok 1: pomocnicza funkcja $h_n$.} Ustalmy $n\in\mathbb N_0$
+	i rozważmy funkcję $h_n:D\to D$ ,,mnożenia przez $n+1$'':
+	\[
+	h_n(d)=
+	\begin{cases}
+		\bt,&d=\bt,\\
+		(n+1)\cdot d,&d\in\mathbb N_0.
+	\end{cases}
+	\]
+	Zgodnie z przyjętą konwencją $(n+1)\cdot\bt=\bt$ możemy pisać krótko
+	$h_n(d)=(n+1)\cdot d$ dla wszystkich $d\in D$. W szczególności
+	\[
+	h_n(\bt)=\bt,
+	\]
+	czyli $h_n$ zachowuje element najmniejszy. Ponieważ $D$ jest płaskim
+	zbiorem łańcuchowo zupełnym, na mocy
+	Wniosku~\ref{wn:plaskie_monotoniczne_ciagle} funkcja $h_n$ jest
+	monotoniczna i ciągła.
+	
+	Za pomocą funkcji $h_n$ wzór na $\mathcal{F}$ możemy zapisać jako
+	\[
+	\mathcal{F}(f)(\bt)=\bt,
+	\qquad
+	\mathcal{F}(f)(0)=1,
+	\qquad
+	\mathcal{F}(f)(n+1)=(n+1)\cdot f(n)=h_n\big(f(n)\big)
+	\quad(n\in\mathbb N_0).
+	\]
+	
+	\emph{Krok 2: monotoniczność $\mathcal{F}$.} Niech
+	$g,g':D\to D$ oraz $g\sqsubseteq g'$, tzn.\
+	$g(x)\sqsubseteq_D g'(x)$ dla każdego $x\in D$. Porównajmy wartości
+	$\mathcal{F}(g)$ i $\mathcal{F}(g')$ w dowolnym punkcie $x\in D$.
+	\begin{itemize}
+		\item Dla $x=\bt$: $\mathcal{F}(g)(\bt)=\bt=\mathcal{F}(g')(\bt)$.
+		\item Dla $x=0$: $\mathcal{F}(g)(0)=1=\mathcal{F}(g')(0)$.
+		\item Dla $x=n+1$: z założenia $g(n)\sqsubseteq_D g'(n)$, a z
+		monotoniczności $h_n$
+		\[
+		\mathcal{F}(g)(n+1)
+		=
+		h_n\big(g(n)\big)
+		\sqsubseteq_D
+		h_n\big(g'(n)\big)
+		=
+		\mathcal{F}(g')(n+1).
+		\]
+	\end{itemize}
+	W każdym przypadku $\mathcal{F}(g)(x)\sqsubseteq_D\mathcal{F}(g')(x)$,
+	więc $\mathcal{F}(g)\sqsubseteq\mathcal{F}(g')$. Funkcjonał
+	$\mathcal{F}$ jest zatem monotoniczny.
+	
+	\emph{Krok 3: obraz łańcucha jest łańcuchem.} Niech
+	\[
+	f_1\sqsubseteq f_2\sqsubseteq f_3\sqsubseteq\ldots
+	\]
+	będzie łańcuchem w $\boldsymbol{D\to D}$. Z kroku 2 i
+	Lematu~\ref{lem:monotoniczna_lancuchy}(a) ciąg
+	\[
+	\mathcal{F}(f_1)\sqsubseteq\mathcal{F}(f_2)\sqsubseteq\mathcal{F}(f_3)\sqsubseteq\ldots
+	\]
+	jest łańcuchem, a więc ma kres górny. Jest to warunek~(1) definicji
+	ciągłości.
+	
+	\emph{Krok 4: zachowanie kresów górnych.} Oznaczmy
+	\[
+	f=\bigsqcup_{i=1}^{\infty}f_i.
+	\]
+	Na mocy Twierdzenia~\ref{tw:funkcje_calkowite_cpo} kresy górne w
+	$\boldsymbol{D\to D}$ wyznaczamy punktowo, więc
+	\[
+	f(x)=\bigsqcup_{i=1}^{\infty}f_i(x)
+	\qquad\text{oraz}\qquad
+	\Big(\bigsqcup_{i=1}^{\infty}\mathcal{F}(f_i)\Big)(x)
+	=
+	\bigsqcup_{i=1}^{\infty}\mathcal{F}(f_i)(x)
+	\qquad(x\in D).
+	\]
+	Musimy wykazać, że
+	$\mathcal{F}(f)(x)=\bigsqcup_{i}\mathcal{F}(f_i)(x)$ dla każdego
+	$x\in D$.
+	\begin{itemize}
+		\item Dla $x=\bt$: $\mathcal{F}(f)(\bt)=\bt$ oraz
+		$\mathcal{F}(f_i)(\bt)=\bt$ dla każdego $i$. Kresem górnym łańcucha
+		stałego $\bt,\bt,\ldots$ jest $\bt$, więc obie strony są równe $\bt$.
+		\item Dla $x=0$: analogicznie obie strony są równe $1$.
+		\item Dla $x=n+1$: ciąg $\big(f_i(n)\big)_{i\in\mathbb N}$ jest
+		łańcuchem w $D$ (bo $f_i\sqsubseteq f_{i+1}$ w porządku pionowym),
+		a jego kresem jest $f(n)$. Korzystając z ciągłości $h_n$, otrzymujemy
+		\[
+		\mathcal{F}(f)(n+1)
+		=
+		h_n\big(f(n)\big)
+		=
+		h_n\Big(\bigsqcup_{i=1}^{\infty}f_i(n)\Big)
+		=
+		\bigsqcup_{i=1}^{\infty}h_n\big(f_i(n)\big)
+		=
+		\bigsqcup_{i=1}^{\infty}\mathcal{F}(f_i)(n+1).
+		\]
+	\end{itemize}
+	Wartości funkcji $\mathcal{F}(f)$ i $\bigsqcup_{i}\mathcal{F}(f_i)$ są
+	równe w każdym punkcie, więc
+	\[
+	\mathcal{F}\Big(\bigsqcup_{i=1}^{\infty}f_i\Big)
+	=
+	\bigsqcup_{i=1}^{\infty}\mathcal{F}(f_i).
+	\]
+	Jest to warunek~(2) definicji ciągłości. Zatem funkcjonał
+	$\mathcal{F}$ jest ciągły.
+\end{proof}
+
+Możemy teraz zastosować twierdzenie Kleenego. Otrzymujemy
+\[
+\lfp(\mathcal{F})
+=
+\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varphi).
+\]
+
+Oznaczmy kolejne przybliżenia przez
+\[
+f_i=\mathcal{F}^i(\varphi).
+\]
+Otrzymujemy wówczas następującą tabelę:
+\[
+\begin{array}{c|ccccccc}
+	x
+	&\bt&0&1&2&3&4&\cdots\\
+	\hline
+	\varphi
+	&\bt&\bt&\bt&\bt&\bt&\bt&\cdots\\
+	f_1
+	&\bt&1&\bt&\bt&\bt&\bt&\cdots\\
+	f_2
+	&\bt&1&1&\bt&\bt&\bt&\cdots\\
+	f_3
+	&\bt&1&1&2&\bt&\bt&\cdots\\
+	f_4
+	&\bt&1&1&2&6&\bt&\cdots\\
+	f_5
+	&\bt&1&1&2&6&24&\cdots\\
+	\vdots
+	&\vdots&\vdots&\vdots&\vdots&\vdots&\vdots&\ddots
+\end{array}
+\]
+
+Wprowadzona wcześniej notacja $S_n=n!$ pozwala zapisać tę tabelę bardziej
+symbolicznie:
+\[
+\begin{array}{c|ccccccc}
+	x
+	&\bt&0&1&2&3&4&\cdots\\
+	\hline
+	\varphi
+	&\bt&\bt&\bt&\bt&\bt&\bt&\cdots\\
+	f_1
+	&\bt&S_0&\bt&\bt&\bt&\bt&\cdots\\
+	f_2
+	&\bt&S_0&S_1&\bt&\bt&\bt&\cdots\\
+	f_3
+	&\bt&S_0&S_1&S_2&\bt&\bt&\cdots\\
+	f_4
+	&\bt&S_0&S_1&S_2&S_3&\bt&\cdots\\
+	f_5
+	&\bt&S_0&S_1&S_2&S_3&S_4&\cdots\\
+	\vdots
+	&\vdots&\vdots&\vdots&\vdots&\vdots&\vdots&\ddots
+\end{array}
+\]
+
+Pierwsze przybliżenie ma postać
+\[
+f_1=\mathcal{F}(\varphi).
+\]
+Dla argumentu $0$ otrzymujemy
+\[
+f_1(0)=1=S_0,
+\]
+natomiast dla $n\geq1$
+\[
+f_1(n)
+=
+n\cdot\varphi(n-1)
+=
+\bt.
+\]
+
+Dla drugiego przybliżenia mamy
+\[
+f_2(0)=1=S_0,
+\]
+oraz
+\[
+f_2(1)
+=
+1\cdot f_1(0)
+=
+1
+=
+S_1.
+\]
+Natomiast
+\[
+f_2(2)
+=
+2\cdot f_1(1)
+=
+\bt.
+\]
+
+Analogicznie
+\[
+f_3(2)
+=
+2\cdot f_2(1)
+=
+2
+=
+S_2,
+\]
+a następnie
+\[
+f_4(3)
+=
+3\cdot f_3(2)
+=
+6
+=
+S_3
+\]
+oraz
+\[
+f_5(4)
+=
+4\cdot f_4(3)
+=
+24
+=
+S_4.
+\]
+
+Ponieważ $\mathcal{F}$ jest ciągły, na mocy
+Twierdzenia~\ref{tw:ciagla_monotoniczna} jest również monotoniczny.
+Ponieważ $\varphi$ jest elementem najmniejszym, mamy
+\[
+\varphi\sqsubseteq\mathcal{F}(\varphi)=f_1.
+\]
+Stosując monotoniczność $\mathcal{F}$ indukcyjnie, otrzymujemy łańcuch
+\[
+\varphi
+\sqsubseteq
+f_1
+\sqsubseteq
+f_2
+\sqsubseteq
+f_3
+\sqsubseteq
+\ldots.
+\]
+
+W granicy otrzymujemy
+\[
+\lfp(\mathcal{F})
+=
+\bigsqcup_{i=1}^{\infty}f_i.
+\]
+Ponieważ kres górny w przestrzeni funkcji całkowitych jest wyznaczany
+punktowo, dla każdego $n\in\mathbb{N}_0$ mamy
+\[
+\lfp(\mathcal{F})(n)=S_n=n!,
+\]
+a ponadto
+\[
+\lfp(\mathcal{F})(\bt)=\bt.
+\]
+
+Zatem najmniejszy punkt stały funkcjonału $\mathcal{F}$ jest funkcją
+\[
+S:D\to D
+\]
+określoną przez
+\[
+S(x)
+=
+\begin{cases}
+	\bt,&x=\bt,\\
+	x!,&x\in\mathbb{N}_0.
+\end{cases}
+\]
+
+W szczególności
+\[
+S(\bt)=\bt.
+\]
+Ponieważ $D$ jest płaskim zbiorem łańcuchowo zupełnym, z
+Wniosku~\ref{wn:plaskie_monotoniczne_ciagle} wynika, że funkcja $S$
+jest ciągła.
+
+Otrzymaliśmy zatem funkcję ciągłą, która dla każdego
+$n\in\mathbb{N}_0$ przyjmuje wartość
+\[
+S(n)=n!,
+\]
+a więc stanowi rozszerzenie zwykłej funkcji silnia na zbiorze łańcuchowo zupełnym.
+
+%==============================================================================
+\section{Podejście alternatywne}
+%==============================================================================
+
+W poprzednich częściach punkty stałe rozważaliśmy z perspektywy porządku
+informacyjnego. Zbiór łańcuchowo zupełny dostarczał przestrzeni, w której
+można było porównywać kolejne przybliżenia, natomiast ciągłość funkcji
+gwarantowała istnienie najmniejszego punktu stałego, który otrzymywaliśmy
+jako kres górny ciągu iteracji od elementu najmniejszego.
+
+To samo zagadnienie można rozpatrywać z innej perspektywy, zastępując
+strukturę porządkową strukturą opartą na pojęciu odległości. Takie podejście
+nie prowadzi jedynie do innego sposobu zapisywania tych samych konstrukcji.
+Pozwala ono również wykorzystać narzędzia analizy klasycznej, w szczególności
+pojęcie ciągu Cauchy'ego oraz twierdzenie o odwzorowaniu zwężającym.
+
+W pracy \emph{Partial Metric Topology}~\cite{matthews1994}
+S.~G.~Matthews wprowadza w tym celu pojęcie \emph{metryki częściowej}
+(ang.\ \emph{partial metric}). Jej istotną cechą jest to, że obiekt może mieć
+niezerową odległość od samego siebie. Wartość $p(x,x)$ może dzięki temu
+opisywać stopień określenia obiektu: obiekty o wartości $p(x,x)=0$ są
+całkowicie określone, natomiast dodatnia wartość wskazuje na obecność
+nieokreśloności.
+
+Podejście to jest szczególnie interesujące w kontekście teorii przedstawionej
+wcześniej, ponieważ metryka częściowa nie jest niezależna od pojęcia
+porządku. Zostaje z niej wyprowadzony porządek informacyjny, a własności
+związane z granicami łańcuchów znajdują swój odpowiednik w pojęciach
+zbieżności i zupełności metrycznej.
+
+W dalszej części przedstawimy podstawowe pojęcia związane z metrykami
+częściowymi, pokażemy sposób odzyskiwania z nich porządku informacyjnego,
+a następnie przedstawimy twierdzenie Matthewsa o punkcie stałym kontrakcji.
+Dzięki temu otrzymamy drugie, metryczne ujęcie problemu punktów stałych,
+które można porównać z wcześniejszym podejściem porządkowym.
+
+%==============================================================================
+\subsection{Podstawy metryczne}
+%==============================================================================
+
+Zanim wprowadzimy metrykę częściową, przypomnijmy klasyczne pojęcie
+metryki. Będzie ono stanowiło punkt odniesienia dla konstrukcji
+Matthewsa.
+
+\begin{definicja}\label{def:metryka}
+	Metryką na zbiorze $U$ nazywamy funkcję
+	\[
+	d:U\times U\to [0, \infty)
+	\]
+	spełniającą dla dowolnych $x,y,z\in U$ następujące warunki:
+	\begin{itemize}[leftmargin=1.5cm]
+		\item[(M1)] $d(x,y)=0 \iff x=y$;
+		\item[(M2)] $d(x,y)=d(y,x)$;
+		\item[(M3)] $d(x,z)\leq d(x,y)+d(y,z)$.
+	\end{itemize}
+\end{definicja}
+
+Z warunku (M1) w szczególności wynika, że
+\[
+d(x,x)=0
+\]
+dla każdego $x\in U$. W zwykłej metryce własna odległość obiektu nie
+niesie więc żadnej dodatkowej informacji. W podejściu Matthewsa własność
+ta zostanie osłabiona. Odległość obiektu od samego siebie może być dodatnia
+i może służyć do opisu stopnia jego określenia.
+
+Prowadzi to do pojęcia metryki częściowej, wprowadzonego przez
+S.~G.~Matthewsa~\cite{matthews1994}.
+
+%==============================================================================
+\subsection{Metryka częściowa}
+%==============================================================================
+
+\begin{definicja}\label{def:metryka_czesciowa}
+	\emph{Metryką częściową} na zbiorze $U$ nazywamy funkcję
+	\[
+	p:U\times U\to [0, \infty)
+	\]
+	spełniającą dla dowolnych $x,y,z\in U$ następujące warunki:
+	\begin{itemize}[leftmargin=1.5cm]
+		\item[(P1)] $x=y \iff p(x,x)=p(x,y)=p(y,y)$;
+		\item[(P2)] $p(x,x)\leq p(x,y)$;
+		\item[(P3)] $p(x,y)=p(y,x)$;
+		\item[(P4)] $p(x,z)\leq p(x,y)+p(y,z)-p(y,y)$.
+	\end{itemize}
+\end{definicja}
+
+Warunek (P1) zastępuje pierwszy aksjomat zwykłej metryki. W szczególności
+nie wymaga on, aby
+\[
+p(x,x)=0.
+\]
+Możliwe jest więc, że
+\[
+p(x,x)>0,
+\]
+a wartość ta może być interpretowana jako miara stopnia nieokreśloności
+obiektu $x$. Obiekt o własnej odległości równej zero jest natomiast
+całkowicie określony.
+
+Warunek (P2) oznacza, że własna odległość $p(x,x)$ jest najmniejszą
+odległością, jaką obiekt $x$ może mieć od dowolnego elementu:
+\[
+p(x,x)\leq p(x,y).
+\]
+Warunek (P3) zachowuje symetrię zwykłej metryki. W warunku (P4)
+nierówność trójkąta otrzymuje natomiast postać
+\[
+p(x,z)\leq p(x,y)+p(y,z)-p(y,y),
+\]
+w której uwzględniona zostaje własna odległość punktu pośredniego.
+
+\begin{uwaga}
+	Jeżeli dla każdego $x\in U$ zachodzi
+	\[
+	p(x,x)=0,
+	\]
+	to warunki (P1)--(P4) redukują się do warunków metryki z
+	Definicji~\ref{def:metryka}. Zwykłą metrykę można więc traktować jako
+	szczególny przypadek metryki częściowej.
+\end{uwaga}
+
+\begin{przyklad}\label{prz:plaska_pmetryka}
+	Niech $D$ będzie dowolnym zbiorem oraz
+	\[
+	D_\bt=D\cup\{\bt\},
+	\]
+	gdzie $\bt\notin D$. Na zbiorze $D_\bt$ definiujemy funkcję
+	\[
+	p:D_\bt\times D_\bt\to\{0,1\}
+	\]
+	wzorem
+	\[
+	p(x,y)=
+	\begin{cases}
+		0,&x=y\in D,\\
+		1,&\text{w przeciwnym przypadku}.
+	\end{cases}
+	\]
+	Pokażemy, że $p$ jest metryką częściową.
+	
+	\emph{(P1).} Załóżmy najpierw, że
+	\[
+	x=y.
+	\]
+	Jeżeli $x=y\in D$, to
+	\[
+	p(x,x)=p(x,y)=p(y,y)=0.
+	\]
+	Jeżeli natomiast
+	\[
+	x=y=\bt,
+	\]
+	to
+	\[
+	p(x,x)=p(x,y)=p(y,y)=1.
+	\]
+	Zatem
+	\[
+	x=y
+	\implies
+	p(x,x)=p(x,y)=p(y,y).
+	\]
+	
+	Załóżmy teraz, że
+	\[
+	p(x,x)=p(x,y)=p(y,y).
+	\]
+	Jeżeli $x\neq y$, to z definicji $p$ mamy
+	\[
+	p(x,y)=1.
+	\]
+	Jeżeli jednocześnie $x,y\in D$, to
+	\[
+	p(x,x)=p(y,y)=0,
+	\]
+	co daje sprzeczność. Jeżeli natomiast jeden z elementów jest równy
+	$\bt$, a drugi należy do $D$, to ich własne odległości wynoszą odpowiednio
+	$1$ i $0$, co również daje sprzeczność. Jedynym pozostałym przypadkiem
+	jest $x=y=\bt$, sprzeczny z założeniem $x\neq y$. Zatem
+	\[
+	p(x,x)=p(x,y)=p(y,y)
+	\implies
+	x=y.
+	\]
+	W konsekwencji zachodzi
+	\[
+	x=y
+	\iff
+	p(x,x)=p(x,y)=p(y,y).
+	\]
+	
+	\emph{(P2).} Jeżeli $x\in D$, to
+	\[
+	p(x,x)=0\leq p(x,y).
+	\]
+	Jeżeli $x=\bt$, to
+	\[
+	p(x,x)=p(\bt,\bt)=1
+	\]
+	oraz
+	\[
+	p(\bt,y)=1
+	\]
+	dla każdego $y\in D_\bt$. W obu przypadkach
+	\[
+	p(x,x)\leq p(x,y).
+	\]
+	
+	\emph{(P3).} Z definicji funkcji $p$ wynika bezpośrednio
+	\[
+	p(x,y)=p(y,x).
+	\]
+	
+	\emph{(P4).} Rozważmy dwa przypadki.
+	
+	Jeżeli
+	\[
+	y=\bt,
+	\]
+	to
+	\[
+	p(x,y)=p(y,z)=p(\bt,\bt)=1,
+	\]
+	a więc
+	\[
+	p(x,y)+p(y,z)-p(y,y)
+	=
+	1+1-1
+	=
+	1.
+	\]
+	Ponieważ $p(x,z)\in\{0,1\}$, otrzymujemy
+	\[
+	p(x,z)\leq
+	p(x,y)+p(y,z)-p(y,y).
+	\]
+	
+	Jeżeli natomiast
+	\[
+	y\in D,
+	\]
+	to
+	\[
+	p(y,y)=0.
+	\]
+	Jeżeli $x=z$, to
+	\[
+	p(x,z)=0,
+	\]
+	a nierówność jest oczywista. Jeżeli $x\neq z$, to
+	\[
+	p(x,z)=1.
+	\]
+	Nie mogą jednocześnie zachodzić
+	\[
+	p(x,y)=0
+	\qquad\text{oraz}\qquad
+	p(y,z)=0,
+	\]
+	ponieważ oznaczałoby to
+	\[
+	x=y
+	\qquad\text{oraz}\qquad
+	y=z,
+	\]
+	a więc $x=z$, wbrew założeniu. Zatem co najmniej jedna z liczb
+	$p(x,y)$ i $p(y,z)$ jest równa $1$, a więc
+	\[
+	p(x,y)+p(y,z)-p(y,y)\geq1=p(x,z).
+	\]
+	W obu przypadkach zachodzi (P4).
+	
+	Zatem funkcja $p$ spełnia warunki (P1)--(P4), a więc jest metryką
+	częściową na $D_\bt$.
+\end{przyklad}
+
+\begin{uwaga}
+	Warto zauważyć, że
+	\[
+	p(\bt,\bt)=1,
+	\qquad
+	p(d,d)=0
+	\quad(d\in D).
+	\]
+	Element $\bt$ ma więc dodatni rozmiar, podczas gdy elementy zbioru $D$
+	są całkowicie określone.
+\end{uwaga}
+
+%==============================================================================
+\subsection{Porządek indukowany przez metrykę częściową}
+%==============================================================================
+
+Metryka częściowa niesie ze sobą porządek. 
+
+\begin{definicja}\label{def:porzadek_indukowany_pmetryka}
+	Niech $p$ będzie metryką częściową na zbiorze $U$. Relację
+	$\sqsubseteq_p \, \subseteq U \times U$ definiujemy wzorem
+	\[
+	x\sqsubseteq_p y
+	\iff
+	p(x,x)=p(x,y).
+	\]
+	Relację tę nazywamy \emph{porządkiem indukowanym przez metrykę częściową}.
+\end{definicja}
+
+\begin{twierdzenie}\label{tw:porzadek_pmetryka}
+	Dla każdej metryki częściowej $p$ relacja $\sqsubseteq_p$ jest
+	porządkiem częściowym.
+\end{twierdzenie}
+
+\begin{proof}
+	Musimy wykazać zwrotność, antysymetryczność oraz przechodniość.
+	
+	\emph{Zwrotność.}
+	Dla każdego $x\in U$ zachodzi
+	\[
+	p(x,x)=p(x,x),
+	\]
+	a zatem, zgodnie z definicją relacji $\sqsubseteq_p$,
+	\[
+	x\sqsubseteq_p x.
+	\]
+	
+	\emph{Antysymetryczność.}
+	Załóżmy, że
+	\[
+	x\sqsubseteq_p y
+	\qquad\text{oraz}\qquad
+	y\sqsubseteq_p x.
+	\]
+	Z definicji $\sqsubseteq_p$ otrzymujemy
+	\[
+	p(x,x)=p(x,y)
+	\]
+	oraz
+	\[
+	p(y,y)=p(y,x).
+	\]
+	Z warunku (P3), czyli symetrii pmetryki,
+	\[
+	p(y,x)=p(x,y).
+	\]
+	Stąd
+	\[
+	p(x,x)=p(x,y)=p(y,y).
+	\]
+	Na mocy warunku (P1) wynika z tego
+	\[
+	x=y.
+	\]
+	
+	\emph{Przechodniość.}
+	Załóżmy, że
+	\[
+	x\sqsubseteq_p y
+	\qquad\text{oraz}\qquad
+	y\sqsubseteq_p z.
+	\]
+	Wówczas
+	\[
+	p(x,x)=p(x,y)
+	\]
+	oraz
+	\[
+	p(y,y)=p(y,z).
+	\]
+	Z warunku (P4) otrzymujemy
+	\[
+	\begin{aligned}
+		p(x,z)
+		&\leq p(x,y)+p(y,z)-p(y,y)\\
+		&=p(x,y)\\
+		&=p(x,x).
+	\end{aligned}
+	\]
+	Z drugiej strony, z warunku (P2) mamy
+	\[
+	p(x,x)\leq p(x,z).
+	\]
+	Zatem
+	\[
+	p(x,z)=p(x,x),
+	\]
+	czyli, z definicji $\sqsubseteq_p$,
+	\[
+	x\sqsubseteq_p z.
+	\]
+	
+	Relacja $\sqsubseteq_p$ jest zatem zwrotna, antysymetryczna
+	i przechodnia, a więc jest porządkiem częściowym.
+\end{proof}
+
+\begin{przyklad}\label{prz:porzadek_pmetryka_plaska}
+	Dla pmetryki z Przykładu~\ref{prz:plaska_pmetryka} porządek
+	indukowany przez pmetrykę jest dokładnie porządkiem płaskim
+	z Definicji~\ref{def:zbior_plaski}.
+	
+	Istotnie, dla każdego $x\in D_\bt$ mamy
+	\[
+	p(\bt,\bt)=p(\bt,x)=1,
+	\]
+	a więc
+	\[
+	\bt\sqsubseteq_p x.
+	\]
+	Z kolei dla $x,y\in D$, $x\neq y$, zachodzi
+	\[
+	p(x,x)=0
+	\neq
+	1=p(x,y),
+	\]
+	więc
+	\[
+	x\not\sqsubseteq_p y.
+	\]
+	Podobnie dla $d\in D$ mamy
+	\[
+	p(d,d)=0
+	\neq
+	1=p(d,\bt),
+	\]
+	a więc $d\not\sqsubseteq_p\bt$. Zatem jedynym elementem mniejszym od
+	pozostałych jest $\bt$, a dwa różne elementy zbioru $D$ są
+	nieporównywalne --- relacja $\sqsubseteq_p$ spełnia warunek
+	$d_1\sqsubseteq_p d_2\iff d_1=\bt\ \text{lub}\ d_1=d_2$.
+\end{przyklad}
+
+%==============================================================================
+\subsection{Ciągi Cauchy'ego i zupełność}
+%==============================================================================
+
+W podejściu porządkowym podstawowym pojęciem związanym z istnieniem granic
+był łańcuch oraz jego kres górny. To właśnie istnienie kresów górnych
+łańcuchów stanowiło istotę zupełności zbioru łańcuchowo zupełnego.
+
+W podejściu metrycznym rolę przybliżeń pełni natomiast ciąg elementów,
+których wzajemne odległości stają się coraz mniejsze. Prowadzi to do
+pojęcia ciągu Cauchy'ego. Zupełność metryki częściowej będzie oznaczała,
+że każdy taki ciąg posiada granicę należącą do rozważanego zbioru.
+
+Istotne jest przy tym, że porządek indukowany przez metrykę częściową
+pozwala połączyć oba sposoby opisu. Łańcuch względem tego porządku okazuje
+się szczególnym przypadkiem ciągu Cauchy'ego. W przypadku zupełnej
+metryki częściowej jego granica odpowiada następnie kresowi górnemu
+łańcucha.
+
+Wprowadzimy najpierw pojęcie ciągu Cauchy'ego i zupełności metryki
+częściowej, a następnie pokażemy bezpośrednio, w jaki sposób wcześniejsze
+łańcuchy pojawiają się w tym metrycznym ujęciu.
+
+\begin{definicja}\label{def:zbieznosc_pmetryka}
+	Niech $p$ będzie metryką częściową na zbiorze $U$. Ciąg
+	$(x_n)_{n\in\mathbb{N}}$ nazywamy \emph{zbieżnym} do elementu
+	$x\in U$, jeżeli
+	\[
+	\lim_{n\to\infty}p(x_n,x)=p(x,x).
+	\]
+	Wówczas piszemy
+	\[
+	x_n\longrightarrow x.
+	\]
+\end{definicja}
+
+Wprowadźmy teraz odpowiednik klasycznego pojęcia ciągu Cauchy'ego.
+
+\begin{definicja}\label{def:cauchy_pmetryka}
+	Niech $p$ będzie metryką częściową na zbiorze $U$. Ciąg
+	$(x_n)_{n\in\mathbb{N}}$ nazywamy \emph{ciągiem Cauchy'ego}, jeżeli
+	istnieje granica
+	\[
+	\lim_{n,m\to\infty}p(x_n,x_m).
+	\]
+\end{definicja}
+
+W zwykłej przestrzeni metrycznej zbieżność ciągu Cauchy'ego prowadzi do
+granicy, której odległość od samej siebie wynosi zero. W przypadku
+metryki częściowej granica może mieć jednak dodatni rozmiar. Dlatego
+wymagamy dodatkowo, aby rozmiar punktu granicznego był zgodny z granicą
+wzajemnych odległości ciągu.
+
+\begin{definicja}\label{def:zupelnosc_pmetryka}
+	Metrykę częściową $p$ na zbiorze $U$ nazywamy \emph{zupełną}, jeżeli
+	każdy ciąg Cauchy'ego $(x_n)_{n\in\mathbb{N}}$ jest zbieżny do pewnego
+	$x\in U$ oraz
+	\[
+	p(x,x)
+	=
+	\lim_{n,m\to\infty}p(x_n,x_m).
+	\]
+\end{definicja}
+
+Mamy już wszystkie pojęcia potrzebne do porównania zupełności
+metrycznej z zupełnością porządkową. Wcześniej rozważaliśmy łańcuchy
+postaci
+\[
+x_1\sqsubseteq x_2\sqsubseteq x_3\sqsubseteq\ldots
+\]
+i wymagaliśmy istnienia ich kresu górnego. Teraz pokażemy, że w obecnym
+ujęciu łańcuch względem porządku $\sqsubseteq_p$ jest jednocześnie
+ciągiem Cauchy'ego względem metryki częściowej $p$.
+
+Jest to pierwszy bezpośredni związek pomiędzy obiema konstrukcjami:
+porządek informacyjny może być odczytywany z pmetryki, a rosnący ciąg
+informacyjnie coraz bardziej określonych przybliżeń staje się ciągiem
+Cauchy'ego.
+
+\begin{twierdzenie}\label{tw:lanuch_jest_cauchy}
+	Niech $p$ będzie metryką częściową na zbiorze $U$, a
+	\[
+	x_1\sqsubseteq_p x_2\sqsubseteq_p x_3\sqsubseteq_p\ldots
+	\]
+	będzie łańcuchem względem porządku indukowanego przez $p$. Wówczas
+	ciąg $(x_n)_{n\in\mathbb N}$ jest ciągiem Cauchy'ego względem $p$.
+\end{twierdzenie}
+
+\begin{proof}
+	Z definicji porządku indukowanego przez pmetrykę, dla $n\leq m$ mamy
+	\[
+	x_n\sqsubseteq_p x_m
+	\iff
+	p(x_n,x_n)=p(x_n,x_m).
+	\]
+	Zatem
+	\[
+	p(x_n,x_m)=p(x_n,x_n).
+	\]
+	
+	Z warunku (P2) oraz symetrii (P3) otrzymujemy dla $n\leq m$
+	\[
+	p(x_m,x_m)
+	\leq
+	p(x_m,x_n)
+	=
+	p(x_n,x_m)
+	=
+	p(x_n,x_n).
+	\]
+	A więc ciąg
+	\[
+	p(x_1,x_1),p(x_2,x_2),p(x_3,x_3),\ldots
+	\]
+	jest nierosnący. Ponieważ wartości pmetryki są nieujemne, ciąg ten
+	jest ograniczony z dołu przez $0$. Istnieje zatem granica
+	\[
+	L:=\lim_{n\to\infty}p(x_n,x_n).
+	\]
+	
+	Pokażemy teraz, że
+	\[
+	\lim_{n,m\to\infty}p(x_n,x_m)=L.
+	\]
+	Niech $\varepsilon>0$. Z definicji granicy ciągu
+	$\bigl(p(x_n,x_n)\bigr)_{n\in\mathbb N}$ istnieje $N\in\mathbb N$
+	takie, że dla każdego $k\geq N$ zachodzi
+	\[
+	|p(x_k,x_k)-L|<\varepsilon.
+	\]
+	
+	Jeżeli $n,m\geq N$, to rozważamy mniejszy z indeksów
+	\[
+	k=\min\{n,m\}.
+	\]
+	Mamy $k\geq N$. Jeżeli $n\leq m$, to
+	\[
+	p(x_n,x_m)=p(x_n,x_n)=p(x_k,x_k),
+	\]
+	a jeżeli $m\leq n$, to z symetrii pmetryki
+	\[
+	p(x_n,x_m)=p(x_m,x_n)=p(x_m,x_m)=p(x_k,x_k).
+	\]
+	W obu przypadkach
+	\[
+	p(x_n,x_m)=p(x_k,x_k).
+	\]
+	Zatem
+	\[
+	|p(x_n,x_m)-L|
+	=
+	|p(x_k,x_k)-L|
+	<\varepsilon.
+	\]
+	
+	Otrzymaliśmy więc
+	\[
+	\forall\varepsilon>0\;\exists N\in\mathbb N\;
+	\forall n,m\geq N\quad
+	|p(x_n,x_m)-L|<\varepsilon,
+	\]
+	czyli
+	\[
+	\lim_{n,m\to\infty}p(x_n,x_m)=L.
+	\]
+	Z definicji ciągu Cauchy'ego wynika, że
+	$(x_n)_{n\in\mathbb N}$ jest ciągiem Cauchy'ego.
+\end{proof}
+
+Dotychczas pokazaliśmy, że porządek indukowany przez metrykę częściową
+pozwala interpretować łańcuchy jako ciągi Cauchy'ego. W przypadku
+zupełnej metryki częściowej każdy łańcuch ma więc granicę. Pozostaje
+zbadać, jak ta granica odnosi się do porządku $\sqsubseteq_p$, tzn.\ czy
+jest ograniczeniem górnym łańcucha i czy jest najmniejszym spośród
+takich ograniczeń. Okazuje się, że obie własności zachodzą.
+
+\begin{twierdzenie}\label{tw:granica_kresem_gornym}
+	Niech $p$ będzie zupełną metryką częściową na zbiorze $U$. Wówczas
+	każdy łańcuch
+	\[
+	x_1\sqsubseteq_p x_2\sqsubseteq_p x_3\sqsubseteq_p\ldots
+	\]
+	posiada kres górny względem porządku $\sqsubseteq_p$, równy granicy
+	tego łańcucha w sensie Definicji~\ref{def:zbieznosc_pmetryka}.
+\end{twierdzenie}
+
+\begin{proof}
+	Niech
+	\[
+	x_1\sqsubseteq_p x_2\sqsubseteq_p x_3\sqsubseteq_p\ldots
+	\]
+	będzie łańcuchem względem $\sqsubseteq_p$.
+	
+	\emph{Krok 1: istnienie granicy.} Na mocy
+	Twierdzenia~\ref{tw:lanuch_jest_cauchy} ciąg $(x_n)_{n\in\mathbb N}$
+	jest ciągiem Cauchy'ego. W dowodzie tego twierdzenia pokazaliśmy
+	ponadto, że ciąg $\big(p(x_n,x_n)\big)_{n\in\mathbb N}$ jest
+	nierosnący i ograniczony z dołu przez $0$, więc ma granicę
+	\[
+	L=\lim_{n\to\infty}p(x_n,x_n),
+	\]
+	oraz że
+	\[
+	\lim_{n,m\to\infty}p(x_n,x_m)=L.
+	\]
+	Ponieważ metryka częściowa $p$ jest zupełna
+	(Definicja~\ref{def:zupelnosc_pmetryka}), istnieje $x\in U$ takie, że
+	\[
+	x_n\longrightarrow x,
+	\quad\text{tzn.}\quad
+	\lim_{n\to\infty}p(x_n,x)=p(x,x),
+	\qquad\text{oraz}\qquad
+	p(x,x)=\lim_{n,m\to\infty}p(x_n,x_m)=L.
+	\]
+	
+	\emph{Krok 2: $x$ jest ograniczeniem górnym łańcucha.} Ustalmy
+	$n\in\mathbb N$ i weźmy dowolne $m\geq n$. Ponieważ
+	$x_n\sqsubseteq_p x_m$, z definicji porządku indukowanego
+	\[
+	p(x_n,x_m)=p(x_n,x_n).
+	\]
+	Warunek (P4) zastosowany do elementów $x_n$, $x_m$ oraz $x$ daje
+	\[
+	p(x_n,x)
+	\leq
+	p(x_n,x_m)+p(x_m,x)-p(x_m,x_m)
+	=
+	p(x_n,x_n)+p(x_m,x)-p(x_m,x_m).
+	\]
+	Nierówność ta zachodzi dla każdego $m\geq n$, a jej lewa strona nie
+	zależy od $m$. Przejdźmy z $m$ do nieskończoności po prawej stronie:
+	\[
+	p(x_m,x)\xrightarrow[m\to\infty]{}p(x,x)=L,
+	\qquad
+	p(x_m,x_m)\xrightarrow[m\to\infty]{}L.
+	\]
+	Granica prawej strony wynosi więc
+	\[
+	p(x_n,x_n)+L-L=p(x_n,x_n),
+	\]
+	a ponieważ nierówności nieostre zachowują się przy przejściu do
+	granicy,
+	\[
+	p(x_n,x)\leq p(x_n,x_n).
+	\]
+	Z drugiej strony warunek (P2) daje
+	\[
+	p(x_n,x_n)\leq p(x_n,x).
+	\]
+	Obie nierówności razem dają
+	\[
+	p(x_n,x_n)=p(x_n,x),
+	\]
+	czyli z definicji porządku indukowanego $x_n\sqsubseteq_p x$.
+	Ponieważ $n$ było dowolne, $x$ jest ograniczeniem górnym łańcucha.
+	
+	\emph{Krok 3: $x$ jest najmniejszym ograniczeniem górnym.} Niech
+	$y\in U$ będzie dowolnym ograniczeniem górnym łańcucha, tzn.\
+	$x_n\sqsubseteq_p y$ dla każdego $n$. Z definicji porządku
+	indukowanego
+	\[
+	p(x_n,y)=p(x_n,x_n)
+	\qquad(n\in\mathbb N).
+	\]
+	Warunek (P4) zastosowany do elementów $x$, $x_n$ oraz $y$ daje
+	\[
+	p(x,y)
+	\leq
+	p(x,x_n)+p(x_n,y)-p(x_n,x_n)
+	=
+	p(x,x_n)
+	\qquad(n\in\mathbb N).
+	\]
+	Z symetrii (P3) oraz zbieżności $x_n\to x$ mamy
+	\[
+	p(x,x_n)=p(x_n,x)\xrightarrow[n\to\infty]{}p(x,x).
+	\]
+	Przechodząc w nierówności $p(x,y)\leq p(x,x_n)$ do granicy przy
+	$n\to\infty$ (lewa strona nie zależy od $n$), otrzymujemy
+	\[
+	p(x,y)\leq p(x,x).
+	\]
+	Z warunku (P2) zachodzi nierówność przeciwna $p(x,x)\leq p(x,y)$,
+	więc
+	\[
+	p(x,x)=p(x,y),
+	\]
+	czyli $x\sqsubseteq_p y$.
+	
+	Element $x$ jest więc ograniczeniem górnym łańcucha i jest mniejszy
+	lub równy każdemu innemu ograniczeniu górnemu. Zatem
+	\[
+	x=\bigsqcup_{n=1}^{\infty}x_n,
+	\]
+	czyli kres górny łańcucha istnieje i jest równy jego granicy.
+\end{proof}
+
+\begin{uwaga}
+	Powyższe twierdzenie pokazuje, w jakim sensie zupełność metryki
+	częściowej odtwarza zupełność porządkową: w zbiorze $(U,\sqsubseteq_p)$
+	każdy łańcuch ma kres górny, a jest nim granica łańcucha.
+	
+	Nie oznacza to jednak, że $(U,\sqsubseteq_p)$ jest zbiorem łańcuchowo
+	zupełnym w sensie rozdziału~\ref{sec:cpo},
+	ponieważ porządek $\sqsubseteq_p$ nie musi mieć elementu najmniejszego.
+	Przykładowo, dla zwykłej metryki $d$ (tzn.\ gdy $d(x,x)=0$ dla
+	wszystkich $x$) mamy
+	\[
+	x\sqsubseteq_d y
+	\iff
+	d(x,y)=0
+	\iff
+	x=y,
+	\]
+	więc porządek indukowany jest dyskretny i przy co najmniej dwóch
+	elementach zbioru $U$ nie ma elementu najmniejszego.
+\end{uwaga}
+
+\subsection{Kontrakcje i twierdzenie o punkcie stałym}
+
+W poprzednich podrozdziałach wprowadziliśmy pojęcie metryki częściowej,
+porządek indukowany przez pmetrykę oraz pojęcia zbieżności, ciągu
+Cauchy'ego i zupełności. Możemy teraz przejść do właściwego zastosowania
+tego aparatu, czyli wyznaczania punktów stałych.
+
+W klasycznej przestrzeni metrycznej kluczową rolę odgrywa twierdzenie
+Banacha o punkcie stałym. Jego założeniem jest istnienie kontrakcji, czyli
+funkcji, która zmniejsza odległości między elementami co najmniej przez
+stały czynnik mniejszy od $1$. Analogiczne pojęcie można wprowadzić dla
+metryki częściowej.
+
+W dalszej części pokażemy, że zupełność metryki częściowej pozwala
+zastosować iterację funkcji
+\[
+x,\quad f(x),\quad f^2(x),\quad f^3(x),\ldots
+\]
+do konstrukcji punktu stałego. Otrzymamy w ten sposób odpowiednik
+klasycznej metody iteracji Banacha, sformułowany dla metryk częściowych.
+
+\begin{definicja}\label{def:kontrakcja_pmetryka}
+	Niech $p$ będzie metryką częściową na zbiorze $U$. Funkcję
+	$f:U\to U$ nazywamy \emph{kontrakcją} względem $p$, jeżeli istnieje
+	stała $c\in[0,1)$ taka, że
+	\[
+	p(f(x),f(y))\leq c \cdot p(x,y)
+	\]
+	dla wszystkich $x,y\in U$.
+\end{definicja}
+
+Kontrakcja pozwala kontrolować odległości pomiędzy kolejnymi iteracjami
+funkcji. Ustalmy zatem dowolny element początkowy $x_0\in U$ i rozważmy
+ciąg określony rekurencyjnie przez
+\[
+x_{n+1}=f(x_n),
+\qquad n\in\mathbb N_0.
+\]
+Równoważnie,
+\[
+x_n=f^n(x_0).
+\]
+
+W pierwszej kolejności pokażemy, że tak otrzymany ciąg jest ciągiem
+Cauchy'ego.
+
+\begin{lemat}\label{lem:iteracje_kontrakcji_cauchy}
+	Niech $(U,p)$ będzie przestrzenią częściowo metryczną, a
+	$f:U\to U$ kontrakcją względem $p$ ze współczynnikiem
+	$c\in[0,1)$. Dla ustalonego $x_0\in U$ niech
+	\[
+	x_{n+1}=f(x_n),
+	\qquad n\in\mathbb N_0.
+	\]
+	Wówczas ciąg $(x_n)_{n\in\mathbb N_0}$ jest ciągiem Cauchy'ego.
+\end{lemat}
+
+\begin{proof}
+	Z warunku kontrakcji dla $x_n$ i $x_{n-1}$ otrzymujemy dla każdego
+	$n\geq 1$
+	\[
+	\begin{aligned}
+		p(x_{n+1},x_n)
+		&=
+		p(f(x_n),f(x_{n-1}))\\
+		&\leq
+		c\,p(x_n,x_{n-1}).
+	\end{aligned}
+	\]
+	Stosując tę nierówność indukcyjnie, otrzymujemy
+	\[
+	p(x_{n+1},x_n)
+	\leq
+	c^n p(x_1,x_0)
+	\]
+	dla każdego $n\in\mathbb N_0$.
+	
+	Niech teraz $m>n$. Wielokrotne zastosowanie warunku (P4) daje
+	\[
+	\begin{aligned}
+		p(x_n,x_m)
+		&\leq
+		p(x_n,x_{n+1})
+		+p(x_{n+1},x_m)
+		-p(x_{n+1},x_{n+1})\\
+		&\leq
+		p(x_n,x_{n+1})+p(x_{n+1},x_m),
+	\end{aligned}
+	\]
+	gdzie w drugim kroku wykorzystaliśmy nieujemność
+	$p(x_{n+1},x_{n+1})$.
+	
+	Kontynuując to rozumowanie, otrzymujemy
+	\[
+	p(x_n,x_m)
+	\leq
+	\sum_{k=n}^{m-1}p(x_k,x_{k+1}).
+	\]
+	Z uzyskanego wcześniej oszacowania wynika więc
+	\[
+	\begin{aligned}
+		p(x_n,x_m)
+		&\leq
+		p(x_0,x_1)\sum_{k=n}^{m-1}c^k\\
+		&\leq
+		p(x_0,x_1)\sum_{k=n}^{\infty}c^k\\
+		&=
+		p(x_0,x_1)\frac{c^n}{1-c}.
+	\end{aligned}
+	\]
+	
+	Ponieważ $0\leq c<1$, zachodzi
+	\[
+	\lim_{n\to\infty}
+	p(x_0,x_1)\frac{c^n}{1-c}=0.
+	\]
+	Zatem dla każdego $\varepsilon>0$ istnieje $N\in\mathbb N$ takie,
+	że dla każdego $n\geq N$
+	\[
+	p(x_0,x_1)\frac{c^n}{1-c}<\varepsilon.
+	\]
+	Jeżeli $n,m\geq N$, to bez straty ogólności możemy założyć, że
+	$n\leq m$. Wówczas
+	\[
+	p(x_n,x_m)
+	\leq
+	p(x_0,x_1)\frac{c^n}{1-c}
+	<\varepsilon.
+	\]
+	Z symetrii pmetryki ten sam wniosek zachodzi również dla $m<n$.
+	Otrzymujemy zatem
+	\[
+	\forall\varepsilon>0\;\exists N\in\mathbb N\;
+	\forall n,m\geq N\quad
+	p(x_n,x_m)<\varepsilon.
+	\]
+	W konsekwencji
+	\[
+	\lim_{n,m\to\infty}p(x_n,x_m)=0.
+	\]
+	Granica wzajemnych odległości istnieje, a więc z definicji
+	$(x_n)_{n\in\mathbb N_0}$ jest ciągiem Cauchy'ego.
+\end{proof}
+
+Powyższy lemat pokazuje, że iteracje kontrakcji tworzą ciąg Cauchy'ego.
+Jeżeli przestrzeń jest zupełna, ciąg ten posiada zatem granicę należącą
+do $U$. Co więcej, z definicji zupełności własna odległość tej granicy
+jest równa granicy wzajemnych odległości wyrazów ciągu.
+
+W naszym przypadku granica ta jest równa zeru, co wynika bezpośrednio
+z oszacowania uzyskanego w dowodzie lematu. Otrzymujemy w ten sposób
+punkt, o którym następnie wykażemy, że jest punktem stałym funkcji
+$f$.
+
+\begin{twierdzenie}[Matthews, \cite{matthews1994}]
+	\label{tw:punkt_staly_matthews}
+	Niech $(U,p)$ będzie zupełną przestrzenią metryczną częściową, a
+	$f:U\to U$ będzie kontrakcją względem $p$, tzn. istnieje
+	$c\in[0,1)$ takie, że
+	\[
+	p(f(x),f(y))\leq c\,p(x,y)
+	\]
+	dla wszystkich $x,y\in U$.
+	
+	Wówczas istnieje dokładnie jeden punkt $x^*\in U$ spełniający
+	\[
+	f(x^*)=x^*.
+	\]
+	Ponadto
+	\[
+	p(x^*,x^*)=0.
+	\]
+\end{twierdzenie}
+
+\begin{proof}
+	Wybierzmy dowolny element $x_0\in U$ i zdefiniujmy ciąg
+	$(x_n)_{n\in\mathbb N_0}$ przez
+	\[
+	x_{n+1}=f(x_n).
+	\]
+	
+	Z Lematu~\ref{lem:iteracje_kontrakcji_cauchy} wynika, że
+	$(x_n)_{n\in\mathbb N_0}$ jest ciągiem Cauchy'ego. Ponieważ $p$ jest
+	zupełna, istnieje $x^*\in U$ takie, że
+	\[
+	x_n\longrightarrow x^*
+	\]
+	oraz
+	\[
+	p(x^*,x^*)
+	=
+	\lim_{n,m\to\infty}p(x_n,x_m).
+	\]
+	Z Lematu~\ref{lem:iteracje_kontrakcji_cauchy} mamy
+	\[
+	\lim_{n,m\to\infty}p(x_n,x_m)=0,
+	\]
+	a więc
+	\[
+	p(x^*,x^*)=0.
+	\]
+	
+	Pokażemy teraz, że $x^*$ jest punktem stałym funkcji $f$. Z warunku
+	(P4) otrzymujemy
+	\[
+	p(f(x^*),x^*)
+	\leq
+	p(f(x^*),x_{n+1})
+	+
+	p(x_{n+1},x^*)
+	-
+	p(x_{n+1},x_{n+1}).
+	\]
+	Stąd, korzystając z nieujemności pmetryki oraz z równości
+	$x_{n+1}=f(x_n)$,
+	\[
+	\begin{aligned}
+		p(f(x^*),x^*)
+		&\leq
+		p(f(x^*),f(x_n))+p(x_{n+1},x^*)\\
+		&\leq
+		c\,p(x^*,x_n)+p(x_{n+1},x^*).
+	\end{aligned}
+	\]
+	Przechodząc z $n$ do nieskończoności, otrzymujemy
+	\[
+	p(f(x^*),x^*)\leq 0.
+	\]
+	Ponieważ pmetryka przyjmuje wartości nieujemne,
+	\[
+	p(f(x^*),x^*)=0.
+	\]
+	Z warunku (P2) wynika
+	\[
+	p(f(x^*),f(x^*))\leq p(f(x^*),x^*)=0,
+	\]
+	a zatem
+	\[
+	p(f(x^*),f(x^*))=0.
+	\]
+	Wraz z
+	\[
+	p(x^*,x^*)=0
+	\]
+	otrzymujemy
+	\[
+	p(f(x^*),f(x^*))
+	=
+	p(f(x^*),x^*)
+	=
+	p(x^*,x^*)
+	=
+	0.
+	\]
+	Na mocy (P1)
+	\[
+	f(x^*)=x^*.
+	\]
+	
+	Pozostaje wykazać jednoznaczność. Niech $y\in U$ będzie drugim
+	punktem stałym funkcji $f$. Wówczas
+	\[
+	\begin{aligned}
+		p(x^*,y)
+		&=
+		p(f(x^*),f(y))\\
+		&\leq
+		c\,p(x^*,y).
+	\end{aligned}
+	\]
+	Ponieważ $c<1$ oraz $p(x^*,y)\geq0$, otrzymujemy
+	\[
+	p(x^*,y)=0.
+	\]
+	Z warunku (P2) wynika
+	\[
+	p(x^*,x^*)=0,
+	\qquad
+	p(y,y)=0,
+	\]
+	a więc z (P1)
+	\[
+	x^*=y.
+	\]
+	Punkt stały jest zatem jedyny.
+\end{proof}
+
+\subsection{Porównanie z podejściem porządkowym}
+
+\begin{comment}
+W tej części przedstawimy związek pomiędzy strukturą porządkową
+wykorzystywaną wcześniej a podejściem metrycznym rozwijanym w teorii
+dziedzin ilościowych. Podstawowe pojęcia dotyczące zbiorów skierowanych,
+zupełnych zbiorów częściowo uporządkowanych, relacji $\ll$, dziedzin
+ciągłych oraz topologii Scotta należą do klasycznej teorii dziedzin.
+W dalszej części korzystamy z ich ujęcia przedstawionego między innymi
+w pracach Waszkiewicza
+\cite{Waszkiewicz2001,Waszkiewicz2003}.
+
+Szczególne znaczenie dla dalszych rozważań ma praca
+\cite{Waszkiewicz2001}, w której badany jest związek pomiędzy pomiarami
+na dziedzinach, topologią Scotta oraz metrykami częściowymi. Przedstawiona
+tam konstrukcja pozwala, przy odpowiednich założeniach dotyczących
+dziedziny i pomiaru, otrzymać metrykę częściową zgodną ze strukturą
+porządkową. Zagadnienie to zostało następnie rozwinięte w
+\cite{Waszkiewicz2003}, gdzie analizowany jest związek pomiędzy
+pomiarami a metrykami częściowymi w ramach ilościowej teorii dziedzin.
+
+W kolejnych podrozdziałach najpierw przypomnimy potrzebne pojęcia
+porządkowe, a następnie przejdziemy od relacji $\ll$ i topologii Scotta
+do pojęcia pomiaru. Dopiero na tej podstawie skonstruujemy odpowiednią
+metrykę częściową. Dzięki takiej kolejności konstrukcja metryczna nie
+jest wprowadzana niezależnie od wcześniej omawianej struktury
+porządkowej, lecz wynika z informacji zawartej w tej strukturze.
+
+\subsubsection{Zbiory skierowane i dziedziny}
+
+W rozdziałach 5--7 rozważaliśmy zbiory łańcuchowo zupełne, których struktura porządkowa była wystarczająca do sformułowania twierdzenia Kleenego i wyznaczenia najmniejszego punktu stałego odpowiedniego funkcjonału. W dalszej części potrzebna będzie szersza struktura porządkowa, w której zamiast łańcuchów rozważa się zbiory skierowane.
+
+\begin{definicja}\label{def:zbior_skierowany}
+	Niech $(P,\sqsubseteq)$ będzie zbiorem częściowo uporządkowanym. Niepusty podzbiór $D\subseteq P$ nazywamy \emph{zbiorem skierowanym}, jeżeli dla każdych $x,y\in D$ istnieje element $z\in D$ taki, że
+	\[
+	x\sqsubseteq z
+	\qquad\text{oraz}\qquad
+	y\sqsubseteq z.
+	\]
+\end{definicja}
+
+Warunek ten oznacza, że dowolne dwa elementy zbioru skierowanego mają wspólne ograniczenie górne należące do tego samego zbioru. Nie wymagamy przy tym, aby elementy zbioru były ze sobą porównywalne. Z tego względu pojęcie zbioru skierowanego jest szersze niż pojęcie łańcucha.
+
+\begin{przyklad}\label{prz:zbior_skierowany_nie_lancuch}
+	Rozważmy zbiór
+	\[
+	P=\{\bot,a,b,c\}
+	\]
+	z porządkiem określonym przez relacje
+	\[
+	\bot\sqsubseteq a\sqsubseteq c,
+	\qquad
+	\bot\sqsubseteq b\sqsubseteq c,
+	\]
+	przy czym elementy $a$ i $b$ są nieporównywalne:
+	\[
+	a\not\sqsubseteq b,
+	\qquad
+	b\not\sqsubseteq a.
+	\]
+	
+	Strukturę tego porządku można przedstawić za pomocą diagramu Hassego:
+	
+	\[
+	\begin{tikzpicture}[
+		every node/.style={circle, fill=white, inner sep=2pt},
+		>=stealth
+		]
+		\node (bottom) at (0,0) {$\bot$};
+		\node (a) at (-1.5,1.5) {$a$};
+		\node (b) at (1.5,1.5) {$b$};
+		\node (c) at (0,3) {$c$};
+		
+		\draw (bottom) -- (a);
+		\draw (bottom) -- (b);
+		\draw (a) -- (c);
+		\draw (b) -- (c);
+	\end{tikzpicture}
+	\]
+	
+	Zbiór
+	\[
+	D=\{a,b,c\}
+	\]
+	nie jest łańcuchem, ponieważ $a$ i $b$ nie są porównywalne. Jest jednak zbiorem skierowanym. Dla pary $a,b$ elementem będącym ich wspólnym ograniczeniem górnym i należącym do $D$ jest $c$. Pozostałe pary elementów są już porównywalne. Zatem $D$ spełnia warunek z definicji~\ref{def:zbior_skierowany}.
+\end{przyklad}
+
+Każdy łańcuch jest zbiorem skierowanym.
+
+\begin{twierdzenie}\label{tw:lancuch_skierowany}
+	Niech $(P,\sqsubseteq)$ będzie zbiorem częściowo uporządkowanym. Każdy łańcuch w $P$ jest zbiorem skierowanym.
+\end{twierdzenie}
+
+\begin{proof}
+	Niech $C\subseteq P$ będzie łańcuchem. Z definicji łańcucha dla dowolnych $x,y\in C$ zachodzi
+	\[
+	x\sqsubseteq y
+	\qquad\text{lub}\qquad
+	y\sqsubseteq x.
+	\]
+	W pierwszym przypadku możemy przyjąć $z=y$, natomiast w drugim przypadku $z=x$. W obu przypadkach $z\in C$ oraz
+	\[
+	x\sqsubseteq z
+	\qquad\text{oraz}\qquad
+	y\sqsubseteq z.
+	\]
+	Zatem $C$ spełnia warunek z definicji~\ref{def:zbior_skierowany}, a więc jest zbiorem skierowanym.
+\end{proof}
+
+Pojęcie zbioru skierowanego pozwala rozszerzyć pojęcie zupełności, które w przypadku zbiorów łańcuchowo zupełnych dotyczyło jedynie łańcuchów. Otrzymujemy w ten sposób następującą definicję.
+
+\begin{definicja}\label{def:zupełny_zbior_czesciowo_uporzadkowany}
+	Zbiór częściowo uporządkowany $(P,\sqsubseteq)$ nazywamy \emph{zupełnym zbiorem częściowo uporządkowanym}, jeżeli każdy niepusty zbiór skierowany $D\subseteq P$ posiada supremum w $P$, oznaczane przez
+	\[
+	\bigsqcup D.
+	\]
+\end{definicja}
+
+Każdy zupełny zbiór częściowo uporządkowany jest zatem także łańcuchowo zupełny.
+
+\begin{twierdzenie}\label{tw:zupelnosc_skierowana_lancuchowa}
+	Jeżeli $(P,\sqsubseteq)$ jest zupełnym zbiorem częściowo uporządkowanym, to każdy łańcuch $C\subseteq P$ posiada supremum w $P$.
+\end{twierdzenie}
+
+\begin{proof}
+	Na mocy twierdzenia~\ref{tw:lancuch_skierowany} każdy łańcuch $C\subseteq P$ jest zbiorem skierowanym. Z definicji zupełnego zbioru częściowo uporządkowanego~\ref{def:zupełny_zbior_czesciowo_uporzadkowany} każdy niepusty zbiór skierowany posiada supremum w $P$. W szczególności istnieje
+	\[
+	\bigsqcup C\in P.
+	\]
+	Zatem każdy łańcuch w $P$ posiada supremum, czyli $(P,\sqsubseteq)$ jest łańcuchowo zupełny.
+\end{proof}
+
+Wynika stąd, że zupełność względem zbiorów skierowanych jest warunkiem silniejszym niż zupełność względem łańcuchów. W teorii dziedzin struktura ta jest podstawowa, ponieważ pozwala traktować nie tylko liniowo uporządkowane ciągi coraz dokładniejszych przybliżeń, lecz również rodziny przybliżeń, których elementy nie muszą być wzajemnie porównywalne.
+
+\subsubsection{Relacja way-below}
+
+Sama zupełność względem zbiorów skierowanych nie pozwala jeszcze
+scharakteryzować sposobu, w jaki elementy dziedziny mogą być
+przybliżane przez elementy prostsze. Do tego celu służy relacja
+\emph{way-below}, oznaczana przez $\ll$. Relacja ta jest jednym
+z podstawowych narzędzi teorii dziedzin i pozwala formalnie opisać
+pojęcie przybliżenia elementu za pomocą elementów zawartych w
+skierowanych rodzinach przybliżeń
+\cite{Waszkiewicz2001}.
+
+\begin{definicja}\label{def:relacja_way_below}
+	Niech $(P,\sqsubseteq)$ będzie zupełnym zbiorem częściowo uporządkowanym.
+	Dla $x,y\in P$ mówimy, że $x$ jest \emph{znacznie poniżej} $y$,
+	co oznaczamy przez
+	\[
+	x\ll y,
+	\]
+	jeżeli dla każdego niepustego zbioru skierowanego $D\subseteq P$,
+	jeżeli
+	\[
+	y\sqsubseteq\bigsqcup D,
+	\]
+	to istnieje element $d\in D$ taki, że
+	\[
+	x\sqsubseteq d.
+	\]
+\end{definicja}
+
+Definicja~\ref{def:relacja_way_below} mówi, że element $x$ jest
+przybliżeniem elementu $y$ na tyle silnym, że nie można otrzymać
+$y$ jako kresu górnego zbioru skierowanego bez pojawienia się
+w tym zbiorze elementu, który zawiera w sobie informację zawartą
+w $x$. W szczególności relacja $\ll$ jest silniejsza od zwykłej
+relacji porządku $\sqsubseteq$.
+
+\begin{twierdzenie}\label{tw:way_below_porządek}
+	Niech $(P,\sqsubseteq)$ będzie zupełnym zbiorem częściowo uporządkowanym.
+	Jeżeli
+	\[
+	x\ll y,
+	\]
+	to
+	\[
+	x\sqsubseteq y.
+	\]
+	Ponadto, jeżeli
+	\[
+	x'\sqsubseteq x\ll y\sqsubseteq y',
+	\]
+	to
+	\[
+	x'\ll y'.
+	\]
+\end{twierdzenie}
+
+\begin{proof}
+	Załóżmy najpierw, że
+	\[
+	x\ll y.
+	\]
+	Rozważmy zbiór jednoelementowy
+	\[
+	D=\{y\}.
+	\]
+	Jest on skierowany, a ponadto
+	\[
+	\bigsqcup D=y.
+	\]
+	Zatem
+	\[
+	y\sqsubseteq\bigsqcup D.
+	\]
+	Na mocy definicji relacji $\ll$ istnieje $d\in D$ takie, że
+	\[
+	x\sqsubseteq d.
+	\]
+	Jedynym elementem zbioru $D$ jest $y$, więc
+	\[
+	x\sqsubseteq y.
+	\]
+	
+	Załóżmy teraz, że
+	\[
+	x'\sqsubseteq x\ll y\sqsubseteq y'.
+	\]
+	Chcemy wykazać, że
+	\[
+	x'\ll y'.
+	\]
+	Niech $D\subseteq P$ będzie dowolnym niepustym zbiorem skierowanym
+	spełniającym
+	\[
+	y'\sqsubseteq\bigsqcup D.
+	\]
+	Ponieważ
+	\[
+	y\sqsubseteq y'\sqsubseteq\bigsqcup D,
+	\]
+	otrzymujemy
+	\[
+	y\sqsubseteq\bigsqcup D.
+	\]
+	Z założenia $x\ll y$ istnieje zatem $d\in D$ takie, że
+	\[
+	x\sqsubseteq d.
+	\]
+	Ponieważ
+	\[
+	x'\sqsubseteq x,
+	\]
+	otrzymujemy
+	\[
+	x'\sqsubseteq d.
+	\]
+	Spełniony został warunek z definicji~\ref{def:relacja_way_below},
+	a więc
+	\[
+	x'\ll y'.
+	\]
+\end{proof}
+
+Relację $\ll$ można dobrze zobrazować na przykładzie zbioru
+potęgowego.
+
+\begin{przyklad}\label{prz:way_below_zbior_potegowy}
+	Niech $X$ będzie dowolnym zbiorem. Rozważmy zbiór potęgowy
+	$\mathcal{P}(X)$ wyposażony w porządek zawierania:
+	\[
+	A\sqsubseteq B
+	\quad\Longleftrightarrow\quad
+	A\subseteq B.
+	\]
+	Wtedy dla dowolnych $A,B\subseteq X$ zachodzi
+	\[
+	A\ll B
+	\quad\Longleftrightarrow\quad
+	A\subseteq B
+	\text{ oraz }
+	A\text{ jest skończony}.
+	\]
+\end{przyklad}
+
+\begin{proof}
+	Załóżmy najpierw, że $A$ jest skończonym podzbiorem $B$. Niech
+	$\mathcal{D}\subseteq\mathcal{P}(X)$ będzie niepustą rodziną
+	skierowaną względem zawierania oraz załóżmy, że
+	\[
+	B\subseteq\bigsqcup\mathcal{D}.
+	\]
+	W porządku zawierania supremum rodziny skierowanej jest jej sumą:
+	\[
+	\bigsqcup\mathcal{D}
+	=
+	\bigcup_{D\in\mathcal{D}}D.
+	\]
+	Zatem
+	\[
+	A\subseteq\bigcup_{D\in\mathcal{D}}D.
+	\]
+	Ponieważ $A$ jest skończony, możemy zapisać
+	\[
+	A=\{a_1,\ldots,a_n\}.
+	\]
+	Dla każdego $i\in\{1,\ldots,n\}$ istnieje $D_i\in\mathcal{D}$ takie,
+	że
+	\[
+	a_i\in D_i.
+	\]
+	
+	Pokażemy indukcyjnie, że istnieje $D\in\mathcal{D}$ takie, że
+	\[
+	D_i\subseteq D
+	\]
+	dla wszystkich $i\in\{1,\ldots,n\}$. Dla $n=1$ wystarczy przyjąć
+	$D=D_1$. Załóżmy, że dla pewnego $k<n$ istnieje
+	$D'\in\mathcal{D}$ takie, że
+	\[
+	D_i\subseteq D'
+	\]
+	dla wszystkich $i\in\{1,\ldots,k\}$. Ponieważ $\mathcal{D}$ jest
+	skierowana, istnieje $D\in\mathcal{D}$ takie, że
+	\[
+	D'\subseteq D
+	\qquad\text{oraz}\qquad
+	D_{k+1}\subseteq D.
+	\]
+	Wtedy
+	\[
+	D_i\subseteq D
+	\]
+	dla wszystkich $i\in\{1,\ldots,k+1\}$. Zatem dla pewnego
+	$D\in\mathcal{D}$ zachodzi
+	\[
+	A\subseteq D.
+	\]
+	Otrzymujemy więc
+	\[
+	A\sqsubseteq D,
+	\]
+	co na mocy definicji~\ref{def:relacja_way_below} oznacza
+	\[
+	A\ll B.
+	\]
+	
+	W drugą stronę załóżmy, że
+	\[
+	A\ll B.
+	\]
+	Na mocy twierdzenia~\ref{tw:way_below_porządek} mamy
+	\[
+	A\subseteq B.
+	\]
+	Przypuśćmy, że $A$ jest nieskończony. Rozważmy rodzinę
+	\[
+	\mathcal{D}
+	=
+	\{F\subseteq B\mid F\text{ jest skończony}\}.
+	\]
+	Rodzina $\mathcal{D}$ jest skierowana względem zawierania. Rzeczywiście,
+	dla dowolnych $F_1,F_2\in\mathcal{D}$ zbiór
+	\[
+	F_1\cup F_2
+	\]
+	jest skończony, należy do $\mathcal{D}$ oraz spełnia
+	\[
+	F_1\subseteq F_1\cup F_2,
+	\qquad
+	F_2\subseteq F_1\cup F_2.
+	\]
+	Ponadto
+	\[
+	\bigsqcup\mathcal{D}
+	=
+	\bigcup_{F\in\mathcal{D}}F
+	=
+	B.
+	\]
+	Zatem
+	\[
+	B\subseteq\bigsqcup\mathcal{D}.
+	\]
+	Z założenia $A\ll B$ wynika więc, że istnieje $F\in\mathcal{D}$
+	takie, że
+	\[
+	A\subseteq F.
+	\]
+	Jest to niemożliwe, ponieważ $F$ jest skończony, natomiast $A$ jest
+	nieskończony. Otrzymujemy sprzeczność. Zatem $A$ musi być skończony.
+\end{proof}
+
+Powyższy przykład pokazuje podstawową interpretację relacji $\ll$.
+Element $B$ może być nieskończony, ale jego informacja może być
+przybliżana przez skończone zbiory $A$. W tym sensie elementy
+spełniające relację $A\ll B$ reprezentują skończone przybliżenia
+elementu $B$.
+
+Relacja $\ll$ posiada również własność interpolacji, która będzie
+istotna przy przejściu od struktury porządkowej do topologii Scotta.
+
+\begin{twierdzenie}\label{tw:interpolacja_way_below}
+	Niech $(P,\sqsubseteq)$ będzie dziedziną ciągłą. Jeżeli
+	\[
+	x\ll z,
+	\]
+	to istnieje element $y\in P$ taki, że
+	\[
+	x\ll y\ll z.
+	\]
+\end{twierdzenie}
+
+Twierdzenie~\ref{tw:interpolacja_way_below} jest nazywane własnością
+interpolacji relacji $\ll$. Oznacza ono, że pomiędzy dowolnym
+przybliżeniem $x$ a elementem $z$, który jest przez nie przybliżany,
+można znaleźć pośrednie przybliżenie $y$. W szczególności relacja
+$\ll$ nie opisuje jedynie pojedynczego poziomu przybliżenia, lecz
+pozwala budować ich hierarchię. Własność ta jest standardową
+własnością dziedzin ciągłych i będzie wykorzystywana przy opisie
+topologii Scotta
+\cite{Waszkiewicz2001}.
+
+\begin{definicja}\label{def:dziedzina_ciagla}
+	Niech $(P,\sqsubseteq)$ będzie zupełnym zbiorem częściowo uporządkowanym.
+	Mówimy, że $P$ jest \emph{dziedziną ciągłą}, jeżeli dla każdego
+	$x\in P$ zbiór
+	\[
+	\mathord{\Downarrow}x
+	=
+	\{y\in P\mid y\ll x\}
+	\]
+	jest skierowany oraz
+	\[
+	x=\bigsqcup\mathord{\Downarrow}x.
+	\]
+\end{definicja}
+
+Warunek z definicji~\ref{def:dziedzina_ciagla} oznacza, że każdy
+element dziedziny może zostać otrzymany jako supremum swoich
+przybliżeń. Struktura porządkowa nie opisuje więc jedynie relacji
+pomiędzy gotowymi elementami, lecz dostarcza również sposobu ich
+stopniowego przybliżania.
+
+\begin{definicja}\label{def:baza_dziedziny}
+	Niech $(P,\sqsubseteq)$ będzie dziedziną ciągłą. Podzbiór
+	$B\subseteq P$ nazywamy \emph{bazą} dziedziny $P$, jeżeli dla każdego
+	$x\in P$ zbiór
+	\[
+	\{b\in B\mid b\ll x\}
+	\]
+	jest skierowany oraz
+	\[
+	x=
+	\bigsqcup\{b\in B\mid b\ll x\}.
+	\]
+\end{definicja}
+
+Jeżeli baza jest przeliczalna, otrzymujemy klasę dziedzin, dla których
+struktura przybliżeń może zostać opisana za pomocą przeliczalnego
+zbioru elementów.
+
+\begin{definicja}\label{def:dziedzina_omega_ciagla}
+	Dziedzinę ciągłą $P$ nazywamy \emph{dziedziną $\omega$-ciągłą}, jeżeli
+	posiada ona przeliczalną bazę.
+\end{definicja}
+
+
+\subsubsection{Topologia Scotta}
+
+Struktura porządkowa dziedziny pozwala nie tylko określać sposób
+przybliżania elementów za pomocą relacji $\ll$, lecz również
+wprowadzić topologię opisującą zachowanie tych przybliżeń. Naturalną
+topologią związaną z częściowym porządkiem jest topologia Scotta
+\cite{Waszkiewicz2001}.
+
+\begin{definicja}\label{def:zbior_scotta_otwarty}
+	Niech $(P,\sqsubseteq)$ będzie zupełnym zbiorem częściowo uporządkowanym.
+	Podzbiór $U\subseteq P$ nazywamy \emph{Scott-otwartym}, jeżeli spełnia
+	następujące dwa warunki:
+	
+	\begin{enumerate}
+		\item $U$ jest górnym zbiorem, tzn. dla każdych $x,y\in P$ zachodzi
+		\[
+		x\in U\ \text{oraz}\ x\sqsubseteq y
+		\quad\Longrightarrow\quad
+		y\in U;
+		\]
+		
+		\item dla każdego niepustego zbioru skierowanego $D\subseteq P$,
+		jeżeli
+		\[
+		\bigsqcup D\in U,
+		\]
+		to
+		\[
+		D\cap U\neq\varnothing.
+		\]
+	\end{enumerate}
+\end{definicja}
+
+Pierwszy warunek oznacza, że jeżeli element należy do zbioru
+otwartego, to każdy element zawierający co najmniej tyle samo
+informacji również do niego należy. Drugi warunek opisuje zachowanie
+zbioru otwartego względem granic skierowanych przybliżeń. Jeżeli
+supremum zbioru skierowanego należy do $U$, to już pewien element tego
+zbioru musi należeć do $U$. Oznacza to, że przynależność do zbioru
+otwartego nie może pojawić się dopiero w granicy skierowanego procesu
+przybliżania.
+
+\begin{definicja}\label{def:topologia_scotta}
+	Niech $(P,\sqsubseteq)$ będzie zupełnym zbiorem częściowo uporządkowanym.
+	\emph{Topologią Scotta} nazywamy rodzinę
+	\[
+	\sigma(P)
+	=
+	\{U\subseteq P\mid U\text{ jest Scott-otwarty}\}.
+	\]
+\end{definicja}
+
+Rodzina $\sigma(P)$ jest topologią na $P$. Zbiór pusty oraz cały
+zbiór $P$ są Scott-otwarte. Dowolna suma zbiorów Scott-otwartych jest
+Scott-otwarta, ponieważ własność bycia górnym zbiorem zachowuje się
+przy sumach, a jeżeli supremum zbioru skierowanego należy do sumy,
+to należy do jednego ze składników tej sumy. Również skończony
+przekrój zbiorów Scott-otwartych jest Scott-otwarty.
+
+Istotny przykład topologii Scotta otrzymujemy dla zbioru potęgowego.
+
+\begin{przyklad}\label{prz:scott_potega}
+	Rozważmy zupełny zbiór częściowo uporządkowany
+	\[
+	(\mathcal{P}(X),\subseteq).
+	\]
+	Dla dowolnego skończonego zbioru $A\subseteq X$ zdefiniujmy
+	\[
+	U_A
+	=
+	\{B\subseteq X\mid A\subseteq B\}.
+	\]
+	Zbiór $U_A$ jest Scott-otwarty.
+	
+	Istotnie, jeżeli $B\in U_A$ oraz $B\subseteq C$, to
+	\[
+	A\subseteq B\subseteq C,
+	\]
+	a więc $C\in U_A$. Zatem $U_A$ jest górnym zbiorem.
+	
+	Pozostaje sprawdzić drugi warunek z
+	definicji~\ref{def:zbior_scotta_otwarty}. Niech $\mathcal{D}$ będzie
+	niepustą rodziną skierowaną pod względem zawierania oraz załóżmy, że
+	\[
+	\bigsqcup\mathcal{D}
+	=
+	\bigcup_{D\in\mathcal{D}}D
+	\in U_A.
+	\]
+	Oznacza to, że
+	\[
+	A\subseteq\bigcup_{D\in\mathcal{D}}D.
+	\]
+	Ponieważ $A$ jest skończony, dla każdego $a\in A$ istnieje
+	$D_a\in\mathcal{D}$ takie, że
+	\[
+	a\in D_a.
+	\]
+	Skierowanie rodziny $\mathcal{D}$ pozwala znaleźć jeden element
+	$D\in\mathcal{D}$ będący ograniczeniem górnym wszystkich skończenie
+	wielu zbiorów $D_a$. W konsekwencji
+	\[
+	A\subseteq D,
+	\]
+	czyli
+	\[
+	D\in U_A.
+	\]
+	Zatem
+	\[
+	\mathcal{D}\cap U_A\neq\varnothing,
+	\]
+	a więc $U_A$ jest Scott-otwarty.
+\end{przyklad}
+
+Przykład~\ref{prz:scott_potega} pokazuje, że topologia Scotta
+bezpośrednio odzwierciedla pojęcie skończonego przybliżenia. Aby
+zdecydować, czy zbiór $B$ należy do otoczenia $U_A$, wystarczy
+sprawdzić, czy zawiera on skończony fragment informacji określony
+przez $A$.
+
+Związek pomiędzy topologią Scotta a relacją $\ll$ staje się
+szczególnie wyraźny w dziedzinach ciągłych.
+
+\begin{twierdzenie}\label{tw:uparrow_way_below_scott}
+	Niech $(P,\sqsubseteq)$ będzie dziedziną ciągłą. Dla każdego
+	$x\in P$ zbiór
+	\[
+	\mathord{\Uparrow}x
+	=
+	\{y\in P\mid x\ll y\}
+	\]
+	jest Scott-otwarty.
+\end{twierdzenie}
+
+\begin{proof}
+	Najpierw pokażemy, że $\mathord{\Uparrow}x$ jest górnym zbiorem.
+	Niech $y\in\mathord{\Uparrow}x$ oraz
+	\[
+	y\sqsubseteq z.
+	\]
+	Zatem
+	\[
+	x\ll y.
+	\]
+	Na mocy twierdzenia~\ref{tw:way_below_porządek}, z relacji
+	\[
+	x\ll y\sqsubseteq z
+	\]
+	wynika
+	\[
+	x\ll z.
+	\]
+	Stąd
+	\[
+	z\in\mathord{\Uparrow}x.
+	\]
+	
+	Pozostaje sprawdzić drugi warunek z
+	definicji~\ref{def:zbior_scotta_otwarty}. Niech $D\subseteq P$ będzie
+	niepustym zbiorem skierowanym oraz załóżmy, że
+	\[
+	\bigsqcup D\in\mathord{\Uparrow}x.
+	\]
+	Oznacza to, że
+	\[
+	x\ll\bigsqcup D.
+	\]
+	Na mocy definicji~\ref{def:relacja_way_below} istnieje $d\in D$
+	takie, że
+	\[
+	x\sqsubseteq d.
+	\]
+	Nie wystarcza to jednak do stwierdzenia, że $d\in\mathord{\Uparrow}x$.
+	Korzystamy zatem z własności interpolacji
+	twierdzenia~\ref{tw:interpolacja_way_below}. Istnieje $y\in P$ takie,
+	że
+	\[
+	x\ll y\ll\bigsqcup D.
+	\]
+	Ponieważ
+	\[
+	y\ll\bigsqcup D,
+	\]
+	z definicji relacji $\ll$ istnieje $d\in D$ takie, że
+	\[
+	y\sqsubseteq d.
+	\]
+	Z twierdzenia~\ref{tw:way_below_porządek} otrzymujemy
+	\[
+	x\ll y\sqsubseteq d,
+	\]
+	a więc
+	\[
+	x\ll d.
+	\]
+	Stąd
+	\[
+	d\in D\cap\mathord{\Uparrow}x.
+	\]
+	Ostatecznie
+	\[
+	D\cap\mathord{\Uparrow}x\neq\varnothing,
+	\]
+	co kończy dowód.
+\end{proof}
+
+Topologia Scotta pozwala zatem traktować strukturę porządkową dziedziny
+jako przestrzeń topologiczną. W szczególności w dziedzinie ciągłej
+relacja $\ll$ dostarcza naturalnych zbiorów otwartych, które opisują
+otoczenia elementów w sensie przybliżeń porządkowych.
+
+W dalszej części potrzebne będzie przypisanie elementom dziedziny
+wartości liczbowych opisujących stopień ich informacji. Taką rolę
+pełni \emph{pomiar}. W przypadku dziedzin z przeliczalną bazą pomiar
+można skonstruować na podstawie przeliczalnej rodziny zbiorów
+Scott-otwartych \cite{Waszkiewicz2001,Waszkiewicz2003}. Prowadzi to
+do następnego etapu konstrukcji, w którym struktura topologiczno-
+porządkowa zostanie wyposażona w ilościowy opis.
+
+\subsubsection{Pomiary}
+
+Dotychczasowa konstrukcja opierała się wyłącznie na strukturze
+porządkowej dziedziny. Relacja $\ll$ pozwala opisywać, kiedy jeden
+element stanowi przybliżenie drugiego, natomiast topologia Scotta
+opisuje sposób, w jaki te przybliżenia zachowują się względem
+skierowanych supremów. Kolejnym krokiem jest przypisanie elementom
+dziedziny wartości liczbowych, które pozwolą ilościowo opisać stopień
+ich przybliżenia.
+
+W tym celu wykorzystuje się pojęcie \emph{pomiaru}. Idea ta pochodzi
+z ilościowej teorii dziedzin rozwijanej przez Martina i została
+wykorzystana przez Waszkiewicza w konstrukcji odległości związanej
+z pomiarem \cite{Waszkiewicz2001,Waszkiewicz2003}.
+
+Wprowadzając pomiar, wygodnie jest odwrócić naturalny porządek na
+zbiorze wartości liczbowych. Wynika to z interpretacji elementów
+dziedziny jako informacji: jeżeli
+\[
+x\sqsubseteq y,
+\]
+to $y$ zawiera co najmniej tyle informacji co $x$, a zatem jego
+wartość pomiaru powinna być nie większa. W szczególności pomiar będzie
+funkcją monotoniczną względem porządku odwrotnego na
+$[0,\infty)$.
+
+\begin{definicja}\label{def:przestrzen_pomiarowa}
+	Niech $P$ będzie zbiorem częściowo uporządkowanym. Dla
+	$x\in P$ i $\varepsilon>0$ oraz monotonicznej funkcji
+	\[
+	\mu\colon P\to[0,\infty)^{\mathrm{op}}
+	\]
+	definiujemy zbiór elementów $\varepsilon$-bliskich $x$ przez
+	\[
+	\mu_\varepsilon(x)
+	=
+	\{y\in P\mid y\sqsubseteq x,\ \mu(y)<\mu(x)+\varepsilon\}.
+	\]
+\end{definicja}
+
+Zauważmy, że monotoniczność funkcji
+\[
+\mu\colon P\to[0,\infty)^{\mathrm{op}}
+\]
+oznacza, że
+\[
+x\sqsubseteq y
+\quad\Longrightarrow\quad
+\mu(x)\geq\mu(y)
+\]
+w zwykłym porządku liczb rzeczywistych. Wartość $\mu(x)$ można więc
+interpretować jako ilość informacji, która pozostaje do określenia,
+aby osiągnąć element $x$. Im bardziej określony jest element, tym
+mniejsza może być jego wartość pomiaru.
+
+Zbiór $\mu_\varepsilon(x)$ zawiera elementy znajdujące się poniżej
+$x$, których wartość pomiaru różni się od $\mu(x)$ o mniej niż
+$\varepsilon$. Jeżeli $\mu$ dobrze odzwierciedla strukturę dziedziny,
+zbiory te powinny dostarczać lokalnego opisu topologii Scotta.
+
+\begin{definicja}\label{def:pomiar_indukujacy_topologie}
+	Niech $P$ będzie zupełnym zbiorem częściowo uporządkowanym,
+	a $\sigma(P)$ jego topologią Scotta. Monotoniczną funkcję
+	\[
+	\mu\colon P\to[0,\infty)^{\mathrm{op}}
+	\]
+	nazywamy \emph{indukującą topologię Scotta} na podzbiorze
+	$X\subseteq P$, jeżeli dla każdego $U\in\sigma(P)$ i każdego
+	$x\in U\cap X$ istnieje $\varepsilon>0$ takie, że
+	\[
+	\mu_\varepsilon(x)\subseteq U.
+	\]
+\end{definicja}
+
+Warunek z definicji~\ref{def:pomiar_indukujacy_topologie} oznacza,
+że wartości pomiaru pozwalają rozpoznać otoczenia Scotta. Jeżeli
+$x$ należy do zbioru Scott-otwartego $U$, to istnieje odpowiednio
+małe $\varepsilon>0$ takie, że wszystkie elementy będące poniżej
+$x$ i mające wartość pomiaru dostatecznie bliską $\mu(x)$ również
+należą do $U$.
+
+W teorii dziedzin interesują nas pomiary, które są zgodne nie tylko
+z porządkiem, lecz także z jego zupełnością. Prowadzi to do pojęcia
+ciągłości pomiaru.
+
+\begin{definicja}\label{def:pomiar}
+	Niech $P$ będzie dziedziną ciągłą. Funkcję
+	\[
+	\mu\colon P\to[0,\infty)^{\mathrm{op}}
+	\]
+	nazywamy \emph{pomiarem}, jeżeli jest Scott-ciągła oraz indukuje
+	topologię Scotta na swoim jądrze
+	\[
+	\ker\mu
+	=
+	\{x\in P\mid\mu(x)=0\}.
+	\]
+\end{definicja}
+
+Scott-ciągłość pomiaru oznacza w szczególności, że dla każdego
+niepustego zbioru skierowanego $D\subseteq P$ zachodzi
+\[
+\mu\left(\bigsqcup D\right)
+=
+\bigsqcup_{x\in D}^{[0,\infty)^{\mathrm{op}}}\mu(x).
+\]
+Ponieważ porządek w $[0,\infty)^{\mathrm{op}}$ jest odwrócony,
+powyższa równość odpowiada w zwykłym porządku liczbowym zależności
+\[
+\mu\left(\bigsqcup D\right)
+=
+\inf_{x\in D}\mu(x).
+\]
+
+W szczególności wartość pomiaru elementu będącego supremum
+skierowanej rodziny jest graniczną wartością pomiarów elementów tej
+rodziny. Jest to zgodne z interpretacją pomiaru jako ilości
+informacji brakującej do pełnego określenia elementu.
+
+Szczególnie istotny jest przypadek dziedzin posiadających
+przeliczalną bazę. Wówczas pomiar można skonstruować bezpośrednio
+z przeliczalnej rodziny zbiorów Scott-otwartych.
+
+\begin{twierdzenie}\label{tw:pomiar_z_bazy_scotta}
+	Niech $P$ będzie dziedziną ciągłą posiadającą przeliczalną bazę
+	topologii Scotta
+	\[
+	\{U_n\mid n\in\mathbb{N}\}.
+	\]
+	Wtedy funkcja
+	\[
+	\mu\colon P\to[0,1]
+	\]
+	określona wzorem
+	\[
+	\mu(x)
+	=
+	1-
+	\sum_{\substack{n\in\mathbb{N}\\x\in U_n}}
+	2^{-(n+1)}
+	\]
+	jest pomiarem indukującym topologię Scotta.
+\end{twierdzenie}
+
+\begin{proof}
+	Dla każdego $x\in P$ zbiór indeksów
+	\[
+	I_x=\{n\in\mathbb{N}\mid x\in U_n\}
+	\]
+	jest podzbiorem $\mathbb{N}$. Ponieważ
+	\[
+	\sum_{n=0}^{\infty}2^{-(n+1)}=1,
+	\]
+	otrzymujemy
+	\[
+	0\leq
+	\sum_{n\in I_x}2^{-(n+1)}
+	\leq 1,
+	\]
+	a zatem
+	\[
+	0\leq\mu(x)\leq1.
+	\]
+	Funkcja $\mu$ jest więc dobrze określona.
+	
+	Załóżmy, że
+	\[
+	x\sqsubseteq y.
+	\]
+	Ponieważ każdy zbiór $U_n$ jest górnym zbiorem, z
+	$x\in U_n$ wynika
+	\[
+	y\in U_n.
+	\]
+	Stąd
+	\[
+	I_x\subseteq I_y,
+	\]
+	a więc
+	\[
+	\sum_{n\in I_x}2^{-(n+1)}
+	\leq
+	\sum_{n\in I_y}2^{-(n+1)}.
+	\]
+	W konsekwencji
+	\[
+	\mu(x)\geq\mu(y).
+	\]
+	Oznacza to, że $\mu$ jest monotoniczna jako funkcja
+	\[
+	P\to[0,\infty)^{\mathrm{op}}.
+	\]
+	
+	Pozostaje wykazać, że $\mu$ indukuje topologię Scotta. Niech
+	$U\in\sigma(P)$ oraz niech
+	\[
+	x\in U.
+	\]
+	Ponieważ $\{U_n\mid n\in\mathbb{N}\}$ jest bazą topologii Scotta,
+	istnieje indeks $k\in\mathbb{N}$ taki, że
+	\[
+	x\in U_k\subseteq U.
+	\]
+	
+	Wybierzmy $\varepsilon>0$ takie, że
+	\[
+	\varepsilon<2^{-(k+1)}.
+	\]
+	Pokażemy, że
+	\[
+	\mu_\varepsilon(x)\subseteq U.
+	\]
+	Niech $y\in\mu_\varepsilon(x)$. Wtedy
+	\[
+	y\sqsubseteq x
+	\]
+	oraz
+	\[
+	\mu(y)<\mu(x)+\varepsilon.
+	\]
+	Załóżmy, dla dowodu nie wprost, że
+	\[
+	y\notin U_k.
+	\]
+	Ponieważ $x\in U_k$, indeks $k$ należy do $I_x$, natomiast nie
+	należy do $I_y$. Zatem
+	\[
+	\sum_{n\in I_x}2^{-(n+1)}
+	-
+	\sum_{n\in I_y}2^{-(n+1)}
+	\geq
+	2^{-(k+1)}.
+	\]
+	Wynika stąd
+	\[
+	\mu(y)-\mu(x)
+	\geq
+	2^{-(k+1)}
+	>
+	\varepsilon,
+	\]
+	co przeczy nierówności
+	\[
+	\mu(y)<\mu(x)+\varepsilon.
+	\]
+	Zatem
+	\[
+	y\in U_k.
+	\]
+	Ponieważ
+	\[
+	U_k\subseteq U,
+	\]
+	otrzymujemy
+	\[
+	y\in U.
+	\]
+	Stąd
+	\[
+	\mu_\varepsilon(x)\subseteq U.
+	\]
+	Wobec dowolności $U$ i $x$ funkcja $\mu$ indukuje topologię Scotta.
+\end{proof}
+
+Powyższa konstrukcja pokazuje, że przeliczalna struktura topologiczna
+dziedziny może zostać zakodowana za pomocą jednej funkcji o wartościach
+rzeczywistych. Każdy zbiór bazowy $U_n$ otrzymuje w konstrukcji
+odpowiednią wagę $2^{-(n+1)}$, a wartość $\mu(x)$ zależy od tego,
+które z tych zbiorów zawierają element $x$.
+
+Warto zwrócić uwagę na szczególną rolę jądra pomiaru. Jeżeli
+\[
+x\in\ker\mu,
+\]
+to
+\[
+\mu(x)=0.
+\]
+W konstrukcji metrycznej przedstawionej w następnym podrozdziale
+elementy jądra będą zachowywać się jak punkty o zerowej odległości
+własnej. Właśnie ta możliwość odróżnia metrykę częściową od zwykłej
+metryki, dla której odległość punktu od samego siebie zawsze wynosi
+zero.
+
+Pomiar stanowi zatem ilościowy opis struktury dziedziny. Z jednej
+strony pozostaje związany z relacją $\ll$ i topologią Scotta, z drugiej
+zaś przyjmuje wartości w zbiorze liczbowym. Pozwala to przejść od
+czysto porządkowego opisu dziedziny do konstrukcji funkcji
+przypominającej odległość. W następnym podrozdziale wykorzystamy
+pomiar $\mu$ do zdefiniowania odległości pomiędzy dwoma elementami
+dziedziny:
+\[
+d_\mu(x,y)
+=
+\inf\{\mu(z)\mid z\ll x,\ z\ll y\}.
+\]
+Konstrukcja ta jest podstawowym krokiem w przejściu od teorii
+pomiarów do metryk częściowych
+\cite{Waszkiewicz2001,Waszkiewicz2003}.
+
+\end{comment}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+	Wprowadzenie metryk częściowych pozwoliło otrzymać alternatywny sposób
+	konstrukcji punktów stałych. Wcześniej punkt stały otrzymywaliśmy za
+	pomocą struktury porządkowej: ciąg kolejnych przybliżeń był rosnącym
+	łańcuchem, a jego kres górny był punktem stałym funkcjonału. W podejściu
+	Matthewsa podstawową rolę odgrywa natomiast kontrakcja oraz zupełność
+	metryki częściowej.
+	
+	Oba podejścia wykorzystują zatem iterację funkcji, lecz wymagają
+	odmiennych założeń. Warto wskazać tę różnicę, ponieważ pokazuje ona, że
+	twierdzenie Matthewsa nie jest po prostu innym sformułowaniem
+	twierdzenia Kleenego.
+	
+	\begin{table}[h]
+		\centering
+		\begin{tabular}{p{0.42\textwidth}p{0.42\textwidth}}
+			\hline
+			\textbf{Podejście porządkowe} &
+			\textbf{Podejście metryczne} \\
+			\hline
+			zbiór łańcuchowo zupełny z porządkiem $\sqsubseteq$ &
+			zupełna metryka częściowa $p$ \\[2mm]
+			
+			ciąg rosnący względem $\sqsubseteq$ &
+			ciąg Cauchy'ego względem $p$ \\[2mm]
+			
+			istnienie kresu górnego &
+			istnienie granicy \\[2mm]
+			
+			ciąg iteracji $f^n(\bt)$, start w $\bt$ &
+			ciąg iteracji $f^n(x_0)$, dowolne $x_0$ \\[2mm]
+			
+			ciągłość funkcjonału &
+			kontrakcja \\[2mm]
+			
+			najmniejszy punkt stały (może nie być jedyny) &
+			jedyny punkt stały $x^*$, przy czym $p(x^*,x^*)=0$ \\[2mm]
+			
+			twierdzenie Kleenego &
+			twierdzenie Matthewsa \\[2mm]
+			\hline
+		\end{tabular}
+		\caption{Porównanie dwóch podejść do konstrukcji punktu stałego.}
+		\label{tab:porownanie}
+	\end{table}
+	
+	Podobieństwo obu konstrukcji (zob.\ Tabela~\ref{tab:porownanie}) jest
+	widoczne przede wszystkim w sposobie wyznaczania punktu stałego. W obu
+	przypadkach wielokrotnie stosujemy badaną funkcję do pewnego elementu
+	początkowego i otrzymujemy ciąg przybliżeń
+	\[
+	x_0,\quad f(x_0),\quad f^2(x_0),\quad\ldots,
+	\]
+	którego element graniczny okazuje się punktem stałym. Różnica pojawia
+	się już na tym etapie: w twierdzeniu Kleenego iterację trzeba rozpocząć
+	od elementu najmniejszego $\bt$ (tylko wtedy otrzymujemy łańcuch
+	i najmniejszy punkt stały), natomiast w twierdzeniu Matthewsa punkt
+	początkowy $x_0$ może być dowolny.
+	
+	Różny jest również mechanizm gwarantujący istnienie elementu
+	granicznego. W podejściu porządkowym wykorzystujemy ciągłość funkcji
+	oraz istnienie kresu górnego rosnącego łańcucha. W podejściu metrycznym
+	wykorzystujemy kontrakcję, która zapewnia własność Cauchy'ego ciągu
+	iteracji, oraz zupełność metryki częściowej, która gwarantuje istnienie
+	jego granicy.
+	
+	Najistotniejsza jest jednak różnica w otrzymanym wyniku. Twierdzenie
+	Kleenego wskazuje \emph{najmniejszy} punkt stały, przy czym punktów
+	stałych może być wiele --- jak w przypadku pętli
+	$\kw{while}\ \kw{true}\ \kw{do}\ \kw{skip}$, dla której każda funkcja
+	częściowa jest punktem stałym, a właściwą denotacją jest
+	$\varnothing$. Twierdzenie Matthewsa daje natomiast punkt stały
+	\emph{jedyny}, i to taki, że $p(x^*,x^*)=0$, czyli element całkowicie
+	określony. W szczególności metodą tą nie otrzymamy denotacji, która
+	jest gdzieś nieokreślona, np.\ funkcji pustej opisującej pętlę
+	nieskończoną.
+	
+	Warunki ciągłości i kontrakcji nie są przy tym porównywalne wprost,
+	ponieważ odnoszą się do różnych struktur: pierwszy do porządku,
+	drugi do metryki częściowej. Twierdzenie Matthewsa nie zastępuje więc
+	twierdzenia Kleenego w ogólnym przypadku. Stanowi natomiast inne
+	narzędzie konstrukcji punktu stałego, szczególnie użyteczne wtedy,
+	gdy działanie funkcji można kontrolować ilościowo za pomocą metryki
+	częściowej, a poszukiwany obiekt ma być całkowicie określony.
+
+%========================= Bibliografia =========================
+\phantomsection
+\addcontentsline{toc}{section}{\refname}
+\begin{thebibliography}{99}
+
+\bibitem{gordon1979}
+  M.~J.~C.~Gordon, \emph{The Denotational Description of Programming Languages: An Introduction}. Springer-Verlag, 1979.
+  
+\bibitem{matthews1994}
+  S.\,G.~Matthews, \emph{Partial Metric Topology}. W: \emph{Papers on General Topology and Applications} (Eighth Summer Conference at Queens College), Annals of the New York Academy of Sciences, vol.~728, 1994, s.~183--197.
+
+\bibitem{cs152denot}
+  \emph{Denotational Semantics}, CS~152: Programming Languages, wykład~6, Harvard School of Engineering and Applied Sciences, 9~lutego 2023.
+
+\bibitem{cs4110denot}
+  \emph{Denotational Semantics}, CS~4110: Programming Languages and Logics, wykład~8, Cornell University, jesień 2012.
+  
+% Pozycje cytowane wyłącznie w wykomentowanym fragmencie o teorii dziedzin:
+% \bibitem{Waszkiewicz2001}
+% P.~Waszkiewicz,
+% \emph{Distance and Measurement in Domain Theory},
+% Electronic Notes in Theoretical Computer Science,
+% 45 (2001), 448--462.
+% DOI: 10.1016/S1571-0661(04)80975-7.
+
+% \bibitem{Waszkiewicz2003}
+% P.~Waszkiewicz,
+% \emph{Quantitative Continuous Domains},
+% Applied Categorical Structures,
+% 11(1) (2003), 41--67.
+% DOI: 10.1023/A:1023012924892.
+
+\bibitem{naur1960}
+P. Naur (red.),
+\emph{Report on the Algorithmic Language ALGOL 60},
+Communications of the ACM, 3(5), 1960, s.~299--314.
+
+\bibitem{kleene1952}
+S.\,C.~Kleene,
+\emph{Introduction to Metamathematics},
+North-Holland, Amsterdam; D.~Van Nostrand, New York, 1952.
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,17 @@
+# Repozytorium zawiera wyłącznie źródło referatu (referat.tex),
+# pliki konfiguracyjne oraz PDF generowany automatycznie przez GitHub Actions.
+# Wszystko inne (pliki pomocnicze LaTeX-a, notatki, prezentacje, materiały
+# źródłowe) jest ignorowane.
+
+*
+
+!.gitignore
+!README.md
+!referat.tex
+
+!.github/
+!.github/workflows/
+!.github/workflows/*.yml
+
+!pdf/
+!pdf/referat.pdf
