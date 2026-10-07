@@ -104,9 +104,9 @@ Przypomnijmy najpierw klasyczne pojęcie funkcji jako relacji.
 \emph{Funkcją} ze zbioru $A$ w zbiór $B$, oznaczaną $f:A\to B$, nazywamy relację
 $f\subseteq A\times B$ spełniającą dwa warunki:
 \begin{enumerate}
-  \item[(1)] \emph{całkowitość}: dla każdego $a\in A$ istnieje $b\in B$
+  \item[(1)] \emph{całkowitość} --- dla każdego $a\in A$ istnieje $b\in B$
         takie, że $(a,b)\in f$;
-  \item[(2)] \emph{jednoznaczność}: jeśli $(a,b)\in f$ oraz $(a,b')\in f$,
+  \item[(2)] \emph{jednoznaczność} --- jeśli $(a,b)\in f$ oraz $(a,b')\in f$,
         to $b=b'$.
 \end{enumerate}
 Ten jedyny element $b$ oznaczamy $f(a)$, tzn.\ $(a,b)\in f \iff b=f(a)$.
@@ -119,10 +119,10 @@ całkowitą} --- w odróżnieniu od funkcji częściowej wprowadzonej niżej.
 nazywamy relację $f\subseteq A\times B$ spełniającą \emph{tylko} warunek
 jednoznaczności:
 \begin{enumerate}
-  \item[(2)] \emph{jednoznaczność}: jeśli $(a,b)\in f$ oraz $(a,b')\in f$, to $b=b'$.
+  \item[(2)] \emph{jednoznaczność} --- jeśli $(a,b)\in f$ oraz $(a,b')\in f$, to $b=b'$.
 \end{enumerate}
-Warunku~(1) z Definicji~\ref{def:funkcja} (całkowitości) \emph{nie} wymagamy: dla
-niektórych $a\in A$ może nie istnieć żadna para $(a,b)\in f$; mówimy wtedy, że
+Warunku~(1) z Definicji~\ref{def:funkcja} (całkowitości) \emph{nie} wymagamy. Dla
+niektórych $a\in A$ może więc nie istnieć żadna para $(a,b)\in f$ i mówimy wtedy, że
 $f(a)$ jest \emph{nieokreślone}, a gdy $(a,b)\in f$, piszemy $b=f(a)$. Funkcję nigdzie
 nieokreśloną utożsamiamy z relacją pustą~$\varnothing$.
 \end{definicja}
@@ -130,14 +130,14 @@ nieokreśloną utożsamiamy z relacją pustą~$\varnothing$.
 \begin{definicja}\label{def:dziedzina_okreslonosci}
 	\emph{Dziedziną określoności} funkcji częściowej $f:A\rightharpoonup B$ nazywamy zbiór tych argumentów, dla których $f$ jest określona, tzn.
 	\[
-	\dom(f)=\{a\in A:\ \exists b\in B\ (a,b)\in f\}\subseteq A.
+	\dom(f)\coloneqq \{a\in A:\ \exists b\in B\ (a,b)\in f\}\subseteq A.
 	\]
 	Funkcja całkowita (Definicja~\ref{def:funkcja}) jest szczególnym przypadkiem, w którym $\dom(f)=A$.
 \end{definicja}
 
 \begin{przyklad}\label{prz:poprzednik}
-Niech $\mathbb{N}=\{1,2,3,\dots\}$ oraz $\mathbb{N}_0=\mathbb{N}\cup\{0\}$. Funkcja
-poprzednika $p:\mathbb{N}_0\rightharpoonup\mathbb{N}_0$, $p(n)=n-1$, jest częściowa:
+Niech $\mathbb{N}\coloneqq\{1,2,3,\dots\}$ oraz $\mathbb{N}_0\coloneqq\mathbb{N}\cup\{0\}$. Funkcja
+poprzednika $p:\mathbb{N}_0\rightharpoonup\mathbb{N}_0$, $p(n)\coloneqq n-1$, jest częściowa. Mamy
 $\dom(p)=\mathbb{N}=\{1,2,3,\dots\}$, a $p(0)$ jest nieokreślone (argument $0$ należy
 do $\mathbb{N}_0$, lecz $0-1\notin\mathbb{N}_0$).
 \end{przyklad}
@@ -164,41 +164,45 @@ czyli zbiór poprawnych programów, wyrażeń oraz innych konstrukcji językowyc
 W tym celu składnię można opisać za pomocą gramatyki formalnej, która określa
 sposób konstruowania poprawnych wyrażeń danego języka.
 
-W dalszej części będziemy posługiwać się zapisem reguł gramatycznych w notacji Backusa--Naura (BNF, ang. \emph{Backus--Naur Form}), wprowadzonej przez Johna Backusa w kontekście formalnego opisu składni języków programowania i rozwiniętej w opisie języka ALGOL 60 przez Petera Naura \cite{naur1960}. Reguły tej postaci zapisywane są jako
+W dalszej części będziemy posługiwać się zapisem reguł gramatycznych w notacji
+Backusa--Naura (BNF, ang.\ \emph{Backus--Naur Form}), wprowadzonej przez Johna
+Backusa w kontekście formalnego opisu składni języków programowania i rozwiniętej
+w opisie języka ALGOL~60 przez Petera Naura~\cite{naur1960}. Reguły zapisujemy
+w postaci
 \[
-\langle\text{wyrażenie}\rangle ::= \ldots
+e ::= \text{wariant}_1 \mid \text{wariant}_2 \mid \ldots
 \]
-gdzie symbol $\langle\text{wyrażenie}\rangle$ oznacza kategorię składniową,
-natomiast prawa strona reguły określa dopuszczalne sposoby konstruowania
-elementów należących do tej kategorii. Symbol $::=$ należy rozumieć jako
-„jest definiowane przez” lub „może być postaci”.
+Litera $e$ po lewej stronie jest \emph{metazmienną} --- oznacza dowolny element
+definiowanej kategorii składniowej (np.\ dowolne wyrażenie). Prawa strona
+wymienia dopuszczalne postaci takiego elementu. Symbol $::=$ czytamy
+,,może być postaci'', a symbol $\mid$ --- ,,lub''.
 
 Przykładowo, prostą klasę wyrażeń arytmetycznych można zdefiniować za pomocą
 reguł
 \[
 \begin{aligned}
-	\langle\text{wyrażenie}\rangle
-	&::=
-	\langle\text{liczba}\rangle
-	\mid
-	\langle\text{wyrażenie}\rangle
-	+
-	\langle\text{wyrażenie}\rangle,
-	\\
-	\langle\text{liczba}\rangle
-	&::=
-	0 \mid 1 \mid 2 \mid \ldots
+	\mathtt{n} &::= \mathtt{0} \mid \mathtt{1} \mid \mathtt{2} \mid \ldots,\\
+	e &::= \mathtt{n} \mid e_1 + e_2.
 \end{aligned}
 \]
-Reguły te nie określają jeszcze znaczenia wyrażeń, lecz jedynie wskazują,
-które ciągi symboli są poprawnymi wyrażeniami języka.
+Druga reguła mówi, że wyrażenie $e$ jest numerałem $\mathtt{n}$ albo ma postać $e_1+e_2$,
+gdzie $e_1$ i $e_2$ są \emph{dowolnymi} wyrażeniami. Indeksy służą jedynie do
+rozróżnienia podwyrażeń, abyśmy mogli się do nich odwoływać; nie oznaczają, że
+podwyrażenia muszą być różne. Na przykład $\mathtt{2+7}$ jest wyrażeniem
+(postaci $e_1+e_2$ z $e_1=\mathtt{2}$, $e_2=\mathtt{7}$), podobnie jak
+$\mathtt{2+2}$ (z $e_1=e_2=\mathtt{2}$). Gramatykę traktujemy przy tym jako opis
+\emph{struktury} wyrażeń, a nie samych ciągów znaków. Wyrażenie postaci
+$e_1+e_2$ ma dwa jednoznacznie wyznaczone podwyrażenia $e_1$ i $e_2$, a ewentualne
+niejednoznaczności zapisu (np.\ $\mathtt{2+7+3}$) rozstrzygamy nawiasami.
 
-Takie podejście jest ogólne: poprzez odpowiednio dobraną gramatykę można
-formalnie określić składnię języka programowania. W szczególności reguły
-składniowe mogą opisywać zarówno proste języki rachunkowe, jak i języki
-zawierające zmienne, funkcje, instrukcje warunkowe czy konstrukcje iteracyjne.
-Dopiero po określeniu składni można przypisać poszczególnym konstrukcjom języka
-ich znaczenie za pomocą semantyki denotacyjnej.
+Reguły te nie określają jeszcze znaczenia wyrażeń, lecz jedynie wskazują,
+które napisy są poprawnymi wyrażeniami języka. Takie podejście jest ogólne.
+Poprzez odpowiednio dobraną gramatykę można formalnie określić składnię języka
+programowania. W szczególności reguły składniowe mogą opisywać zarówno proste
+języki rachunkowe, jak i języki zawierające zmienne, funkcje, instrukcje
+warunkowe czy konstrukcje iteracyjne. Dopiero po określeniu składni można
+przypisać poszczególnym konstrukcjom języka ich znaczenie za pomocą semantyki
+denotacyjnej.
 
 W dalszej części referatu skupimy się na prostym, modelowym języku
 programowania \texttt{IMP}. Jest to niewielki język imperatywny, zawierający
@@ -209,58 +213,70 @@ zasady konstruowania semantyki denotacyjnej.
 
 \subsection{Gramatyka języka \texttt{IMP}}
 
+W gramatyce języka \texttt{IMP} używamy następujących metazmiennych:
+\begin{itemize}
+	\item $\mathtt{x},\mathtt{y},\mathtt{z}$ --- nazwy zmiennych programu,
+	\item $\mathtt{n}$ --- stałe liczbowe (numerały), np.\ $\mathtt{0}$, $\mathtt{7}$, $\mathtt{42}$,
+	\item $a,a_1,a_2$ --- wyrażenia arytmetyczne,
+	\item $b$ --- wyrażenia logiczne,
+	\item $c,c_1,c_2$ --- instrukcje.
+\end{itemize}
+Zmienne programu i numerały zapisujemy krojem maszynowym (np.\ $\mathtt{x}$,
+$\mathtt{7}$), aby odróżnić elementy składni od obiektów matematycznych,
+takich jak liczby całkowite.
 Składnię języka \texttt{IMP} określamy za pomocą następującej gramatyki:
 \[
 \begin{aligned}
-	\langle a \rangle
+	a
 	&::=
-	x
-	\mid n
-	\mid \langle a \rangle + \langle a \rangle,
+	\mathtt{x}
+	\mid \mathtt{n}
+	\mid a_1 + a_2,
 	\\[2mm]
-	\langle b \rangle
+	b
 	&::=
 	\kw{true}
 	\mid \kw{false}
-	\mid \langle a \rangle < \langle a \rangle,
+	\mid a_1 < a_2,
 	\\[2mm]
-	\langle c \rangle
+	c
 	&::=
 	\kw{skip}
 	\mid
-	x := \langle a \rangle
+	\mathtt{x} := a
 	\mid
-	\langle c \rangle ; \langle c \rangle
+	c_1 ; c_2
 	\\
 	&\qquad\mid
-	\kw{if}\ \langle b\rangle\
-	\kw{then}\ \langle c\rangle\
-	\kw{else}\ \langle c\rangle
+	\kw{if}\ b\
+	\kw{then}\ c_1\
+	\kw{else}\ c_2
 	\mid
-	\kw{while}\ \langle b\rangle\
-	\kw{do}\ \langle c\rangle.
+	\kw{while}\ b\
+	\kw{do}\ c.
 \end{aligned}
 \]
 
-W powyższej gramatyce $\langle a\rangle$ oznacza wyrażenie arytmetyczne,
-$\langle b\rangle$ oznacza wyrażenie logiczne, natomiast $\langle c\rangle$
-oznacza instrukcję. Symbol $n$ oznacza stałą liczbową, a $x$ zmienną programu.
+Pierwsza reguła mówi, że wyrażenie arytmetyczne $a$ jest
+zmienną $\mathtt{x}$, stałą liczbową $\mathtt{n}$ albo ma postać $a_1+a_2$, gdzie $a_1$ i $a_2$
+są dowolnymi wyrażeniami arytmetycznymi (jak wyżej, niekoniecznie różnymi ---
+$\mathtt{x}+\mathtt{x}$ jest wyrażeniem postaci $a_1+a_2$ z $a_1=a_2=\mathtt{x}$). Indeksy pozwolą nam
+w dalszej części odwoływać się do poszczególnych podwyrażeń.
 
-Konstrukcja
+Konstrukcja $\mathtt{x} := a$ reprezentuje przypisanie wartości wyrażenia
+arytmetycznego $a$ do zmiennej $\mathtt{x}$. Symbol $:=$ jest tu elementem składni
+\texttt{IMP} i nie należy go mylić z symbolem $\coloneqq$ równości
+definicyjnej, którego używamy w opisie matematycznym. Średnik w $c_1;c_2$ oznacza sekwencyjne
+wykonanie dwóch instrukcji. Konstrukcja
 \[
-x := \langle a\rangle
-\]
-reprezentuje przypisanie wartości wyrażenia arytmetycznego do zmiennej.
-Średnik oznacza sekwencyjne wykonanie dwóch instrukcji. Konstrukcja
-\[
-\kw{if}\ \langle b\rangle\
-\kw{then}\ \langle c\rangle\
-\kw{else}\ \langle c\rangle
+\kw{if}\ b\
+\kw{then}\ c_1\
+\kw{else}\ c_2
 \]
 reprezentuje instrukcję warunkową, natomiast
 \[
-\kw{while}\ \langle b\rangle\
-\kw{do}\ \langle c\rangle
+\kw{while}\ b\
+\kw{do}\ c
 \]
 reprezentuje instrukcję iteracyjną.
 
@@ -270,20 +286,30 @@ właśnie jest przedmiotem semantyki denotacyjnej, która pozwoli każdej
 konstrukcji składniowej przypisać odpowiedni obiekt matematyczny opisujący
 jej znaczenie.
 
+Podkreślmy, że symbole występujące w gramatyce --- $+$, $<$, $:=$, $;$
+oraz słowa $\kw{true}$, $\kw{false}$, $\kw{skip}$, $\kw{if}$, $\kw{then}$,
+$\kw{else}$, $\kw{while}$, $\kw{do}$ --- są na razie wyłącznie
+\emph{znakami}, z których budujemy napisy. Na przykład znak $+$ w wyrażeniu
+$\mathtt{x}+\mathtt{2}$ jest po prostu częścią napisu; to, że ma on oznaczać dodawanie liczb,
+ustalimy dopiero w definicji semantyki.
+
+\subsection{Stany i funkcje semantyczne}\label{subsec:stany}
 
 Przez denotacyjny opis języka programowania rozumiemy w tym kontekście jego
 matematyczną interpretację, która abstrahuje od konkretnej składni języka
 i przypisuje poszczególnym konstrukcjom programistycznym ich formalne znaczenie.
 
-Skupimy się teraz na denotacyjnym opisie języka \texttt{IMP}. W tym celu
-wprowadzimy kilka podstawowych definicji.
+Przechodzimy teraz do denotacyjnego opisu języka \texttt{IMP}. Zanim
+podamy znaczenie poszczególnych konstrukcji, musimy ustalić, czym są
+obiekty, na których działają programy --- stany --- oraz jakiego rodzaju
+funkcjami będą denotacje wyrażeń i instrukcji.
 
 \begin{definicja}
 	Ustalamy dwa \emph{zbiory podstawowe} języka. Zbiór
 	$\Var$ jest przeliczalnym zbiorem nazw zmiennych (identyfikatorów),
 	które mogą wystąpić w programie, natomiast
 	\[
-	\Int=\mathbb{Z}
+	\Int\coloneqq \mathbb{Z}
 	\]
 	jest zbiorem liczb całkowitych, stanowiących wartości wyrażeń
 	arytmetycznych oraz wartości przechowywane przez zmienne. Zbiory
@@ -294,16 +320,16 @@ wprowadzimy kilka podstawowych definicji.
 \begin{definicja}\label{def:store}
 	\emph{Stanem} nazywamy funkcję
 	$\sigma:\Var \to \Int$ przypisującą zmiennym ich wartości.
-	Zbiór wszystkich stanów oznaczamy przez $\Store$. Wartość zmiennej $x$
-	w stanie $\sigma$ oznaczamy przez $\sigma(x)$. Ponadto
+	Zbiór wszystkich stanów oznaczamy przez $\Store$. Wartość zmiennej $\mathtt{x}$
+	w stanie $\sigma$ oznaczamy przez $\sigma(\mathtt{x})$. Ponadto
 	\[
-	\big(\sigma[x\mapsto n]\big)(y)=
+	\big(\sigma[\mathtt{x}\mapsto n]\big)(\mathtt{y})\coloneqq 
 	\begin{cases}
-		n & \text{gdy } y=x,\\
-		\sigma(y) & \text{gdy } y\neq x,
+		n & \text{gdy } \mathtt{y}=\mathtt{x},\\
+		\sigma(\mathtt{y}) & \text{gdy } \mathtt{y}\neq \mathtt{x},
 	\end{cases}
 	\]
-	oznacza stan powstały z $\sigma$ przez przypisanie zmiennej $x$ wartości
+	oznacza stan powstały z $\sigma$ przez przypisanie zmiennej $\mathtt{x}$ wartości
 	$n$.
 \end{definicja}
 
@@ -328,9 +354,9 @@ wprowadzimy kilka podstawowych definicji.
 			\draw[rounded corners=5pt, thick] (-1.6,-2.0) rectangle (1.6,1.9);
 			\node at (0,1.50) {$\sigma_1$};
 			
-			\node[entry] (x1) at (-0.85, 0.95) {$x$};
-			\node[entry] (y1) at (-0.85, 0.35) {$y$};
-			\node[entry] (z1) at (-0.85,-0.25) {$z$};
+			\node[entry] (x1) at (-0.85, 0.95) {$\mathtt{x}$};
+			\node[entry] (y1) at (-0.85, 0.35) {$\mathtt{y}$};
+			\node[entry] (z1) at (-0.85,-0.25) {$\mathtt{z}$};
 			
 			\node[entry] (x1v) at (0.85, 0.95) {$3$};
 			\node[entry] (y1v) at (0.85, 0.35) {$5$};
@@ -353,9 +379,9 @@ wprowadzimy kilka podstawowych definicji.
 			\draw[rounded corners=5pt, thick] (-1.6,-2.0) rectangle (1.6,1.9);
 			\node at (0,1.50) {$\sigma_2$};
 			
-			\node[entry] (x2) at (-0.85, 0.95) {$x$};
-			\node[entry] (y2) at (-0.85, 0.35) {$y$};
-			\node[entry] (z2) at (-0.85,-0.25) {$z$};
+			\node[entry] (x2) at (-0.85, 0.95) {$\mathtt{x}$};
+			\node[entry] (y2) at (-0.85, 0.35) {$\mathtt{y}$};
+			\node[entry] (z2) at (-0.85,-0.25) {$\mathtt{z}$};
 			
 			\node[entry] (x2v) at (0.85, 0.95) {$1$};
 			\node[entry] (y2v) at (0.85, 0.35) {$2$};
@@ -378,9 +404,9 @@ wprowadzimy kilka podstawowych definicji.
 			\draw[rounded corners=5pt, thick] (-1.6,-2.0) rectangle (1.6,1.9);
 			\node at (0,1.50) {$\sigma_3$};
 			
-			\node[entry] (x3) at (-0.85, 0.95) {$x$};
-			\node[entry] (y3) at (-0.85, 0.35) {$y$};
-			\node[entry] (z3) at (-0.85,-0.25) {$z$};
+			\node[entry] (x3) at (-0.85, 0.95) {$\mathtt{x}$};
+			\node[entry] (y3) at (-0.85, 0.35) {$\mathtt{y}$};
+			\node[entry] (z3) at (-0.85,-0.25) {$\mathtt{z}$};
 			
 			\node[entry] (x3v) at (0.85, 0.95) {$7$};
 			\node[entry] (y3v) at (0.85, 0.35) {$2$};
@@ -406,12 +432,12 @@ wprowadzimy kilka podstawowych definicji.
 \end{figure}
 \begin{przyklad}\label{prz:store}
 	Niech $\sigma$ będzie stanem takim, że
-	$\sigma(\texttt{foo})=3$ oraz $\sigma(\texttt{bar})=5$.
+	$\sigma(\mathtt{foo})=3$ oraz $\sigma(\mathtt{bar})=5$.
 	Wtedy
-	$\sigma[\texttt{foo}\mapsto 7]$ jest nowym stanem, w którym
-	$\texttt{foo}$ ma wartość $7$, a $\texttt{bar}$ nadal ma wartość $5$:
+	$\sigma[\mathtt{foo}\mapsto 7]$ jest nowym stanem, w którym
+	$\mathtt{foo}$ ma wartość $7$, a $\mathtt{bar}$ nadal ma wartość $5$:
 	\[
-	\big(\sigma[\texttt{foo}\mapsto 7]\big)(\texttt{bar})=5.
+	\big(\sigma[\mathtt{foo}\mapsto 7]\big)(\mathtt{bar})=5.
 	\]
 \end{przyklad}
 
@@ -436,7 +462,7 @@ arytmetycznego przypisuje każdemu stanowi \emph{liczbę} --- wartość
 wyrażenia w tym stanie, a denotacja wyrażenia logicznego --- \emph{wartość
 logiczną}. Obie są funkcjami całkowitymi, bo wyrażenie ma wartość
 w każdym stanie. Jedynie denotacja instrukcji przenosi nas \emph{ze stanu
-w stan}: stanowi początkowemu przypisuje stan końcowy. Jest to przy tym
+w stan}, bo stanowi początkowemu przypisuje stan końcowy. Jest to przy tym
 funkcja częściowa --- jeżeli wykonanie instrukcji rozpoczęte w pewnym
 stanie się nie kończy, to temu stanowi nie odpowiada żaden stan końcowy
 (na rysunku stan $\sigma_3$).
@@ -507,7 +533,7 @@ stanie się nie kończy, to temu stanowi nie odpowiada żaden stan końcowy
 Definicję tę szczegółowo zobrazujemy dla każdego z tych trzech podstawowych
 typów poniżej.
 
-\subsection{Denotacje wyrażeń}
+\subsection{Denotacje wyrażeń}\label{subsec:denotacje_wyrazen}
 
 Znaczeniem wyrażenia jest funkcja przypisująca każdemu stanowi jego
 wartość. Zgodnie z Definicją~\ref{def:funkcja}, dla wygody zapisu
@@ -517,39 +543,38 @@ przyjmuje wartość $n$.
 
 \subsubsection{Stała liczbowa}
 
-Denotację stałej liczbowej $n$ definiujemy jako
+Denotację stałej liczbowej $\mathtt{n}$ definiujemy jako
 \[
-\Aa\sem{n}=\{(\sigma,n)\mid \sigma\in\Store\}.
+\Aa\sem{\mathtt{n}}\coloneqq \{(\sigma,n)\mid \sigma\in\Store\}.
 \]
-Tutaj $n$ oznacza \emph{stałą liczbową} (numerał), czyli literał zapisany
-w programie, np.\ \texttt{0}, \texttt{7} lub \texttt{42}. Symbol $n$
-występujący w wyrażeniu oznacza zatem składniową postać stałej, natomiast
-$n$ występujący w parze $(\sigma,n)$ oznacza odpowiadającą jej liczbę
-całkowitą. Dla uproszczenia oba obiekty oznaczamy tą samą literą.
-Wartość stałej liczbowej nie zależy od stanu.
+Tutaj $\mathtt{n}$ (krojem maszynowym) oznacza \emph{stałą liczbową}
+(numerał), czyli napis zapisany w programie, np.\ $\mathtt{0}$, $\mathtt{7}$
+lub $\mathtt{42}$, natomiast $n$ (kursywą) w parze $(\sigma,n)$ oznacza
+odpowiadającą mu liczbę całkowitą. Na przykład numerałowi $\mathtt{42}$
+odpowiada liczba $42$. Wartość stałej liczbowej nie zależy od stanu.
 
 \begin{przyklad}
 	\[
-	\Aa\sem{7}=\{(\sigma,7)\mid \sigma\in\Store\}.
+	\Aa\sem{\mathtt{7}}=\{(\sigma,7)\mid \sigma\in\Store\}.
 	\]
-	Zatem w każdym stanie $\sigma$ literał \texttt{7} przyjmuje wartość $7$.
+	Zatem w każdym stanie $\sigma$ numerał $\mathtt{7}$ przyjmuje wartość $7$.
 \end{przyklad}
 
 \subsubsection{Zmienna}
 
-Denotację zmiennej $x$ definiujemy jako
+Denotację zmiennej $\mathtt{x}$ definiujemy jako
 \[
-\Aa\sem{x}=\{(\sigma,\sigma(x))\mid \sigma\in\Store\}.
+\Aa\sem{\mathtt{x}}\coloneqq \{(\sigma,\sigma(\mathtt{x}))\mid \sigma\in\Store\}.
 \]
-Wartość zmiennej $x$ jest więc określona przez stan $\sigma$, a zatem może
+Wartość zmiennej $\mathtt{x}$ jest więc określona przez stan $\sigma$, a zatem może
 zależeć od stanu.
 
 \begin{przyklad}
-	Jeżeli $\sigma(x)=5$, to
+	Jeżeli $\sigma(\mathtt{x})=5$, to
 	\[
-	(\sigma,5)\in\Aa\sem{x}.
+	(\sigma,5)\in\Aa\sem{\mathtt{x}}.
 	\]
-	Oznacza to, że w stanie $\sigma$ zmienna $x$ przyjmuje wartość $5$.
+	Oznacza to, że w stanie $\sigma$ zmienna $\mathtt{x}$ przyjmuje wartość $5$.
 \end{przyklad}
 
 \subsubsection{Dodawanie}
@@ -557,7 +582,7 @@ zależeć od stanu.
 Denotację sumy dwóch wyrażeń arytmetycznych definiujemy jako
 \[
 \Aa\sem{a_1+a_2}
-=
+\coloneqq 
 \left\{
 (\sigma,n)
 \;\middle|\;
@@ -578,12 +603,38 @@ ich sumie:
 n=n_1+n_2.
 \]
 
+\begin{uwaga}[język a metajęzyk]\label{uw:metajezyk}
+	W powyższej definicji ten sam znak $+$ występuje w dwóch różnych rolach.
+	Opisując semantykę, posługujemy się bowiem jednocześnie dwoma językami:
+	\begin{itemize}
+		\item \emph{językiem obiektowym} --- tu \texttt{IMP} --- czyli językiem,
+		który badamy; jego elementami są napisy zbudowane z symboli składni;
+		\item \emph{metajęzykiem}, czyli językiem matematyki, w którym
+		\emph{mówimy o} języku obiektowym --- metazmienne, stany, zbiory
+		$\Var$, $\Int$, $\Store$, notacja teoriomnogościowa, działania na
+		liczbach całkowitych i funkcje semantyczne.
+	\end{itemize}
+	Znak $+$ w $\Aa\sem{a_1+a_2}$, wewnątrz nawiasów $\sem{\ \cdot\ }$, jest
+	\emph{symbolem składni} \texttt{IMP}, natomiast znak $+$ w równości
+	$n=n_1+n_2$ oznacza \emph{dodawanie liczb całkowitych} w $\mathbb Z$.
+	Definicja denotacji mówi właśnie, że znaczeniem symbolu $+$ jest
+	dodawanie. Podobnie numerał $\mathtt{7}$ jest napisem, a liczba $7$ --- jego
+	wartością (por.\ denotacja stałej liczbowej).
+	
+	Oba poziomy rozdzielają nawiasy semantyczne $\sem{\ \cdot\ }$. To, co
+	znajduje się wewnątrz nich, jest fragmentem składni (zapisanym za pomocą
+	metazmiennych), a wszystko poza nimi --- obiektami matematycznymi.
+	Zgodnie z konwencją przyjętą w literaturze ten sam symbol oznacza
+	operację składniową i odpowiadające jej działanie matematyczne; z nawiasów
+	$\sem{\ \cdot\ }$ zawsze wiadomo, o które znaczenie chodzi.
+\end{uwaga}
+
 \begin{przyklad}\label{prz:wyr}
-	Niech $\sigma(x)=5$. Wówczas
+	Niech $\sigma(\mathtt{x})=5$. Wówczas
 	\[
-	(\sigma,5)\in\Aa\sem{x}
+	(\sigma,5)\in\Aa\sem{\mathtt{x}}
 	\qquad\text{oraz}\qquad
-	(\sigma,2)\in\Aa\sem{2}.
+	(\sigma,2)\in\Aa\sem{\mathtt{2}}.
 	\]
 	Zatem
 	\[
@@ -591,10 +642,10 @@ n=n_1+n_2.
 	\]
 	więc
 	\[
-	(\sigma,7)\in\Aa\sem{x+2}.
+	(\sigma,7)\in\Aa\sem{\mathtt{x}+\mathtt{2}}.
 	\]
-	Oznacza to, że w stanie, w którym $x$ przyjmuje wartość $5$, wyrażenie
-	$x+2$ przyjmuje wartość $7$.
+	Oznacza to, że w stanie, w którym $\mathtt{x}$ przyjmuje wartość $5$, wyrażenie
+	$\mathtt{x}+\mathtt{2}$ przyjmuje wartość $7$.
 \end{przyklad}
 
 \subsubsection{Stała logiczna}
@@ -602,13 +653,13 @@ n=n_1+n_2.
 Denotację stałej logicznej $\kw{true}$ definiujemy jako
 \[
 \Bb\sem{\kw{true}}
-=
+\coloneqq 
 \{(\sigma,\kw{true})\mid \sigma\in\Store\}.
 \]
 Analogicznie
 \[
 \Bb\sem{\kw{false}}
-=
+\coloneqq 
 \{(\sigma,\kw{false})\mid \sigma\in\Store\}.
 \]
 Wartość stałej logicznej jest niezależna od stanu.
@@ -619,7 +670,7 @@ Denotację porównania $a_1<a_2$ definiujemy jako
 \[
 \begin{aligned}
 	\Bb\sem{a_1<a_2}
-	={}&
+	\coloneqq{}&
 	\left\{
 	(\sigma,\kw{true})
 	\;\middle|\;
@@ -650,22 +701,25 @@ to wyrażenie $a_1<a_2$ przyjmuje wartość $\kw{true}$, natomiast jeżeli
 \[
 n_1\geq n_2,
 \]
-to przyjmuje wartość $\kw{false}$.
+to przyjmuje wartość $\kw{false}$. Podobnie jak w Uwadze~\ref{uw:metajezyk},
+znak $<$ w $\Bb\sem{a_1<a_2}$ jest symbolem składni \texttt{IMP}, natomiast
+w warunkach $n_1<n_2$ i $n_1\geq n_2$ --- relacją porządku na liczbach
+całkowitych.
 
 \begin{przyklad}
-	Niech $\sigma(x)=5$. Wówczas
+	Niech $\sigma(\mathtt{x})=5$. Wówczas
 	\[
-	(\sigma,5)\in\Aa\sem{x}
+	(\sigma,5)\in\Aa\sem{\mathtt{x}}
 	\qquad\text{oraz}\qquad
-	(\sigma,1)\in\Aa\sem{1}.
+	(\sigma,1)\in\Aa\sem{\mathtt{1}}.
 	\]
 	Ponieważ $5\not<1$, otrzymujemy
 	\[
-	(\sigma,\kw{false})\in\Bb\sem{x<1}.
+	(\sigma,\kw{false})\in\Bb\sem{\mathtt{x}<\mathtt{1}}.
 	\]
-	Jeżeli natomiast $\sigma(x)=0$, to $0<1$, a zatem
+	Jeżeli natomiast $\sigma(\mathtt{x})=0$, to $0<1$, a zatem
 	\[
-	(\sigma,\kw{true})\in\Bb\sem{x<1}.
+	(\sigma,\kw{true})\in\Bb\sem{\mathtt{x}<\mathtt{1}}.
 	\]
 \end{przyklad}
 
@@ -692,7 +746,7 @@ rozpoczętego w stanie $\sigma$.
 
 Denotację instrukcji \kw{skip} definiujemy jako
 \[
-\Cc\sem{\kw{skip}}=\{(\sigma,\sigma)\mid \sigma\in\Store\}.
+\Cc\sem{\kw{skip}}\coloneqq \{(\sigma,\sigma)\mid \sigma\in\Store\}.
 \]
 Instrukcja \kw{skip} nie zmienia stanu, a więc stan początkowy i końcowy
 są identyczne. Oznacza to, że wykonanie instrukcji \kw{skip} w stanie $\sigma$
@@ -704,7 +758,7 @@ kończy się w tym samym stanie $\sigma$ (zob.\ Rysunek~\ref{fig:skip}).
 		\node (s) {$\sigma$};
 		\draw[->] (s) edge[loop right, min distance=14mm, in=-30, out=30] node[right] {$\Cc\sem{\kw{skip}}$} (s);
 	\end{tikzpicture}
-	\caption{Denotacja instrukcji \kw{skip}: stan końcowy jest równy początkowemu.}
+	\caption{Denotacja instrukcji \kw{skip}. Stan końcowy jest równy początkowemu.}
 	\label{fig:skip}
 \end{figure}
 
@@ -712,61 +766,77 @@ kończy się w tym samym stanie $\sigma$ (zob.\ Rysunek~\ref{fig:skip}).
 
 Denotację instrukcji przypisania definiujemy jako
 \[
-\Cc\sem{x:=a}
-=
+\Cc\sem{\mathtt{x}:=a}
+\coloneqq 
 \left\{
-(\sigma,\sigma[x\mapsto n])
+(\sigma,\sigma[\mathtt{x}\mapsto n])
 \;\middle|\;
 (\sigma,n)\in\Aa\sem{a}
 \right\}.
 \]
 Oznacza to, że w stanie $\sigma$ najpierw wyznaczamy wartość $n$ wyrażenia
-$a$, a następnie otrzymujemy nowy stan $\sigma[x\mapsto n]$, w którym
-zmienna $x$ przyjmuje wartość $n$, natomiast wartości pozostałych zmiennych
+$a$, a następnie otrzymujemy nowy stan $\sigma[\mathtt{x}\mapsto n]$, w którym
+zmienna $\mathtt{x}$ przyjmuje wartość $n$, natomiast wartości pozostałych zmiennych
 pozostają bez zmian (zob.\ Rysunek~\ref{fig:przypisanie}).
 
 \begin{figure}[H]
 	\centering
 	\begin{tikzpicture}[>=stealth, node distance=4.2cm]
 		\node (s) {$\sigma$};
-		\node (s1) [right=of s] {$\sigma[x\mapsto n]$};
+		\node (s1) [right=of s] {$\sigma[\mathtt{x}\mapsto n]$};
 		\node (n) at ($(s)!0.5!(s1)+(0,1.2)$) {$n$};
-		\draw[->] (s) -- node[below] {$\Cc\sem{x:=a}$} (s1);
+		\draw[->] (s) -- node[below] {$\Cc\sem{\mathtt{x}:=a}$} (s1);
 		\draw[->, dashed] (s) -- node[above left] {$\Aa\sem{a}$} (n);
-		\draw[->, dashed] (n) -- node[above right] {nowa wartość $x$} (s1);
+		\draw[->, dashed] (n) -- node[above right] {nowa wartość $\mathtt{x}$} (s1);
 	\end{tikzpicture}
-	\caption{Denotacja przypisania: najpierw obliczamy wartość $n$ wyrażenia $a$
-		w stanie $\sigma$, a następnie zmieniamy wartość zmiennej $x$ na $n$.}
+	\caption{Denotacja przypisania. Najpierw obliczamy wartość $n$ wyrażenia $a$
+		w stanie $\sigma$, a następnie zmieniamy wartość zmiennej $\mathtt{x}$ na $n$.}
 	\label{fig:przypisanie}
 \end{figure}
 
 \begin{przyklad}\label{prz:instr}
 	Niech stan $\sigma$ spełnia
 	\[
-	\sigma(x)=5
+	\sigma(\mathtt{x})=5
 	\qquad\text{oraz}\qquad
-	\sigma(y)=9.
+	\sigma(\mathtt{y})=9.
 	\]
 	Wówczas
 	\[
-	(\sigma,7)\in\Aa\sem{x+2},
+	(\sigma,7)\in\Aa\sem{\mathtt{x}+\mathtt{2}},
 	\]
 	a zatem
 	\[
-	(\sigma,\sigma[x\mapsto7])\in\Cc\sem{x:=x+2}.
+	(\sigma,\sigma[\mathtt{x}\mapsto7])\in\Cc\sem{\mathtt{x}:=\mathtt{x}+\mathtt{2}}.
 	\]
-	W stanie $\sigma[x\mapsto7]$ zmienna $x$ przyjmuje wartość $7$,
-	natomiast zmienna $y$ nadal przyjmuje wartość $9$.
+	W stanie $\sigma[\mathtt{x}\mapsto7]$ zmienna $\mathtt{x}$ przyjmuje wartość $7$,
+	natomiast zmienna $\mathtt{y}$ nadal przyjmuje wartość $9$.
 \end{przyklad}
 
 \subsubsection{Złożenie instrukcji}
 
-Instrukcja $c_1;c_2$ oznacza wykonanie dwóch instrukcji kolejno:
-najpierw instrukcji $c_1$, a następnie instrukcji $c_2$. Denotację takiej
-instrukcji definiujemy przez złożenie denotacji obu instrukcji:
+Instrukcja $c_1;c_2$ oznacza wykonanie dwóch instrukcji kolejno ---
+najpierw instrukcji $c_1$, a następnie instrukcji $c_2$. Denotacje instrukcji
+są funkcjami częściowymi, czyli relacjami. Dla relacji
+$R_1,R_2\subseteq\Store\times\Store$ ich \emph{złożenie} określamy jako
+\[
+R_2\circ R_1
+\coloneqq 
+\left\{
+(\sigma,\sigma'')
+\;\middle|\;
+\exists\sigma'\in\Store\,
+\big(
+(\sigma,\sigma')\in R_1
+\land
+(\sigma',\sigma'')\in R_2
+\big)
+\right\}.
+\]
+Denotację instrukcji $c_1;c_2$ definiujemy przez złożenie denotacji obu instrukcji:
 \[
 \Cc\sem{c_1;c_2}
-=
+\coloneqq 
 \Cc\sem{c_2}\circ\Cc\sem{c_1}.
 \]
 Oznacza to, że stan początkowy $\sigma$ najpierw poddajemy działaniu
@@ -792,88 +862,76 @@ to całe złożenie $c_1;c_2$ prowadzi ze stanu $\sigma$ do stanu $\sigma''$
 		\draw[->] (s1) -- node[above] {$\Cc\sem{c_2}$} (s2);
 		\draw[->, bend right=20, dashed] (s) to node[below] {$\Cc\sem{c_1;c_2}=\Cc\sem{c_2}\circ\Cc\sem{c_1}$} (s2);
 	\end{tikzpicture}
-	\caption{Denotacja złożenia instrukcji: przejście ze stanu $\sigma$ do
+	\caption{Denotacja złożenia instrukcji --- przejście ze stanu $\sigma$ do
 		$\sigma''$ przez stan pośredni $\sigma'$.}
 	\label{fig:zlozenie}
 \end{figure}
 
-Ponieważ denotacje instrukcji są funkcjami częściowymi, formalnie
-$\circ$ oznacza tutaj składanie relacji:
-\[
-R_2\circ R_1
-=
-\left\{
-(\sigma,\sigma'')
-\;\middle|\;
-\exists\sigma'\,
-\big(
-(\sigma,\sigma')\in R_1
-\land
-(\sigma',\sigma'')\in R_2
-\big)
-\right\}.
-\]
-
 \begin{przyklad}\label{prz:zloz}
 	Rozważmy instrukcję
 	\[
-	x:=1;\ x:=x+2
+	\mathtt{x}:=\mathtt{1};\ \mathtt{x}:=\mathtt{x}+\mathtt{2}
 	\]
-	oraz stan $\sigma$ taki, że $\sigma(x)=5$.
+	oraz stan $\sigma$ taki, że $\sigma(\mathtt{x})=5$.
 	
 	Z definicji denotacji instrukcji przypisania mamy
 	\[
-	(\sigma,\sigma[x\mapsto1])
+	(\sigma,\sigma[\mathtt{x}\mapsto1])
 	\in
-	\Cc\sem{x:=1}.
+	\Cc\sem{\mathtt{x}:=\mathtt{1}}.
 	\]
 	Oznaczmy stan pośredni przez
 	\[
-	\sigma'=\sigma[x\mapsto1].
+	\sigma'\coloneqq \sigma[\mathtt{x}\mapsto1].
 	\]
-	Wówczas $\sigma'(x)=1$, a zatem
+	Wówczas $\sigma'(\mathtt{x})=1$, a zatem
 	\[
 	(\sigma',3)
 	\in
-	\Aa\sem{x+2}.
+	\Aa\sem{\mathtt{x}+\mathtt{2}}.
 	\]
 	Stąd, ponownie z definicji denotacji przypisania,
 	\[
-	(\sigma',\sigma'[x\mapsto3])
+	(\sigma',\sigma'[\mathtt{x}\mapsto3])
 	\in
-	\Cc\sem{x:=x+2}.
+	\Cc\sem{\mathtt{x}:=\mathtt{x}+\mathtt{2}}.
 	\]
 	Z definicji złożenia denotacji otrzymujemy więc
 	\[
-	(\sigma,\sigma'[x\mapsto3])
+	(\sigma,\sigma'[\mathtt{x}\mapsto3])
 	\in
-	\Cc\sem{x:=1;\ x:=x+2}.
+	\Cc\sem{\mathtt{x}:=\mathtt{1};\ \mathtt{x}:=\mathtt{x}+\mathtt{2}}.
 	\]
 	Ponieważ
 	\[
-	\sigma'=\sigma[x\mapsto1],
+	\sigma'=\sigma[\mathtt{x}\mapsto1],
 	\]
-	a zmiana wartości zmiennej $x$ z $1$ na $3$ daje
+	a zmiana wartości zmiennej $\mathtt{x}$ z $1$ na $3$ daje
 	\[
-	\sigma'[x\mapsto3]=\sigma[x\mapsto3],
+	\sigma'[\mathtt{x}\mapsto3]=\sigma[\mathtt{x}\mapsto3],
 	\]
 	ostatecznie
 	\[
-	(\sigma,\sigma[x\mapsto3])
+	(\sigma,\sigma[\mathtt{x}\mapsto3])
 	\in
-	\Cc\sem{x:=1;\ x:=x+2}.
+	\Cc\sem{\mathtt{x}:=\mathtt{1};\ \mathtt{x}:=\mathtt{x}+\mathtt{2}}.
 	\]
-	Całe obliczenie można przedstawić schematycznie:
-	\begin{center}
+	Całe obliczenie przedstawia schematycznie Rysunek~\ref{fig:przyklad_zlozenia}.
+	\begin{figure}[H]
+		\centering
 		\begin{tikzpicture}[>=stealth, node distance=2.6cm]
 			\node (s) {$\sigma$};
-			\node (s1) [right=of s] {$\sigma'=\sigma[x\mapsto1]$};
-			\node (s2) [right=of s1] {$\sigma[x\mapsto3]$};
-			\draw[->] (s) -- node[above] {$x:=1$} (s1);
-			\draw[->] (s1) -- node[above] {$x:=x+2$} (s2);
-			\draw[->, bend right=15, dashed] (s) to node[below] {$x:=1;\ x:=x+2$} (s2);
+			\node (s1) [right=of s] {$\sigma'=\sigma[\mathtt{x}\mapsto1]$};
+			\node (s2) [right=of s1] {$\sigma[\mathtt{x}\mapsto3]$};
+			\draw[->] (s) -- node[above] {$\mathtt{x}:=\mathtt{1}$} (s1);
+			\draw[->] (s1) -- node[above] {$\mathtt{x}:=\mathtt{x}+\mathtt{2}$} (s2);
+			\draw[->, bend right=15, dashed] (s) to node[below] {$\mathtt{x}:=\mathtt{1};\ \mathtt{x}:=\mathtt{x}+\mathtt{2}$} (s2);
 		\end{tikzpicture}
-	\end{center}
+		\caption{Obliczenie denotacji złożenia
+			$\mathtt{x}:=\mathtt{1};\ \mathtt{x}:=\mathtt{x}+\mathtt{2}$
+			w stanie $\sigma$. Linia przerywana odpowiada całemu złożeniu.}
+		\label{fig:przyklad_zlozenia}
+	\end{figure}
 \end{przyklad}
 
 \subsubsection{Instrukcja warunkowa \kw{if}}
@@ -881,7 +939,7 @@ R_2\circ R_1
 Denotację instrukcji warunkowej definiujemy jako
 \begin{align*}
 	\Cc\sem{\kw{if}\ b\ \kw{then}\ c_1\ \kw{else}\ c_2}
-	={}&
+	\coloneqq{}&
 	\left\{
 	(\sigma,\sigma')
 	\;\middle|\;
@@ -914,10 +972,10 @@ $\kw{false}$, wykonywana jest instrukcja $c_2$ (zob.\ Rysunek~\ref{fig:if}).
 		\node (s1) at (7.0,1.1) {$\sigma'$};
 		\node (s2) at (7.0,-1.1) {$\sigma'$};
 		\draw[->] (s) -- (b);
-		\draw[->] (b.north) |- node[pos=0.75, above] {$\kw{true}$:\ \ $\Cc\sem{c_1}$} (s1);
-		\draw[->] (b.south) |- node[pos=0.75, below] {$\kw{false}$:\ \ $\Cc\sem{c_2}$} (s2);
+		\draw[->] (b.north) |- node[pos=0.75, above] {$\kw{true}$ --- $\Cc\sem{c_1}$} (s1);
+		\draw[->] (b.south) |- node[pos=0.75, below] {$\kw{false}$ --- $\Cc\sem{c_2}$} (s2);
 	\end{tikzpicture}
-	\caption{Denotacja instrukcji warunkowej: wartość warunku $b$ w stanie
+	\caption{Denotacja instrukcji warunkowej. Wartość warunku $b$ w stanie
 		$\sigma$ decyduje, czy stan końcowy wyznacza denotacja $c_1$, czy $c_2$.}
 	\label{fig:if}
 \end{figure}
@@ -925,16 +983,16 @@ $\kw{false}$, wykonywana jest instrukcja $c_2$ (zob.\ Rysunek~\ref{fig:if}).
 \begin{przyklad}\label{prz:if}
 	Rozważmy instrukcję
 	\[
-	\kw{if}\ x<1\ \kw{then}\ y:=0\ \kw{else}\ y:=1
+	\kw{if}\ \mathtt{x}<\mathtt{1}\ \kw{then}\ \mathtt{y}:=\mathtt{0}\ \kw{else}\ \mathtt{y}:=\mathtt{1}
 	\]
 	oraz stan $\sigma$ taki, że
 	\[
-	\sigma(x)=5.
+	\sigma(\mathtt{x})=5.
 	\]
 	
 	Z definicji denotacji porównania otrzymujemy
 	\[
-	(\sigma,\kw{false})\in\Bb\sem{x<1},
+	(\sigma,\kw{false})\in\Bb\sem{\mathtt{x}<\mathtt{1}},
 	\]
 	ponieważ
 	\[
@@ -943,26 +1001,26 @@ $\kw{false}$, wykonywana jest instrukcja $c_2$ (zob.\ Rysunek~\ref{fig:if}).
 	Zatem w definicji denotacji instrukcji warunkowej spełniony jest drugi
 	przypadek. Z definicji przypisania mamy
 	\[
-	(\sigma,\sigma[y\mapsto1])
+	(\sigma,\sigma[\mathtt{y}\mapsto1])
 	\in
-	\Cc\sem{y:=1}.
+	\Cc\sem{\mathtt{y}:=\mathtt{1}}.
 	\]
 	Wobec tego
 	\[
-	(\sigma,\sigma[y\mapsto1])
+	(\sigma,\sigma[\mathtt{y}\mapsto1])
 	\in
 	\Cc\sem{
-		\kw{if}\ x<1\ \kw{then}\ y:=0\ \kw{else}\ y:=1
+		\kw{if}\ \mathtt{x}<\mathtt{1}\ \kw{then}\ \mathtt{y}:=\mathtt{0}\ \kw{else}\ \mathtt{y}:=\mathtt{1}
 	}.
 	\]
 	
 	Rozważmy teraz stan $\sigma'$ taki, że
 	\[
-	\sigma'(x)=0.
+	\sigma'(\mathtt{x})=0.
 	\]
 	Wówczas
 	\[
-	(\sigma',\kw{true})\in\Bb\sem{x<1},
+	(\sigma',\kw{true})\in\Bb\sem{\mathtt{x}<\mathtt{1}},
 	\]
 	ponieważ
 	\[
@@ -970,16 +1028,16 @@ $\kw{false}$, wykonywana jest instrukcja $c_2$ (zob.\ Rysunek~\ref{fig:if}).
 	\]
 	Tym razem spełniony jest pierwszy przypadek definicji. Zatem
 	\[
-	(\sigma',\sigma'[y\mapsto0])
+	(\sigma',\sigma'[\mathtt{y}\mapsto0])
 	\in
-	\Cc\sem{y:=0},
+	\Cc\sem{\mathtt{y}:=\mathtt{0}},
 	\]
 	a w konsekwencji
 	\[
-	(\sigma',\sigma'[y\mapsto0])
+	(\sigma',\sigma'[\mathtt{y}\mapsto0])
 	\in
 	\Cc\sem{
-		\kw{if}\ x<1\ \kw{then}\ y:=0\ \kw{else}\ y:=1
+		\kw{if}\ \mathtt{x}<\mathtt{1}\ \kw{then}\ \mathtt{y}:=\mathtt{0}\ \kw{else}\ \mathtt{y}:=\mathtt{1}
 	}.
 	\]
 \end{przyklad}
@@ -1004,8 +1062,8 @@ całą pętlę. Możemy zatem zapisać
 	\ \kw{else}\ \kw{skip}.
 }
 \]
-Działanie pętli przedstawia Rysunek~\ref{fig:while}: z każdego stanu
-sprawdzamy warunek $b$; jeżeli jest fałszywy, pętla kończy się bez zmiany
+Działanie pętli przedstawia Rysunek~\ref{fig:while}. W każdym stanie
+sprawdzamy warunek $b$. Jeżeli jest fałszywy, pętla kończy się bez zmiany
 stanu, a jeżeli jest prawdziwy, wykonujemy ciało $c$ i \emph{wracamy} do
 sprawdzenia warunku w nowym stanie. Właśnie ten powrót sprawia, że
 denotacji pętli nie da się zapisać tak bezpośrednio jak w przypadku
@@ -1023,19 +1081,14 @@ pozostałych instrukcji.
 		\draw[->] (b) -- node[right] {$\kw{true}$} (c);
 		\draw[->] (c.west) -- ++(-1.3,0) |- node[pos=0.25, left] {$\sigma''$} ($(b.west)+(-0.6,0)$);
 	\end{tikzpicture}
-	\caption{Wykonanie pętli $\kw{while}\ b\ \kw{do}\ c$: po każdym wykonaniu
+	\caption{Wykonanie pętli $\kw{while}\ b\ \kw{do}\ c$. Po każdym wykonaniu
 		ciała $c$ wracamy do sprawdzenia warunku $b$ w nowym stanie $\sigma''$.}
 	\label{fig:while}
 \end{figure}
 
 Powyższa równoważność pozwala opisać denotację pętli za pomocą jej
-własnej denotacji. Oznaczmy przez
-\[
-W_{b,c}
-=
-\Cc\sem{\kw{while}\ b\ \kw{do}\ c}
-\]
-denotację instrukcji pętli
+własnej denotacji. Oznaczmy przez $W_{b,c}$ szukaną (jeszcze
+niezdefiniowaną) denotację instrukcji pętli
 $\kw{while}\ b\ \kw{do}\ c$. Korzystając z definicji denotacji
 instrukcji warunkowej oraz złożenia instrukcji, otrzymujemy następujące
 \emph{równanie denotacyjne}:
@@ -1069,7 +1122,7 @@ instrukcji warunkowej oraz złożenia instrukcji, otrzymujemy następujące
 
 Pierwszy składnik odpowiada sytuacji, w której warunek $b$ jest fałszywy,
 a więc pętla kończy działanie bez zmiany stanu. Drugi składnik odpowiada
-sytuacji, w której warunek $b$ jest prawdziwy: najpierw wykonywana jest
+sytuacji, w której warunek $b$ jest prawdziwy. Wtedy najpierw wykonywana jest
 instrukcja $c$, prowadząc ze stanu $\sigma$ do stanu pośredniego
 $\sigma''$, a następnie pętla jest wykonywana ponownie, prowadząc ze
 stanu $\sigma''$ do stanu końcowego $\sigma'$.
@@ -1090,7 +1143,7 @@ stałych, która pozwoli formalnie wyznaczyć właściwe rozwiązanie równania~
 Zaczniemy od jednej z najważniejszych definicji tego referatu.
 
 \begin{definicja}\label{def:rownanie_stalopunktowe}
-	\emph{Równaniem stałopunktowym} nazywamy każde równanie w postaci
+	\emph{Równaniem stałopunktowym} nazywamy każde równanie postaci
 	\begin{equation}
 		\label{eq:rownanie_stalopunktowe}
 		x=f(x)
@@ -1100,110 +1153,117 @@ Zaczniemy od jednej z najważniejszych definicji tego referatu.
 	równanie~\eqref{eq:rownanie_stalopunktowe} nazywamy \emph{punktem stałym} odwzorowania $f$. Zbiór wszystkich punktów
 	stałych odwzorowania $f$ oznaczamy przez
 	\[
-	\Fix(f)=\{x\in D:f(x)=x\}.
+	\Fix(f)\coloneqq \{x\in D\mid f(x)=x\}.
 	\]
-	Jeżeli w zbiorze $\Fix(f)$ istnieje element najmniejszy względem
-	ustalonego porządku na $D$, to nazywamy go \emph{najmniejszym punktem
+	Jeżeli na $D$ ustalony jest porządek częściowy (porządki omówimy
+	w Rozdziale~\ref{sec:cpo}) i w zbiorze $\Fix(f)$ istnieje element
+	najmniejszy względem tego porządku, to nazywamy go \emph{najmniejszym punktem
 		stałym} odwzorowania $f$ i oznaczamy przez $\lfp(f)$.
 \end{definicja}
 
 Rozważmy na początek następujący przykład.
 
 \begin{przyklad}
-	Niech $f:\mathbb{N}_0\to\mathbb{N}_0$ będzie funkcją określoną rekurencyjnie
-	przez równanie
-	\begin{equation}\label{prz:kwadrat}
+	Rozważmy wzór rekurencyjny
+	\begin{equation}\label{eq:kwadrat}
 		f(x)=
 		\begin{cases}
-			0 & x=0,\\
-			f(x-1)+2x-1 & \text{wpp.}
+			0, & x=0,\\
+			f(x-1)+2x-1, & x\neq0.
 		\end{cases}
 	\end{equation}
-	Chcemy zatem znaleźć funkcję $f$, która spełnia powyższą zależność
-	rekurencyjną. Powstaje pytanie, czy taka funkcja istnieje oraz czy jest
-	wyznaczona jednoznacznie.
+	Taki zapis nie jest poprawną definicją (ang.\ \emph{ill-formed}).
+	Szukana funkcja $f$ występuje po obu stronach znaku równości, więc
+	wzór~\eqref{eq:kwadrat} niczego nie definiuje wprost. Jest on
+	\emph{równaniem}, którego niewiadomą jest funkcja $f$. Nie wiadomo
+	z góry, czy takie równanie ma rozwiązanie, ani czy jest ono jedyne.
 	
-	Spróbujmy skonstruować rozwiązanie poprzez kolejne przybliżenia. Załóżmy,
-	że $f$ jest funkcją częściową, tzn.
-	$f:\mathbb{N}_0\rightharpoonup\mathbb{N}_0$, i zdefiniujmy ciąg
-	$(f_k)_{k\in\mathbb{N}_0}$ kolejnych przybliżeń. Rozpoczynamy od funkcji
+	Spróbujmy zbudować rozwiązanie za pomocą kolejnych przybliżeń.
+	Przybliżeniami będą funkcje częściowe
+	$f_k:\mathbb{N}_0\rightharpoonup\mathbb{N}_0$. Każda z nich zna wartości
+	szukanej funkcji tylko dla niektórych argumentów. Rozpoczynamy od funkcji
 	częściowej, która nie określa wartości dla żadnego argumentu:
 	\[
-	f_0=\varnothing.
+	f_0\coloneqq \varnothing.
 	\]
-	Następnie, korzystając z równania~\eqref{prz:kwadrat}, otrzymujemy
-	\begin{align*}
-		f_1
-		&=
-		\begin{cases}
-			0 & \text{gdy }x=0,\\
-			f_0(x-1)+2x-1 & \text{wpp.}
-		\end{cases}
-		=\{(0,0)\},\\[2pt]
-		f_2
-		&=
-		\begin{cases}
-			0 & \text{gdy }x=0,\\
-			f_1(x-1)+2x-1 & \text{wpp.}
-		\end{cases}
-		=\{(0,0),(1,1)\},\\[2pt]
-		f_3
-		&=
-		\begin{cases}
-			0 & \text{gdy }x=0,\\
-			f_2(x-1)+2x-1 & \text{wpp.}
-		\end{cases}
-		=\{(0,0),(1,1),(2,4)\},\\[2pt]
-		&\;\;\vdots
-	\end{align*}
-	
-	Widzimy zatem, że kolejne przybliżenia prowadzą do funkcji
-	$f(x)=x^2$, która spełnia równanie~\eqref{prz:kwadrat}, ponieważ
+	Kolejne przybliżenie otrzymujemy, wstawiając poprzednie do prawej strony
+	wzoru~\eqref{eq:kwadrat}. Jeżeli wartość $f_k(x-1)$ nie jest określona,
+	to wartość $f_{k+1}(x)$ również pozostawiamy nieokreśloną. Mamy więc
 	\[
-	(x-1)^2+2x-1=x^2
+	f_1(x)\coloneqq
+	\begin{cases}
+		0, & x=0,\\
+		f_0(x-1)+2x-1, & x\neq0,\ x-1\in\dom(f_0),
+	\end{cases}
 	\]
-	dla każdego $x\in\mathbb{N}$.
-	
-	Spójrzmy na ten przykład z nieco innej strony. Poszukujemy odwzorowania,
-	które na podstawie danego przybliżenia rozwiązania $f_k$ wyznacza kolejne
-	przybliżenie $f_{k+1}$. W istocie poszukujemy więc funkcjonału wyższego rzędu
+	a ponieważ $\dom(f_0)=\varnothing$, otrzymujemy $f_1=\{(0,0)\}$.
+	Analogicznie
 	\[
-	F:
+	f_2=\{(0,0),(1,0+1)\}=\{(0,0),(1,1)\},
+	\qquad
+	f_3=\{(0,0),(1,1),(2,1+3)\}=\{(0,0),(1,1),(2,4)\}.
+	\]
+	Przez indukcję względem $k$ łatwo sprawdzić, że
+	\[
+	f_k=\{(x,x^2)\mid x\in\mathbb N_0,\ x<k\}.
+	\]
+	Dla $k=0$ obie strony są zbiorem pustym. Jeżeli wzór zachodzi dla $k$,
+	to $f_{k+1}(0)=0=0^2$, a dla $1\leq x<k+1$ mamy $x-1<k$, więc
+	\[
+	f_{k+1}(x)=f_k(x-1)+2x-1=(x-1)^2+2x-1=x^2-2x+1+2x-1=x^2.
+	\]
+	Dla $x\geq k+1$ mamy $x-1\notin\dom(f_k)$, więc $f_{k+1}(x)$ nie jest
+	określone.
+	
+	Kolejne przybliżenia tworzą rosnący ciąg
+	$f_0\subseteq f_1\subseteq f_2\subseteq\ldots$, a ich suma
+	\[
+	\bigcup_{k=0}^{\infty}f_k=\{(x,x^2)\mid x\in\mathbb N_0\}
+	\]
+	jest funkcją $f(x)=x^2$ określoną dla wszystkich $x\in\mathbb N_0$.
+	Spełnia ona równanie~\eqref{eq:kwadrat}. Istotnie, $f(0)=0=0^2$, a dla
+	$x\in\mathbb{N}$
+	\[
+	f(x-1)+2x-1=(x-1)^2+2x-1=x^2.
+	\]
+	
+	Spójrzmy na ten przykład z nieco innej strony. Przejście od przybliżenia
+	$f_k$ do przybliżenia $f_{k+1}$ opisuje funkcjonał
+	\[
+	\mathcal{F}:
 	(\mathbb{N}_0\rightharpoonup\mathbb{N}_0)
 	\to
 	(\mathbb{N}_0\rightharpoonup\mathbb{N}_0)
 	\]
-	takiego, że
+	określony wzorem
 	\[
-	(F(f))(x)=
+	\mathcal{F}(g)(x)\coloneqq
 	\begin{cases}
-		0 & \text{gdy }x=0,\\
-		f(x-1)+2x-1 & \text{wpp.}
+		0, & x=0,\\
+		g(x-1)+2x-1, & x\neq0,\ x-1\in\dom(g),
 	\end{cases}
 	\]
-	Wówczas kolejne przybliżenia możemy zapisać w postaci
+	przy czym dla $x\neq0$, $x-1\notin\dom(g)$ wartość $\mathcal F(g)(x)$
+	nie jest określona. Wówczas
 	\[
-	f_0=\varnothing,
-	\qquad
-	f_{k+1}=F(f_k).
+	f_{k+1}=\mathcal{F}(f_k),\qquad k\in\mathbb N_0.
 	\]
-	
-	Rozwiązanie równania~\eqref{prz:kwadrat} jest więc funkcją $f$ spełniającą
+	Rozwiązanie równania~\eqref{eq:kwadrat} jest więc funkcją $f$ spełniającą
 	równanie
 	\[
-	F(f)=f.
+	\mathcal{F}(f)=f.
 	\]
-	Innymi słowy, rozwiązanie jest punktem stałym odwzorowania $F$.
+	Innymi słowy, rozwiązanie jest punktem stałym odwzorowania $\mathcal{F}$.
 	
-	Przeszliśmy zatem od rekurencyjnego równania określającego funkcję $f$
-	do równania stałopunktowego, w którym szukamy punktu stałego odwzorowania
-	$F$. Pozostaje odpowiedzieć na szereg pytań związanych z powyższym
-	równaniem: kiedy rozwiązanie istnieje oraz --- jeśli rozwiązań jest więcej
-	--- które z nich powinniśmy wybrać, aby odpowiadało ono naszym
-	oczekiwaniom. Na te pytania postaramy się odpowiedzieć w dalszej części
-	niniejszego referatu. Zastanowimy się bowiem, w jakiej klasie obiektów,
-	zbiorów i funkcji rozwiązanie równania~\eqref{eq:rownanie_stalopunktowe}
-	istnieje i spełnia nasze oczekiwania.
+	Przeszliśmy zatem od wzoru rekurencyjnego, który sam w sobie nie jest
+	definicją, do równania stałopunktowego, w którym szukamy punktu stałego
+	odwzorowania $\mathcal{F}$. Pozostaje odpowiedzieć na kilka pytań.
+	Kiedy rozwiązanie istnieje? Jeśli rozwiązań jest więcej, które z nich
+	należy wybrać, aby odpowiadało naszym oczekiwaniom? Na te pytania
+	odpowiemy w dalszej części referatu. Zastanowimy się bowiem, w jakich
+	zbiorach i dla jakich odwzorowań rozwiązanie
+	równania~\eqref{eq:rownanie_stalopunktowe} istnieje i spełnia nasze
+	oczekiwania.
 \end{przyklad}
 
 %==============================================================================
@@ -1226,7 +1286,7 @@ dla dowolnych $a,b,c\in D$ następujące warunki:
   \item[(2)] \emph{przechodniość}: $a\sqsubseteq b \,\land\, b\sqsubseteq c \implies a\sqsubseteq c$;
   \item[(3)] \emph{antysymetryczność}: $a\sqsubseteq b \,\land\, b\sqsubseteq a \implies a=b$.
 \end{itemize}
-Zapis $x\sqsubseteq y$ czytamy „$x$ jest co najwyżej tak określone jak $y$”
+Zapis $x\sqsubseteq y$ czytamy ,,$x$ jest co najwyżej tak określone jak $y$''
 (\emph{porządek informacyjny}). Jeżeli z kolei nie zachodzi ani $a \sqsubseteq b$, ani $b \sqsubseteq a$, to mówimy, że $a$ i $b$ są \emph{nieporównywalne}.
 \end{definicja}
 
@@ -1295,7 +1355,7 @@ Finalnie możemy zdefiniować główny twór naszych rozważań.
 Wprowadzimy dodatkowo następujące oznaczenie zbiorów łańcuchowo zupełnych.
 
 \begin{oznaczenie}
-	Niech $\boldsymbol{D} = (D, \sqsubseteq_D, \bt_D)$ jako trójka uporządkowana oznacza zbiór łańcuchowo zupełny, w którym $D$ nazwiemy \emph{nośnikiem}, $\sqsubseteq_D$ relacją porządku oraz $\bt_D$ elementem najmniejszym.
+	Niech $\boldsymbol{D} \coloneqq (D, \sqsubseteq_D, \bt_D)$ jako trójka uporządkowana oznacza zbiór łańcuchowo zupełny, w którym $D$ nazwiemy \emph{nośnikiem}, $\sqsubseteq_D$ relacją porządku oraz $\bt_D$ elementem najmniejszym.
 \end{oznaczenie}
 
 \begin{comment}
@@ -1370,7 +1430,7 @@ brak informacji.
 	Niech $D$ będzie dowolnym zbiorem. Rozszerzmy go o nowy element
 	$\bt\notin D$, tworząc zbiór
 	\[
-	D_\bt = D \cup \{\bt\}.
+	D_\bt \coloneqq  D \cup \{\bt\}.
 	\]
 	Parę $(D_\bt,\sqsubseteq)$ nazywamy \emph{płaską} (a porządek
 	$\sqsubseteq$ --- \emph{płaskim}), jeżeli
@@ -1426,7 +1486,7 @@ zupełnych.
 	Niech $A \rightharpoonup B$ oznacza zbiór funkcji częściowych ze zbioru $A$ w zbiór $B$. 
 \end{definicja}
 
-Zbiór ten możemy naturalnie uporządkować relacją inkluzji:
+Zbiór ten możemy naturalnie uporządkować relacją inkluzji.
 
 \begin{twierdzenie}\label{tw:zbior_funkcji_czesciowych_czesciowo_uporzadkowany}
 	Zbiór funkcji częściowych $A \rightharpoonup B$ można częściowo uporządkować relacją zawierania się wykresów
@@ -1480,7 +1540,7 @@ Zbiór ten możemy naturalnie uporządkować relacją inkluzji:
 		\draw[dashed] (-1.1,-1.35) -- (1.4,-1.35);
 		\node[below] at (0.15,-1.35) {$\dom(g)$};
 	\end{tikzpicture}
-	\caption{Porządek poziomy: $f\sqsubseteq g \iff f\subseteq g$. Funkcja $g$ (linia ciągła i przerywana) rozszerza $f$ (linia ciągła): pokrywa się z $f$ na $\dom(f)\subseteq\dom(g)$ i jest dodatkowo określona poza $\dom(f)$.}
+	\caption{Porządek poziomy $f\sqsubseteq g \iff f\subseteq g$. Funkcja $g$ (linia ciągła i przerywana) rozszerza $f$ (linia ciągła), tzn.\ pokrywa się z $f$ na $\dom(f)\subseteq\dom(g)$ i jest dodatkowo określona poza $\dom(f)$.}
 	\label{fig:porzadek_poziomy}
 \end{figure}
 
@@ -1500,7 +1560,7 @@ Zbiór ten możemy naturalnie uporządkować relacją inkluzji:
 \end{twierdzenie}
 
 \begin{proof}
-	\emph{Częściowy porządek}. Istotnie wobec Twierdzenia~\ref{tw:zbior_funkcji_czesciowych_czesciowo_uporzadkowany} zbiór funkcji częściowych $A \rightharpoonup B$ jest zbiorem częściowo uporządkowanym. 
+	\emph{Częściowy porządek}. Na mocy Twierdzenia~\ref{tw:zbior_funkcji_czesciowych_czesciowo_uporzadkowany} zbiór funkcji częściowych $A \rightharpoonup B$ jest zbiorem częściowo uporządkowanym. 
 	
 	\emph{Element najmniejszy}. Funkcja pusta $\varnothing$ jest elementem najmniejszym, gdyż
 	\[
@@ -1515,7 +1575,7 @@ Zbiór ten możemy naturalnie uporządkować relacją inkluzji:
 	będzie dowolnym łańcuchem funkcji częściowych $A\rightharpoonup B$.
 	Zdefiniujmy relację
 	\[
-	f=\bigcup_{n=1}^{\infty}f_n.
+	f\coloneqq \bigcup_{n=1}^{\infty}f_n.
 	\]
 	
 	Najpierw pokażemy, że $f$ jest funkcją częściową. Ponieważ
@@ -1685,29 +1745,30 @@ Zdefiniujemy teraz porządek w zbiorze funkcji całkowitych.
 		\node[right] at (7.2,2.0) {$g$};
 		
 	\end{tikzpicture}
-	\caption{Porządek pionowy: $f\sqsubseteq g \iff \forall a\in A\ f(a)\sqsubseteq_B g(a)$. Wykres funkcji $g$ (linia przerywana) leży nad wykresem funkcji $f$ (linia ciągła).}
+	\caption{Porządek pionowy $f\sqsubseteq g \iff \forall a\in A\ f(a)\sqsubseteq_B g(a)$. Wykres funkcji $g$ (linia przerywana) leży nad wykresem funkcji $f$ (linia ciągła).}
 	\label{fig:porzadek_pionowy}
 \end{figure}
 
 \begin{twierdzenie}\label{tw:funkcje_calkowite_cpo}
 	Niech $A$ będzie dowolnym zbiorem, a $\boldsymbol{B}=(B,\sqsubseteq_B,\bt_B)$
-	--- zbiorem łańcuchowo zupełnym. Wówczas zbiór funkcji całkowitych
+	--- zbiorem łańcuchowo zupełnym. Niech $\varphi:A\to B$ będzie funkcją
+	stałą $\varphi(a)\coloneqq\bt_B$ dla $a\in A$. Wówczas zbiór funkcji całkowitych
 	$\boldsymbol{A\to B}=(A\to B,\sqsubseteq,\varphi)$ z porządkiem pionowym jest zbiorem łańcuchowo
 	zupełnym. Kres górny łańcucha wyznaczamy punktowo,
 	\[
 	\Big(\bigsqcup_{n=1}^{\infty} f_n\Big)(a)=\bigsqcup_{n=1}^{\infty} f_n(a)
 	\qquad(a\in A),
 	\]
-	a elementem najmniejszym jest funkcja stała $\varphi(a)=\bt_B$ dla dowolnego $a \in A$.
+	a elementem najmniejszym jest funkcja $\varphi$.
 \end{twierdzenie}
 
 \begin{proof}
-	\emph{Częściowy porządek.} Istotnie wobec Twierdzenia~\ref{tw:zbior_funkcji_calkowitych_czesciowo_uporzadkowany} zbiór funkcji całkowitych jest zbiorem częściowo uporządkowanym względem relacji $\sqsubseteq$. 
+	\emph{Częściowy porządek.} Na mocy Twierdzenia~\ref{tw:zbior_funkcji_calkowitych_czesciowo_uporzadkowany} zbiór funkcji całkowitych jest zbiorem częściowo uporządkowanym względem relacji $\sqsubseteq$. 
 	
 	\emph{Element najmniejszy.}
-	Funkcja $\varphi:A\to B$ jest określona wzorem
+	Przypomnijmy, że
 	\[
-	\varphi(a)=\bt_B
+	\varphi(a)= \bt_B
 	\qquad(a\in A).
 	\]
 	Niech $f:A\to B$ będzie dowolną funkcją. Ponieważ $\bt_B$ jest
@@ -1743,7 +1804,7 @@ Zdefiniujemy teraz porządek w zbiorze funkcji całkowitych.
 	\[
 	f_n\sqsubseteq f_{n+1}
 	\]
-	oraz z definicji porządku punktowego wynika
+	oraz z definicji porządku pionowego wynika
 	\[
 	f_n(a)\sqsubseteq_B f_{n+1}(a)
 	\qquad(a\in A).
@@ -1754,7 +1815,7 @@ Zdefiniujemy teraz porządek w zbiorze funkcji całkowitych.
 	funkcję $f:A\to B$ wzorem
 	\[
 	f(a)
-	:=
+	\coloneqq
 	\bigsqcup_{n=1}^{\infty}f_n(a)
 	\qquad(a\in A).
 	\]
@@ -1801,7 +1862,7 @@ Zdefiniujemy teraz porządek w zbiorze funkcji całkowitych.
 	\[
 	\forall n\in\mathbb{N}\quad f_n\sqsubseteq g.
 	\]
-	Z definicji porządku punktowego otrzymujemy
+	Z definicji porządku pionowego otrzymujemy
 	\[
 	\forall n\in\mathbb{N}\;\forall a\in A\quad
 	f_n(a)\sqsubseteq_B g(a).
@@ -1828,7 +1889,7 @@ Zdefiniujemy teraz porządek w zbiorze funkcji całkowitych.
 	\[
 	\forall a\in A\quad f(a)\sqsubseteq_B g(a).
 	\]
-	Z definicji porządku punktowego wynika stąd
+	Z definicji porządku pionowego wynika stąd
 	\[
 	f\sqsubseteq g.
 	\]
@@ -1851,15 +1912,15 @@ Zdefiniujemy teraz porządek w zbiorze funkcji całkowitych.
 \end{proof}
 
 \begin{wniosek}
-	W szczególności, biorąc za $\boldsymbol{B}$ zbiór płaski $\boldsymbol{B} = (B_\bt, \sqsubseteq, \bt)$ otrzymujemy, że zbiór funkcji całkowitych $A\to B_\bt$ jest zbiorem
+	W szczególności, biorąc w Twierdzeniu~\ref{tw:funkcje_calkowite_cpo} zbiór płaski $(B_\bt, \sqsubseteq, \bt)$, który jest łańcuchowo zupełny na mocy Uwagi~\ref{uw:lancuchy_plaskie}, otrzymujemy, że zbiór funkcji całkowitych $A\to B_\bt$ jest zbiorem
 łańcuchowo zupełnym.
 \end{wniosek}
 
 \subsection{Izomorfizm zbiorów łańcuchowo zupełnych}
 
-Okazuje się, że oba spojrzenia opisują ten sam obiekt: funkcje częściowe
-$A\rightharpoonup B$ z porządkiem poziomym to dokładnie funkcje całkowite
-$A\to B_\bt$ z porządkiem pionowym. Stąd możemy mówić o ich \emph{izomorfizmie}. 
+Okazuje się, że oba spojrzenia opisują ten sam obiekt --- funkcje częściowe
+$A\rightharpoonup B$ z porządkiem poziomym można utożsamić z funkcjami całkowitymi
+$A\to B_\bt$ z porządkiem pionowym. Precyzuje to pojęcie \emph{izomorfizmu}. 
 
 \begin{definicja}
 	\emph{Izomorfizmem} zbiorów łańcuchowo zupełnych $\boldsymbol{A}$ i
@@ -1870,6 +1931,7 @@ $A\to B_\bt$ z porządkiem pionowym. Stąd możemy mówić o ich \emph{izomorfiz
 		dla dowolnych $a_1,a_2\in A$,
 		\item [(2)] $\alpha(\bt_A)=\bt_B$.
 	\end{itemize}
+	Piszemy wtedy $\boldsymbol{A}\cong\boldsymbol{B}$.
 \end{definicja}
 
 \begin{twierdzenie}\label{tw:izomorfizm_czesciowe_calkowite}
@@ -1891,7 +1953,7 @@ $A\to B_\bt$ z porządkiem pionowym. Stąd możemy mówić o ich \emph{izomorfiz
 	\]
 	wzorem
 	\[
-	\alpha(f)(a)=
+	\alpha(f)(a)\coloneqq
 	\begin{cases}
 		f(a),&a\in\dom(f),\\
 		\bt,&a\notin\dom(f).
@@ -1900,97 +1962,67 @@ $A\to B_\bt$ z porządkiem pionowym. Stąd możemy mówić o ich \emph{izomorfiz
 	Odwzorowanie $\alpha$ uzupełnia więc funkcję częściową $f$ wartością
 	$\bt$ we wszystkich punktach, w których $f$ nie jest określona.
 	
-	Zdefiniujmy również odwzorowanie w przeciwną stronę,
+	Zauważmy najpierw, że dla każdej funkcji $f:A\rightharpoonup B$ i każdego
+	$a\in A$ zachodzi
+	\begin{equation}\label{eq:alpha_dziedzina}
+		a\in\dom(f)
+		\iff
+		\alpha(f)(a)\neq\bt.
+	\end{equation}
+	Istotnie, jeżeli $a\in\dom(f)$, to $\alpha(f)(a)=f(a)\in B$, a ponieważ
+	$\bt\notin B$, mamy $\alpha(f)(a)\neq\bt$. Jeżeli natomiast
+	$a\notin\dom(f)$, to z definicji $\alpha(f)(a)=\bt$.
+	
+	\emph{Różnowartościowość.} Niech $f,f':A\rightharpoonup B$ spełniają
 	\[
-	\beta:(A\to B_\bt)\longrightarrow(A\rightharpoonup B),
+	\alpha(f)=\alpha(f').
 	\]
-	które z funkcji całkowitej $g:A\to B_\bt$ ,,wycina'' punkty, w których
-	przyjmuje ona wartość $\bt$:
+	Na mocy \eqref{eq:alpha_dziedzina} dla każdego $a\in A$
 	\[
-	\beta(g)=\{(a,g(a))\mid a\in A,\ g(a)\neq\bt\}.
+	a\in\dom(f)
+	\iff
+	\alpha(f)(a)\neq\bt
+	\iff
+	\alpha(f')(a)\neq\bt
+	\iff
+	a\in\dom(f'),
 	\]
-	Sprawdźmy, że $\beta(g)$ jest rzeczywiście funkcją częściową z $A$
-	w $B$.
-	\begin{itemize}
-		\item $\beta(g)\subseteq A\times B$. Istotnie, jeżeli
-		$(a,b)\in\beta(g)$, to $b=g(a)$ oraz $g(a)\neq\bt$. Ponieważ
-		$g(a)\in B_\bt=B\cup\{\bt\}$, otrzymujemy $b\in B$.
-		\item Warunek jednoznaczności. Jeżeli $(a,b)\in\beta(g)$ oraz
-		$(a,b')\in\beta(g)$, to z definicji $\beta$ mamy $b=g(a)$ oraz
-		$b'=g(a)$, a więc $b=b'$.
-	\end{itemize}
-	Ponadto z definicji
+	czyli
 	\[
-	\dom\big(\beta(g)\big)=\{a\in A:\ g(a)\neq\bt\},
-	\qquad
-	\beta(g)(a)=g(a)\quad\text{dla }a\in\dom\big(\beta(g)\big).
+	\dom(f)=\dom(f').
+	\]
+	Dla $a$ z tej wspólnej dziedziny z definicji $\alpha$ otrzymujemy
+	\[
+	f(a)=\alpha(f)(a)=\alpha(f')(a)=f'(a).
+	\]
+	Funkcje częściowe o tej samej dziedzinie i tych samych wartościach na
+	niej są równe, więc
+	\[
+	f=f'.
 	\]
 	
-	\emph{Bijektywność.} Pokażemy, że $\beta$ jest odwrotnością $\alpha$,
-	tzn.
+	\emph{Surjektywność.} Niech $g:A\to B_\bt$ będzie dowolną funkcją
+	i niech
 	\[
-	\beta(\alpha(f))=f
-	\quad\text{dla każdej } f:A\rightharpoonup B
-	\qquad\text{oraz}\qquad
-	\alpha(\beta(g))=g
-	\quad\text{dla każdej } g:A\to B_\bt.
+	D\coloneqq\{a\in A:\ g(a)\neq\bt\}.
 	\]
-	
-	\emph{(i) Równość $\beta(\alpha(f))=f$.} Obie strony są podzbiorami
-	$A\times B$, więc wystarczy pokazać, że mają te same elementy. Niech
-	$(a,b)\in A\times B$. Z definicji $\beta$
+	Określmy funkcję częściową $f:A\rightharpoonup B$ o dziedzinie
+	$\dom(f)\coloneqq D$ wzorem
 	\[
-	(a,b)\in\beta(\alpha(f))
-	\iff
-	\alpha(f)(a)=b
-	\ \land\
-	\alpha(f)(a)\neq\bt.
+	f(a)\coloneqq g(a)
+	\qquad(a\in D).
 	\]
-	Ponieważ $b\in B$, mamy $b\neq\bt$, więc drugi warunek wynika
-	z pierwszego i
+	Jest to poprawna definicja, bo dla $a\in D$ mamy $g(a)\neq\bt$, czyli
+	$g(a)\in B$. Sprawdźmy, że $\alpha(f)=g$. Jeżeli $a\in D=\dom(f)$, to
 	\[
-	(a,b)\in\beta(\alpha(f))
-	\iff
-	\alpha(f)(a)=b.
+	\alpha(f)(a)=f(a)=g(a).
 	\]
-	Jeżeli $a\notin\dom(f)$, to $\alpha(f)(a)=\bt\neq b$, więc równość
-	$\alpha(f)(a)=b$ może zachodzić tylko dla $a\in\dom(f)$, a wtedy
-	$\alpha(f)(a)=f(a)$. Zatem
+	Jeżeli $a\notin D$, to $g(a)=\bt$, więc
 	\[
-	\alpha(f)(a)=b
-	\iff
-	a\in\dom(f)\ \land\ f(a)=b
-	\iff
-	(a,b)\in f.
+	\alpha(f)(a)=\bt=g(a).
 	\]
-	Stąd $\beta(\alpha(f))=f$.
-	
-	\emph{(ii) Równość $\alpha(\beta(g))=g$.} Obie strony są funkcjami
-	całkowitymi z $A$ w $B_\bt$, więc wystarczy porównać ich wartości
-	w dowolnym punkcie $a\in A$. Rozważmy dwa przypadki.
-	\begin{itemize}
-		\item Jeżeli $g(a)\neq\bt$, to $a\in\dom(\beta(g))$ oraz
-		$\beta(g)(a)=g(a)$. Z definicji $\alpha$
-		\[
-		\alpha(\beta(g))(a)=\beta(g)(a)=g(a).
-		\]
-		\item Jeżeli $g(a)=\bt$, to $a\notin\dom(\beta(g))$, więc
-		z definicji $\alpha$
-		\[
-		\alpha(\beta(g))(a)=\bt=g(a).
-		\]
-	\end{itemize}
-	W obu przypadkach $\alpha(\beta(g))(a)=g(a)$, a ponieważ $a$ było
-	dowolne, $\alpha(\beta(g))=g$.
-	
-	Z (i) wynika, że $\alpha$ jest różnowartościowe: jeżeli
-	$\alpha(f)=\alpha(f')$, to
-	\[
-	f=\beta(\alpha(f))=\beta(\alpha(f'))=f'.
-	\]
-	Z (ii) wynika, że $\alpha$ jest ,,na'': każda funkcja $g:A\to B_\bt$
-	jest postaci $g=\alpha(\beta(g))$. Zatem $\alpha$ jest bijekcją,
-	a $\beta$ jest do niej odwrotna.
+	Zatem $\alpha(f)=g$, czyli $\alpha$ jest ,,na''. Wraz z
+	różnowartościowością oznacza to, że $\alpha$ jest bijekcją.
 	
 	\emph{Zachowanie porządku.} Pokażemy, że dla dowolnych
 	$f,g:A\rightharpoonup B$
@@ -2000,44 +2032,56 @@ $A\to B_\bt$ z porządkiem pionowym. Stąd możemy mówić o ich \emph{izomorfiz
 	\alpha(f)\sqsubseteq\alpha(g).
 	\]
 	
-	($\Rightarrow$) Załóżmy, że $f\subseteq g$, i ustalmy $a\in A$.
-	\begin{itemize}
-		\item Jeżeli $a\notin\dom(f)$, to $\alpha(f)(a)=\bt$, a ponieważ
-		$\bt$ jest elementem najmniejszym $B_\bt$, mamy
-		$\alpha(f)(a)\sqsubseteq\alpha(g)(a)$.
-		\item Jeżeli $a\in\dom(f)$, to $(a,f(a))\in f\subseteq g$, więc
-		$a\in\dom(g)$ oraz $g(a)=f(a)$. Stąd
-		\[
-		\alpha(f)(a)=f(a)=g(a)=\alpha(g)(a),
-		\]
-		a w szczególności $\alpha(f)(a)\sqsubseteq\alpha(g)(a)$.
-	\end{itemize}
-	Ponieważ $a$ było dowolne, z definicji porządku pionowego
-	$\alpha(f)\sqsubseteq\alpha(g)$.
+	($\Rightarrow$) Załóżmy, że $f\subseteq g$, i ustalmy $a\in A$. Jeżeli
+	$a\notin\dom(f)$, to
+	\[
+	\alpha(f)(a)=\bt\sqsubseteq\alpha(g)(a),
+	\]
+	bo $\bt$ jest elementem najmniejszym $B_\bt$. Jeżeli $a\in\dom(f)$, to
+	z $f\subseteq g$ mamy $a\in\dom(g)$ oraz $g(a)=f(a)$, więc
+	\[
+	\alpha(f)(a)=f(a)=g(a)=\alpha(g)(a).
+	\]
+	W obu przypadkach $\alpha(f)(a)\sqsubseteq\alpha(g)(a)$. Ponieważ $a$ było
+	dowolne,
+	\[
+	\alpha(f)\sqsubseteq\alpha(g).
+	\]
 	
 	($\Leftarrow$) Załóżmy, że $\alpha(f)\sqsubseteq\alpha(g)$, i niech
-	$(a,b)\in f$. Wtedy $a\in\dom(f)$ oraz $f(a)=b$, więc
-	$\alpha(f)(a)=b$, przy czym $b\neq\bt$, bo $b\in B$. Z założenia
+	$(a,b)\in f$. Wtedy $a\in\dom(f)$ oraz
+	\[
+	\alpha(f)(a)=f(a)=b\neq\bt.
+	\]
+	Z założenia
 	\[
 	b=\alpha(f)(a)\sqsubseteq\alpha(g)(a).
 	\]
-	W porządku płaskim element różny od $\bt$ jest mniejszy lub równy
-	jedynie samemu sobie (Definicja~\ref{def:zbior_plaski}), zatem
-	$\alpha(g)(a)=b\neq\bt$. Oznacza to, że $a\in\dom(g)$ oraz
+	W porządku płaskim element różny od $\bt$ jest mniejszy lub równy tylko
+	samemu sobie (Definicja~\ref{def:zbior_plaski}), więc
+	\[
+	\alpha(g)(a)=b\neq\bt.
+	\]
+	Na mocy \eqref{eq:alpha_dziedzina} mamy $a\in\dom(g)$, a więc
 	$g(a)=\alpha(g)(a)=b$, czyli $(a,b)\in g$. Ponieważ $(a,b)\in f$ było
-	dowolne, $f\subseteq g$.
+	dowolne,
+	\[
+	f\subseteq g.
+	\]
 	
 	\emph{Element najmniejszy.} Funkcja pusta nie jest nigdzie określona,
 	tzn.\ $\dom(\varnothing)=\varnothing$. Zatem dla każdego $a\in A$
-	mamy $a\notin\dom(\varnothing)$ i
 	\[
 	\alpha(\varnothing)(a)=\bt=\varphi(a),
 	\]
-	czyli $\alpha(\varnothing)=\varphi$.
+	czyli
+	\[
+	\alpha(\varnothing)=\varphi.
+	\]
 	
 	Wykazaliśmy, że $\alpha$ jest bijekcją, zachowuje porządek w obie
-	strony oraz przeprowadza element najmniejszy $\varnothing$ na element
-	najmniejszy $\varphi$. Zatem
+	strony oraz przeprowadza element najmniejszy na element najmniejszy.
+	Zatem
 	\[
 	(A\rightharpoonup B,\subseteq,\varnothing)
 	\cong
@@ -2046,16 +2090,19 @@ $A\to B_\bt$ z porządkiem pionowym. Stąd możemy mówić o ich \emph{izomorfiz
 \end{proof}
 
 \begin{wniosek}\label{wn:izomorfizm}
-	Każdą funkcję częściową możemy utożsamić z odpowiednią funkcją całkowitą.	
+	Za pomocą izomorfizmu $\alpha$ każdą funkcję częściową
+	$f:A\rightharpoonup B$ możemy utożsamić z funkcją całkowitą
+	$\alpha(f):A\to B_\bt$.
 \end{wniosek}
 
 \section{Funkcje w zbiorach łańcuchowo zupełnych}
 
 \subsection{Monotoniczność i ciągłość}
 
-Do przejścia do sedna naszych rozważań będziemy potrzebować jeszcze dwóch kluczowych pojęć.
+Aby przejść do sedna naszych rozważań, potrzebujemy jeszcze dwóch kluczowych pojęć.
 
 \begin{definicja}
+	Niech $\boldsymbol{A}$ i $\boldsymbol{B}$ będą zbiorami łańcuchowo zupełnymi.
 	Funkcję całkowitą $f : \boldsymbol{A} \to \boldsymbol{B}$ nazywamy \emph{monotoniczną}, jeżeli zachodzi
 	\[
 	a_1 \sqsubseteq_A a_2
@@ -2065,106 +2112,29 @@ Do przejścia do sedna naszych rozważań będziemy potrzebować jeszcze dwóch 
 	dla dowolnych $a_1, a_2 \in A$.
 \end{definicja}
 
-Analogicznie wprowadzamy definicję ciągłości funkcji w zbiorze łańcuchowo zupełnym.
+Monotoniczność można równoważnie wyrazić w języku łańcuchów.
 
-\begin{definicja}
-	Funkcję całkowitą $f : \boldsymbol{A} \to \boldsymbol{B}$ nazywamy \emph{ciągłą}, jeżeli przenosi ona łańcuchy wraz z ich granicami z $\boldsymbol{A}$ do $\boldsymbol{B}$, tzn.
-	\begin{itemize}
-		\item [(1)] dla każdego łańcucha
-		\[
-		a_1 \sqsubseteq_A a_2 \sqsubseteq_A a_3 \sqsubseteq_A \ldots
-		\]
-		w $\boldsymbol{A}$ jego obraz
-		\[
-		f(a_1), f(a_2), f(a_3), \ldots
-		\]
-		jest łańcuchem w $\boldsymbol{B}$, tzn:
-		\[
-			f(a_1) \sqsubseteq_B f(a_2) \sqsubseteq_B f(a_3) \sqsubseteq_B \ldots
-		\]
-		\item [(2)] funkcja $f$ zachowuje granice łańcuchów, tzn.
-		\[
-		f\left(\bigsqcup_{i=1}^{\infty} a_i\right)
-		=
-		\bigsqcup_{i=1}^{\infty} f(a_i).
-		\]
-	\end{itemize}
-\end{definicja}
-
-\begin{twierdzenie}\label{tw:ciagla_monotoniczna}
-	Każda funkcja ciągła jest monotoniczna.
-\end{twierdzenie}
-
-\begin{proof}
-	Niech $f : \boldsymbol{A} \to \boldsymbol{B}$ będzie funkcją ciągłą. Ustalmy dowolne
-	$a_1,a_2\in A$ takie, że
-	\[
-	a_1\sqsubseteq_A a_2.
-	\]
-	Wówczas ciąg
-	\[
-	a_1,a_2,a_2,a_2,\ldots
-	\]
-	jest łańcuchem w $\boldsymbol{A}$, którego granicą jest $a_2$, tzn.
-	\[
-	\bigsqcup_{i=1}^{\infty} a_i = a_2.
-	\]
-	Z ciągłości funkcji $f$ wynika, że ciąg
-	\[
-	f(a_1),f(a_2),f(a_2),f(a_2),\ldots
-	\]
-	jest łańcuchem w $\boldsymbol{B}$ oraz
-	\[
-	f\left(\bigsqcup_{i=1}^{\infty} a_i\right)
-	=
-	\bigsqcup_{i=1}^{\infty} f(a_i).
-	\]
-	Zatem
-	\[
-	f(a_2)
-	=
-	\bigsqcup_{i=1}^{\infty} f(a_i),
-	\]
-	a więc w szczególności
-	\[
-	f(a_1)\sqsubseteq_B f(a_2).
-	\]
-	Stąd
-	\[
-	a_1\sqsubseteq_A a_2
-	\implies
-	f(a_1)\sqsubseteq_B f(a_2),
-	\]
-	co oznacza, że $f$ jest monotoniczna.
-\end{proof}
-
-Twierdzenie~\ref{tw:ciagla_monotoniczna} mówi, że z ciągłości wynika
-monotoniczność. Zapytajmy teraz w drugą stronę: co wynika z samej
-monotoniczności? Okazuje się, że funkcja monotoniczna spełnia
-automatycznie warunek~(1) definicji ciągłości oraz jedną z dwóch
-nierówności składających się na równość z warunku~(2).
-
-\begin{lemat}\label{lem:monotoniczna_lancuchy}
+\begin{twierdzenie}\label{tw:monotoniczna_lancuchy}
 	Niech $\boldsymbol{A}$ i $\boldsymbol{B}$ będą zbiorami łańcuchowo
-	zupełnymi, a $f:\boldsymbol{A}\to\boldsymbol{B}$ funkcją monotoniczną.
-	Niech ponadto
+	zupełnymi. Funkcja $f:\boldsymbol{A}\to\boldsymbol{B}$ jest monotoniczna
+	wtedy i tylko wtedy, gdy przenosi łańcuchy na łańcuchy, tzn.\ dla
+	każdego łańcucha
 	\[
 	a_1\sqsubseteq_A a_2\sqsubseteq_A a_3\sqsubseteq_A\ldots
 	\]
-	będzie dowolnym łańcuchem w $\boldsymbol{A}$. Wówczas:
-	\begin{itemize}
-		\item[(a)] ciąg $f(a_1),f(a_2),f(a_3),\ldots$ jest łańcuchem
-		w $\boldsymbol{B}$, a zatem posiada kres górny;
-		\item[(b)] zachodzi nierówność
-		\[
-		\bigsqcup_{n=1}^{\infty}f(a_n)\sqsubseteq_B f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big).
-		\]
-	\end{itemize}
-\end{lemat}
+	w $\boldsymbol{A}$ ciąg
+	\[
+	f(a_1)\sqsubseteq_B f(a_2)\sqsubseteq_B f(a_3)\sqsubseteq_B\ldots
+	\]
+	jest łańcuchem w $\boldsymbol{B}$. W szczególności dla funkcji
+	monotonicznej $f$ i dowolnego łańcucha $(a_n)_{n\in\mathbb N}$ istnieje
+	kres górny $\bigsqcup_{n=1}^{\infty}f(a_n)$.
+\end{twierdzenie}
 
 \begin{proof}
-	\emph{(a)} Ustalmy $n\in\mathbb N$. Ponieważ $(a_n)_{n\in\mathbb N}$
-	jest łańcuchem, mamy
+	($\Rightarrow$) Załóżmy, że $f$ jest monotoniczna, i niech
+	$(a_n)_{n\in\mathbb N}$ będzie łańcuchem w $\boldsymbol{A}$. Ustalmy
+	$n\in\mathbb N$. Ponieważ $(a_n)_{n\in\mathbb N}$ jest łańcuchem, mamy
 	\[
 	a_n\sqsubseteq_A a_{n+1}.
 	\]
@@ -2178,14 +2148,89 @@ nierówności składających się na równość z warunku~(2).
 	\]
 	czyli ciąg $(f(a_n))_{n\in\mathbb N}$ jest łańcuchem w $\boldsymbol{B}$.
 	Ponieważ $\boldsymbol{B}$ jest zbiorem łańcuchowo zupełnym, łańcuch ten
-	posiada kres górny
-	\[
-	\bigsqcup_{n=1}^{\infty}f(a_n)\in B.
-	\]
+	posiada kres górny $\bigsqcup_{n=1}^{\infty}f(a_n)\in B$.
 	
-	\emph{(b)} Oznaczmy kres górny łańcucha $(a_n)_{n\in\mathbb N}$ przez
+	($\Leftarrow$) Załóżmy, że $f$ przenosi łańcuchy na łańcuchy, i niech
+	$a_1,a_2\in A$ spełniają
 	\[
-	a=\bigsqcup_{n=1}^{\infty}a_n.
+	a_1\sqsubseteq_A a_2.
+	\]
+	Rozważmy ciąg
+	\[
+	a_1,\ a_2,\ a_2,\ a_2,\ \ldots
+	\]
+	Jest to łańcuch w $\boldsymbol{A}$, bo pierwsza nierówność
+	$a_1\sqsubseteq_A a_2$ zachodzi z założenia, a pozostałe
+	$a_2\sqsubseteq_A a_2$ --- ze zwrotności. Z założenia jego obraz
+	\[
+	f(a_1),\ f(a_2),\ f(a_2),\ f(a_2),\ \ldots
+	\]
+	jest łańcuchem w $\boldsymbol{B}$. W szczególności jego dwa pierwsze
+	wyrazy spełniają
+	\[
+	f(a_1)\sqsubseteq_B f(a_2).
+	\]
+	Ponieważ $a_1,a_2$ były dowolne, $f$ jest monotoniczna.
+\end{proof}
+
+Możemy teraz zdefiniować ciągłość. Zauważmy, że aby w ogóle mówić
+o kresie górnym $\bigsqcup_{n}f(a_n)$, ciąg $f(a_1),f(a_2),\ldots$ musi być
+łańcuchem --- w zbiorze łańcuchowo zupełnym istnienie kresów górnych mamy
+zagwarantowane tylko dla łańcuchów. Dlatego w definicji ciągłości
+wymagamy najpierw monotoniczności, która na mocy
+Twierdzenia~\ref{tw:monotoniczna_lancuchy} zapewnia, że obrazy łańcuchów
+są łańcuchami.
+
+\begin{definicja}\label{def:ciaglosc}
+	Niech $\boldsymbol{A}$ i $\boldsymbol{B}$ będą zbiorami łańcuchowo zupełnymi.
+	Funkcję całkowitą $f : \boldsymbol{A} \to \boldsymbol{B}$ nazywamy
+	\emph{ciągłą}, jeżeli
+	\begin{itemize}
+		\item [(1)] $f$ jest monotoniczna,
+		\item [(2)] $f$ zachowuje kresy górne łańcuchów, tzn.\ dla każdego
+		łańcucha $a_1 \sqsubseteq_A a_2 \sqsubseteq_A \ldots$ w $\boldsymbol{A}$
+		\[
+		f\left(\bigsqcup_{i=1}^{\infty} a_i\right)
+		=
+		\bigsqcup_{i=1}^{\infty} f(a_i).
+		\]
+	\end{itemize}
+	Prawa strona równości w (2) jest poprawnie określona na mocy (1)
+	i Twierdzenia~\ref{tw:monotoniczna_lancuchy}.
+\end{definicja}
+
+\begin{uwaga}\label{uw:ciaglosc_gordon}
+	U Gordona~\cite{gordon1979} warunek (1) ma postać ,,$f$ przenosi
+	łańcuchy na łańcuchy''. Na mocy Twierdzenia~\ref{tw:monotoniczna_lancuchy}
+	jest on równoważny monotoniczności, więc obie definicje ciągłości są
+	równoważne. W szczególności każda funkcja ciągła jest monotoniczna ---
+	wynika to teraz wprost z definicji.
+\end{uwaga}
+
+Funkcja monotoniczna spełnia automatycznie nie tylko warunek (1), ale
+także jedną z dwóch nierówności składających się na równość z
+warunku~(2).
+
+\begin{lemat}\label{lem:monotoniczna_lancuchy}
+	Niech $\boldsymbol{A}$ i $\boldsymbol{B}$ będą zbiorami łańcuchowo
+	zupełnymi, a $f:\boldsymbol{A}\to\boldsymbol{B}$ funkcją monotoniczną.
+	Wówczas dla każdego łańcucha
+	\[
+	a_1\sqsubseteq_A a_2\sqsubseteq_A a_3\sqsubseteq_A\ldots
+	\]
+	w $\boldsymbol{A}$ zachodzi nierówność
+	\[
+	\bigsqcup_{n=1}^{\infty}f(a_n)\sqsubseteq_B f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big).
+	\]
+\end{lemat}
+
+\begin{proof}
+	Na mocy Twierdzenia~\ref{tw:monotoniczna_lancuchy} ciąg
+	$(f(a_n))_{n\in\mathbb N}$ jest łańcuchem, więc kres górny po lewej
+	stronie istnieje. Oznaczmy kres górny łańcucha $(a_n)_{n\in\mathbb N}$
+	przez
+	\[
+	a\coloneqq \bigsqcup_{n=1}^{\infty}a_n.
 	\]
 	Z definicji kresu górnego $a$ jest ograniczeniem górnym tego łańcucha,
 	tzn.
@@ -2199,8 +2244,8 @@ nierówności składających się na równość z warunku~(2).
 	\qquad(n\in\mathbb N).
 	\]
 	Oznacza to, że $f(a)$ jest ograniczeniem górnym łańcucha
-	$(f(a_n))_{n\in\mathbb N}$ z punktu (a). Ponieważ kres górny jest
-	najmniejszym ograniczeniem górnym, otrzymujemy
+	$(f(a_n))_{n\in\mathbb N}$. Ponieważ kres górny jest najmniejszym
+	ograniczeniem górnym, otrzymujemy
 	\[
 	\bigsqcup_{n=1}^{\infty}f(a_n)
 	\sqsubseteq_B
@@ -2231,17 +2276,13 @@ nierówność, bo druga zachodzi zawsze.
 	w szczególności żądana nierówność.
 	
 	($\Leftarrow$) Załóżmy, że $f$ jest monotoniczna i spełnia powyższą
-	nierówność dla każdego łańcucha. Sprawdzimy oba warunki definicji
-	ciągłości.
-	
-	Warunek~(1): na mocy Lematu~\ref{lem:monotoniczna_lancuchy} (a) obraz
-	dowolnego łańcucha w $\boldsymbol{A}$ jest łańcuchem w $\boldsymbol{B}$.
-	
-	Warunek~(2): ustalmy łańcuch $(a_n)_{n\in\mathbb N}$. Z założenia
+	nierówność dla każdego łańcucha. Warunek~(1) definicji ciągłości jest
+	spełniony z założenia. Dla warunku~(2) ustalmy łańcuch
+	$(a_n)_{n\in\mathbb N}$. Z założenia
 	\[
 	f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big)\sqsubseteq_B\bigsqcup_{n=1}^{\infty}f(a_n),
 	\]
-	a z Lematu~\ref{lem:monotoniczna_lancuchy} (b)
+	a z Lematu~\ref{lem:monotoniczna_lancuchy}
 	\[
 	\bigsqcup_{n=1}^{\infty}f(a_n)\sqsubseteq_B f\Big(\bigsqcup_{n=1}^{\infty}a_n\Big).
 	\]
@@ -2260,7 +2301,7 @@ nierówność, bo druga zachodzi zawsze.
 	$\boldsymbol{B}$ oznaczamy przez
 	\[
 	\mathcal{C}(\boldsymbol{A}\to\boldsymbol{B})
-	=
+	\coloneqq 
 	\{f:\boldsymbol{A}\to\boldsymbol{B}\mid f\text{ jest ciągła}\}.
 	\]
 	Na zbiorze tym rozważamy porządek pionowy określony przez
@@ -2309,7 +2350,7 @@ nierówność, bo druga zachodzi zawsze.
 	Twierdzenia~\ref{tw:funkcje_calkowite_cpo} posiada on kres górny
 	w $\boldsymbol{A\to B}$, równy funkcji
 	\[
-	f(a)=\bigsqcup_{n=1}^{\infty}f_n(a)
+	f(a)\coloneqq\bigsqcup_{n=1}^{\infty}f_n(a)
 	\qquad(a\in A).
 	\]
 	Kres ten został jednak wyznaczony w większym zbiorze $A\to B$.
@@ -2334,8 +2375,8 @@ nierówność, bo druga zachodzi zawsze.
 	\end{itemize}
 	
 	\emph{(I) Monotoniczność $f$.} Niech $a\sqsubseteq_A a'$ i ustalmy
-	$i\in\mathbb N$. Funkcja $f_i$ jest ciągła, a więc na mocy
-	Twierdzenia~\ref{tw:ciagla_monotoniczna} monotoniczna, skąd
+	$i\in\mathbb N$. Funkcja $f_i$ jest ciągła, a więc z definicji
+	ciągłości monotoniczna, skąd
 	\[
 	f_i(a)\sqsubseteq_B f_i(a').
 	\]
@@ -2358,13 +2399,13 @@ nierówność, bo druga zachodzi zawsze.
 	\emph{(II) Nierówność dla kresów.} Niech $(a_n)_{n\in\mathbb N}$ będzie
 	łańcuchem w $\boldsymbol{A}$ i niech
 	\[
-	a=\bigsqcup_{n=1}^{\infty}a_n.
+	a\coloneqq \bigsqcup_{n=1}^{\infty}a_n.
 	\]
-	Na mocy (I) oraz Lematu~\ref{lem:monotoniczna_lancuchy}(a) ciąg
+	Na mocy (I) oraz Twierdzenia~\ref{tw:monotoniczna_lancuchy} ciąg
 	$\big(f(a_n)\big)_{n\in\mathbb N}$ jest łańcuchem w $\boldsymbol{B}$,
 	więc istnieje jego kres górny
 	\[
-	s=\bigsqcup_{n=1}^{\infty}f(a_n).
+	s\coloneqq \bigsqcup_{n=1}^{\infty}f(a_n).
 	\]
 	Ustalmy $i\in\mathbb N$. Dla każdego $n\in\mathbb N$ mamy
 	\[
@@ -2442,7 +2483,7 @@ nierówność, bo druga zachodzi zawsze.
 	a_1\sqsubseteq_A a_2\sqsubseteq_A a_3\sqsubseteq_A\ldots
 	\]
 	będzie dowolnym łańcuchem w $\boldsymbol{A}$. Ponieważ $f$ jest
-	monotoniczna, na mocy Lematu~\ref{lem:monotoniczna_lancuchy}(a) ciąg
+	monotoniczna, na mocy Twierdzenia~\ref{tw:monotoniczna_lancuchy} ciąg
 	$\big(f(a_n)\big)_{n\in\mathbb N}$ jest łańcuchem w $\boldsymbol{B}$,
 	a na mocy Wniosku~\ref{wn:ciaglosc_monotonicznej} wystarczy wykazać
 	nierówność
@@ -2456,7 +2497,7 @@ nierówność, bo druga zachodzi zawsze.
 	\[
 	\bigsqcup_{n=1}^{\infty}a_n=a_k.
 	\]
-	Rozważmy dwa przypadki (por.\ Uwaga~\ref{uw:lancuchy_plaskie}).
+	Rozważmy dwa przypadki (por.\ Uwagę~\ref{uw:lancuchy_plaskie}).
 	\begin{itemize}
 		\item Jeżeli $a_n=\bt_A$ dla wszystkich $n$, to łańcuch jest stały,
 		jego kresem jest $\bt_A$ i możemy przyjąć $k=1$.
@@ -2519,7 +2560,7 @@ nierówność, bo druga zachodzi zawsze.
 		\]
 		\item Jeżeli $a_1\neq\bt_A$, to z płaskości $\boldsymbol{A}$
 		(Definicja~\ref{def:zbior_plaski}) warunek $a_1\sqsubseteq_A a_2$
-		oznacza $a_1=a_2$. Wtedy $f(a_1)=f(a_2)$, a więc z zwrotności
+		oznacza $a_1=a_2$. Wtedy $f(a_1)=f(a_2)$, a więc ze zwrotności
 		$f(a_1)\sqsubseteq_B f(a_2)$.
 	\end{itemize}
 	W obu przypadkach $f(a_1)\sqsubseteq_B f(a_2)$, czyli $f$ jest
@@ -2530,9 +2571,11 @@ nierówność, bo druga zachodzi zawsze.
 \begin{wniosek}\label{wn:funkcje_czesciowe_jako_ciagle}
 	Niech $A$ i $B$ będą dowolnymi zbiorami, a
 	\[
-	A_\bt=A\cup\{\bt_A\},
+	A_\bt\coloneqq A\cup\{\bt_A\},
 	\qquad
-	B_\bt=B\cup\{\bt_B\}
+	B_\bt\coloneqq B\cup\{\bt_B\},
+	\qquad
+	\bt_A\notin A,\ \bt_B\notin B,
 	\]
 	będą płaskimi zbiorami łańcuchowo zupełnymi otrzymanymi przez dodanie
 	elementów najmniejszych. Każda funkcja częściowa
@@ -2545,7 +2588,7 @@ nierówność, bo druga zachodzi zawsze.
 	\]
 	określone wzorem
 	\[
-	\widehat{f}(a)=
+	\widehat{f}(a)\coloneqq 
 	\begin{cases}
 		f(a),&a\in\dom(f),\\
 		\bt_B,&a\in A\setminus\dom(f),\\
@@ -2558,7 +2601,7 @@ nierówność, bo druga zachodzi zawsze.
 
 \begin{proof}
 	Najpierw zauważmy, że $\widehat{f}$ jest poprawnie określoną funkcją
-	całkowitą z $A_\bt$ w $B_\bt$: każdy element $a\in A_\bt$ spełnia
+	całkowitą z $A_\bt$ w $B_\bt$. Każdy element $a\in A_\bt$ spełnia
 	dokładnie jeden z warunków $a\in\dom(f)$, $a\in A\setminus\dom(f)$,
 	$a=\bt_A$, a w każdym przypadku przypisana wartość należy do
 	$B_\bt$ (bo $f(a)\in B$).
@@ -2587,12 +2630,12 @@ nierówność, bo druga zachodzi zawsze.
 %==============================================================================
 
 Niniejszy rozdział poświęcimy w pełni zagadnieniu znajdowania punktu stałego
-dowolnego odwzorowania ciągłego między zbiorami łańcuchowo zupełnymi. Wrócimy na
+dowolnego odwzorowania ciągłego zbioru łańcuchowo zupełnego w siebie. Wróćmy na
 chwilę do równania~\eqref{eq:rownanie_stalopunktowe} i postarajmy się odpowiedzieć na
 zadane wcześniej pytania, tzn.\ o istnienie rozwiązania równania stałopunktowego oraz
-o wybór właściwego rozwiązania, gdy jest ich więcej. Dysponujemy już wszystkimi pojęciami --- zbiorem łańcuchowo zupełnym oraz funkcją ciągłą --- potrzebnymi, aby wykazać istnienie rozwiązania równania~\eqref{eq:rownanie_stalopunktowe} i wskazać wśród rozwiązań jedno wyróżnione: najmniejszy punkt stały. Twierdzenie to nie orzeka natomiast, że rozwiązanie jest jedyne.
+o wybór właściwego rozwiązania, gdy jest ich więcej. Dysponujemy już wszystkimi pojęciami --- zbiorem łańcuchowo zupełnym oraz funkcją ciągłą --- potrzebnymi, aby wykazać istnienie rozwiązania równania~\eqref{eq:rownanie_stalopunktowe} i wskazać wśród rozwiązań jedno wyróżnione --- najmniejszy punkt stały.
 
-Przejdziemy teraz do głównego twierdzenia niniejszego referatu --- twierdzenia Kleenego\footnote{Stephen Cole Kleene (1909--1994) --- amerykański matematyk i~logik, jeden z~twórców teorii rekursji, czyli teorii funkcji obliczalnych. Doktorat uzyskał w~1934~r.\ w~Princeton pod kierunkiem Alonzo Churcha, a~większość kariery naukowej związał z~University of Wisconsin--Madison. Zajmował się m.in.\ funkcjami częściowo rekurencyjnymi, hierarchią arytmetyczną, realizowalnością w~logice intuicjonistycznej oraz wyrażeniami regularnymi --- od jego nazwiska pochodzi nazwa \emph{gwiazdki Kleenego} $A^*$, użytej w~Przykładzie~\ref{prz:alfabet}. Jest autorem klasycznej monografii \emph{Introduction to Metamathematics} (1952)~\cite{kleene1952}. Omawiane twierdzenie nawiązuje do jego \emph{pierwszego twierdzenia o~rekursji}, według którego definicja rekurencyjna wyznacza najmniejszy punkt stały odpowiedniego operatora; sformułowanie w~języku zbiorów łańcuchowo zupełnych pochodzi z~późniejszych prac nad semantyką denotacyjną.} --- łączącego teorię punktu stałego z wprowadzonym pojęciem zbioru łańcuchowo zupełnego.
+Przejdziemy teraz do głównego twierdzenia niniejszego referatu --- twierdzenia Kleenego\footnote{Stephen Cole Kleene (1909--1994) --- amerykański matematyk i~logik, jeden z~twórców teorii rekursji, czyli teorii funkcji obliczalnych. Zajmował się także logiką intuicjonistyczną oraz teorią automatów i~wyrażeń regularnych~\cite{kleene1952}.} --- łączącego teorię punktu stałego z wprowadzonym pojęciem zbioru łańcuchowo zupełnego.
 
 \begin{twierdzenie}[Kleene]\label{tw:kleene}
 	Każda funkcja ciągła $f:\boldsymbol{A}\to\boldsymbol{A}$ ma najmniejszy
@@ -2603,12 +2646,15 @@ Przejdziemy teraz do głównego twierdzenia niniejszego referatu --- twierdzenia
 	\]
 	gdzie
 	\[
-	f^1(\bt)=f(\bt),
+	f^1(\bt)\coloneqq f(\bt),
 	\qquad
-	f^{i+1}(\bt)=f\!\left(f^i(\bt)\right)
+	f^{i+1}(\bt)\coloneqq f\!\left(f^i(\bt)\right)
 	\]
-	dla $i=1,2,3,\ldots$.
+	dla $i=1,2,3,\ldots$. Przyjmujemy również $f^0(\bt)\coloneqq\bt$.
 \end{twierdzenie}
+
+Twierdzenie Kleenego nie orzeka, że punkt stały jest jedyny. Wskazuje
+jedynie najmniejszy spośród nich.
 
 \begin{proof}
 	Niech $\boldsymbol{A}=(A,\sqsubseteq,\bt)$ oraz niech
@@ -2622,7 +2668,7 @@ Przejdziemy teraz do głównego twierdzenia niniejszego referatu --- twierdzenia
 	\[
 	\bt\sqsubseteq f(\bt).
 	\]
-	Ponieważ $f$ jest ciągła, wobec Twierdzenia~\ref{tw:ciagla_monotoniczna} jest monotoniczna, a więc
+	Ponieważ $f$ jest ciągła, z definicji ciągłości jest monotoniczna, a więc
 	\[
 		f(\bt)\sqsubseteq f(f(\bt))=f^2(\bt).
 	\]
@@ -2630,8 +2676,7 @@ Przejdziemy teraz do głównego twierdzenia niniejszego referatu --- twierdzenia
 	\[
 	f^i(\bt)\sqsubseteq f^{i+1}(\bt).
 	\]
-	Wobec Twierdzenia~\ref{tw:ciagla_monotoniczna} ciągłość funkcji $f$
-	implikuje jej monotoniczność, zatem
+	Z definicji ciągłości funkcja $f$ jest monotoniczna, zatem
 	\[
 	f\left(f^i(\bt)\right)
 	\sqsubseteq
@@ -2651,7 +2696,7 @@ Przejdziemy teraz do głównego twierdzenia niniejszego referatu --- twierdzenia
 	Z łańcuchowej zupełności $\boldsymbol{A}$ wynika istnienie kresu górnego
 	łańcucha $\left\{f^i(\bt)\right\}_{i=1}^{\infty}$. Oznaczmy go przez
 	\[
-	x=\bigsqcup_{i=1}^{\infty}f^i(\bt).
+	x\coloneqq \bigsqcup_{i=1}^{\infty}f^i(\bt).
 	\]
 	
 	Ponieważ $f$ jest funkcją ciągłą, zachowuje kresy górne łańcuchów, zatem
@@ -2762,18 +2807,13 @@ będziemy szukać w przestrzeni funkcji częściowych
 \[
 \Store\rightharpoonup\Store.
 \]
-Oznaczmy przez
-\[
-W_{b,c}
-=
-\Cc\sem{\kw{while}\ b\ \kw{do}\ c}
-\]
-denotację tej pętli.
+Przypomnijmy, że $W_{b,c}$ oznacza szukaną denotację pętli
+$\kw{while}\ b\ \kw{do}\ c$.
 
 W podrozdziale~\ref{subsec:problem_while} otrzymaliśmy równanie
 opisujące $W_{b,c}$, w którym denotacja pętli występuje po obu stronach
-równania. Wynika to bezpośrednio z charakteru instrukcji \kw{while}:
-jeżeli warunek $b$ jest prawdziwy, po wykonaniu ciała $c$ należy ponownie
+równania. Wynika to bezpośrednio z charakteru instrukcji \kw{while}.
+Jeżeli warunek $b$ jest prawdziwy, po wykonaniu ciała $c$ należy ponownie
 wykonać całą pętlę.
 
 Aby formalnie rozwiązać to równanie, wprowadzimy funkcjonał
@@ -2786,7 +2826,7 @@ Aby formalnie rozwiązać to równanie, wprowadzimy funkcjonał
 Argumentem funkcjonału $\mathcal{F}$ będzie dowolna funkcja częściowa
 $f:\Store\rightharpoonup\Store$, która reprezentuje proponowaną
 denotację dalszego wykonania pętli. Wartość $\mathcal{F}(f)$ opisuje
-jedno rozwinięcie pętli: sprawdzenie warunku $b$, wykonanie ciała $c$
+jedno rozwinięcie pętli --- sprawdzenie warunku $b$, wykonanie ciała $c$
 w przypadku prawdziwego warunku oraz dalsze wykonanie opisane przez
 $f$.
 
@@ -2794,7 +2834,7 @@ Funkcjonał $\mathcal{F}$ definiujemy następująco:
 \[
 \begin{aligned}
 	\mathcal{F}(f)
-	={}&
+	\coloneqq{}&
 	\left\{
 	(\sigma,\sigma)
 	\;\middle|\;
@@ -2924,7 +2964,7 @@ Które z tych rozwiązań jest właściwe? Pętla
 $\kw{while}\ \kw{true}\ \kw{do}\ \kw{skip}$ nie kończy się dla żadnego
 stanu początkowego, więc jej denotacja nie powinna zawierać żadnej pary
 $(\sigma,\sigma')$ --- powinna to być funkcja pusta $\varnothing$.
-Identyczność byłaby błędna: twierdziłaby, że pętla kończy się
+Identyczność byłaby błędna, bo twierdziłaby, że pętla kończy się
 natychmiast, nie zmieniając stanu. Funkcja pusta jest przy tym
 \emph{najmniejszym} punktem stałym, bo $\varnothing\subseteq f$ dla
 każdej $f$. Ogólnie, najmniejszy punkt stały zawiera tylko te pary,
@@ -3026,7 +3066,7 @@ Zaczniemy jednak od sprawdzenia jego poprawności.
 	\]
 	ponieważ wszystkie stany występujące w definicji $\mathcal{F}(f)$
 	należą do $\Store$. Pozostaje zatem wykazać warunek jednoznaczności,
-	tzn. że dla każdego $\sigma\in\Store$ istnieje co najwyżej jeden
+	tzn.\ że dla każdego $\sigma\in\Store$ istnieje co najwyżej jeden
 	$\sigma'\in\Store$ taki, że
 	\[
 	(\sigma,\sigma')\in\mathcal{F}(f).
@@ -3127,7 +3167,7 @@ Zaczniemy jednak od sprawdzenia jego poprawności.
 	$\mathcal{F}$ jest dobrze określony.
 \end{proof}
 
-Aby móc zastosować twierdzenie Kleenego (Twierdzenie \ref{tw:kleene}), oprócz dobrego określenia
+Aby móc zastosować twierdzenie Kleenego (Twierdzenie~\ref{tw:kleene}), oprócz dobrego określenia
 funkcjonału $\mathcal{F}$ musimy zbadać jego zachowanie względem
 porządku na przestrzeni
 \[
@@ -3148,7 +3188,7 @@ f\subseteq g
 
 \begin{lemat}\label{lemat:F_monotoniczny}
 	Funkcjonał $\mathcal{F}$ jest monotoniczny względem inkluzji wykresów,
-	tzn. dla dowolnych funkcji częściowych
+	tzn.\ dla dowolnych funkcji częściowych
 	\[
 	f,g:\Store\rightharpoonup\Store
 	\]
@@ -3247,8 +3287,9 @@ f\subseteq g
 \end{proof}
 
 Aby zastosować twierdzenie Kleenego do funkcjonału $\mathcal{F}$, musimy
-wykazać, że jest on ciągły. Ciągłość oznacza, że $\mathcal{F}$ zachowuje
-kresy górne łańcuchów. W rozważanej przestrzeni funkcji częściowych kres
+wykazać, że jest on ciągły. Warunek~(1) definicji ciągłości, czyli
+monotoniczność, wykazaliśmy w Lemacie~\ref{lemat:F_monotoniczny}.
+Pozostaje warunek~(2), czyli zachowywanie kresów górnych łańcuchów przez $\mathcal{F}$. W rozważanej przestrzeni funkcji częściowych kres
 górny łańcucha jest równy sumie jego elementów, dlatego dla dowolnego
 łańcucha
 \[
@@ -3436,7 +3477,7 @@ Pokażemy ją, dowodząc obu inkluzji.
 	\subseteq
 	\mathcal{F}\left(\bigcup_{n=1}^{\infty}f_n\right).
 	\]
-	(Jest to dokładnie nierówność z Lematu~\ref{lem:monotoniczna_lancuchy}(b)
+	(Jest to dokładnie nierówność z Lematu~\ref{lem:monotoniczna_lancuchy}
 	zapisana w porządku inkluzji.)
 	
 	Z obu inkluzji wynika
@@ -3457,7 +3498,9 @@ Pokażemy ją, dowodząc obu inkluzji.
 	=
 	\bigsqcup_{n=1}^{\infty}\mathcal{F}(f_n).
 	\]
-	Wobec tego $\mathcal{F}$ jest ciągły.
+	Wraz z monotonicznością (Lemat~\ref{lemat:F_monotoniczny}) oznacza to,
+	że $\mathcal{F}$ spełnia oba warunki definicji ciągłości, czyli jest
+	ciągły.
 \end{proof}
 
 %==============================================================================
@@ -3468,7 +3511,7 @@ Możemy teraz zastosować twierdzenie Kleenego do równania
 \[
 W_{b,c}=\mathcal{F}\left(W_{b,c}\right).
 \]
-W tym celu sprawdziliśmy wszystkie wymagane założenia. Z
+Wszystkie wymagane założenia zostały już sprawdzone. Z
 Twierdzenia~\ref{tw:funkcje_czesciowe_cpo} wynika, że przestrzeń
 \[
 \boldsymbol{\Store\rightharpoonup\Store}
@@ -3488,7 +3531,7 @@ Lematu~\ref{lemat:F_monotoniczny} oraz
 Twierdzenia~\ref{tw:F_ciagly} jest on ciągły.
 
 Wszystkie założenia twierdzenia Kleenego są zatem spełnione. Wynika stąd,
-że $\mathcal{F}$ posiada najmniejszy punkt stały, który jest równy kresowi
+że $\mathcal{F}$ ma najmniejszy punkt stały, który jest równy kresowi
 górnemu ciągu kolejnych przybliżeń od elementu najmniejszego:
 \[
 \lfp(\mathcal{F})
@@ -3499,12 +3542,13 @@ górnemu ciągu kolejnych przybliżeń od elementu najmniejszego:
 Zgodnie z wcześniejszymi rozważaniami \emph{definiujemy} denotację pętli
 jako ten najmniejszy punkt stały:
 \[
-	W_{b,c}
-	:=
+	\Cc\sem{\kw{while}\ b\ \kw{do}\ c}
+	\coloneqq
 	\lfp(\mathcal{F})
 	=
-	\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing).
+	\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing),
 \]
+i odtąd $W_{b,c}=\Cc\sem{\kw{while}\ b\ \kw{do}\ c}$.
 
 Na mocy Twierdzenia~\ref{tw:funkcje_czesciowe_cpo} kres górny łańcucha
 funkcji częściowych jest równy sumie jego elementów, dlatego
@@ -3615,21 +3659,12 @@ Widzimy zatem, że kolejne przybliżenia tworzą łańcuch
 \subseteq\ldots.
 \]
 Przybliżenie $\mathcal{F}^i(\varnothing)$ zawiera wszystkie wykonania
-pętli, które mogą zakończyć się po co najwyżej $i-1$ wykonaniach jej
+pętli, które kończą się po co najwyżej $i-1$ wykonaniach jej
 ciała. Każde kolejne zastosowanie funkcjonału może zatem dodać wykonania
 wymagające jeszcze jednego przejścia przez ciało pętli.
 
 W konsekwencji semantyka pętli jest dana przez sumę wszystkich tych
 przybliżeń:
-\[
-	W_{b,c}
-	=
-	\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing)
-	=
-	\bigcup_{i=1}^{\infty}\mathcal{F}^i(\varnothing).
-\]
-
-Ostatecznie otrzymujemy jawną postać denotacji:
 \[
 	\Cc\sem{\kw{while}\ b\ \kw{do}\ c}
 	=
@@ -3641,16 +3676,16 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 
 
 \begin{przyklad}
-	Rozważmy przykład
+	Rozważmy pętlę
 	\[
-	\kw{while}\ \texttt{foo}<5\ \kw{do}\ 
-	\texttt{foo}:=\texttt{foo}+1.
+	\kw{while}\ \mathtt{foo}<\mathtt{5}\ \kw{do}\ 
+	\mathtt{foo}:=\mathtt{foo}+\mathtt{1}.
 	\]
 	Mamy zatem
 	\[
-	b=\texttt{foo}<5,
+	b=\mathtt{foo}<\mathtt{5},
 	\qquad
-	c=\texttt{foo}:=\texttt{foo}+1.
+	c=\mathtt{foo}:=\mathtt{foo}+\mathtt{1}.
 	\]
 	
 	Dla pierwszego przybliżenia otrzymujemy
@@ -3681,7 +3716,7 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 		\left\{
 		(\sigma,\sigma)
 		\;\middle|\;
-		\sigma(\texttt{foo})\geq5
+		\sigma(\mathtt{foo})\geq5
 		\right\}.
 	\end{aligned}
 	\]
@@ -3714,18 +3749,18 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 		\left\{
 		(\sigma,\sigma)
 		\;\middle|\;
-		\sigma(\texttt{foo})\geq5
+		\sigma(\mathtt{foo})\geq5
 		\right\}\\
 		&{}\cup
 		\left\{
 		\left(
 		\sigma,
-		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+1]
+		\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+1]
 		\right)
 		\;\middle|\;
 		\begin{array}{c}
-			\sigma(\texttt{foo})<5,\\
-			\sigma(\texttt{foo})+1\geq5
+			\sigma(\mathtt{foo})<5,\\
+			\sigma(\mathtt{foo})+1\geq5
 		\end{array}
 		\right\}.
 	\end{aligned}
@@ -3733,13 +3768,13 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 	
 	Ponieważ
 	\[
-	\sigma(\texttt{foo})<5
+	\sigma(\mathtt{foo})<5
 	\quad\land\quad
-	\sigma(\texttt{foo})+1\geq5
+	\sigma(\mathtt{foo})+1\geq5
 	\]
 	implikuje
 	\[
-	\sigma(\texttt{foo})+1=5,
+	\sigma(\mathtt{foo})+1=5,
 	\]
 	otrzymujemy
 	\[
@@ -3748,16 +3783,16 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 	\left\{
 	(\sigma,\sigma)
 	\;\middle|\;
-	\sigma(\texttt{foo})\geq5
+	\sigma(\mathtt{foo})\geq5
 	\right\}
 	\cup
 	\left\{
 	\left(
 	\sigma,
-	\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+1]
+	\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+1]
 	\right)
 	\;\middle|\;
-	\sigma(\texttt{foo})+1=5
+	\sigma(\mathtt{foo})+1=5
 	\right\}.
 	\]
 	
@@ -3769,25 +3804,25 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 		\left\{
 		(\sigma,\sigma)
 		\;\middle|\;
-		\sigma(\texttt{foo})\geq5
+		\sigma(\mathtt{foo})\geq5
 		\right\}\\
 		&{}\cup
 		\left\{
 		\left(
 		\sigma,
-		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+1]
+		\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+1]
 		\right)
 		\;\middle|\;
-		\sigma(\texttt{foo})+1=5
+		\sigma(\mathtt{foo})+1=5
 		\right\}\\
 		&{}\cup
 		\left\{
 		\left(
 		\sigma,
-		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+2]
+		\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+2]
 		\right)
 		\;\middle|\;
-		\sigma(\texttt{foo})+2=5
+		\sigma(\mathtt{foo})+2=5
 		\right\}.
 	\end{aligned}
 	\]
@@ -3800,34 +3835,34 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 		\left\{
 		(\sigma,\sigma)
 		\;\middle|\;
-		\sigma(\texttt{foo})\geq5
+		\sigma(\mathtt{foo})\geq5
 		\right\}\\
 		&{}\cup
 		\left\{
 		\left(
 		\sigma,
-		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+1]
+		\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+1]
 		\right)
 		\;\middle|\;
-		\sigma(\texttt{foo})+1=5
+		\sigma(\mathtt{foo})+1=5
 		\right\}\\
 		&{}\cup
 		\left\{
 		\left(
 		\sigma,
-		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+2]
+		\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+2]
 		\right)
 		\;\middle|\;
-		\sigma(\texttt{foo})+2=5
+		\sigma(\mathtt{foo})+2=5
 		\right\}\\
 		&{}\cup
 		\left\{
 		\left(
 		\sigma,
-		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+3]
+		\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+3]
 		\right)
 		\;\middle|\;
-		\sigma(\texttt{foo})+3=5
+		\sigma(\mathtt{foo})+3=5
 		\right\}.
 	\end{aligned}
 	\]
@@ -3842,39 +3877,39 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 		\left\{
 		(\sigma,\sigma)
 		\;\middle|\;
-		\sigma(\texttt{foo})\geq5
+		\sigma(\mathtt{foo})\geq5
 		\right\}\\
 		&{}\cup
 		\left\{
 		\left(
 		\sigma,
-		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+n]
+		\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+n]
 		\right)
 		\;\middle|\;
-		\sigma(\texttt{foo})+n=5
+		\sigma(\mathtt{foo})+n=5
 		\land
 		n\geq1
 		\right\}.
 	\end{aligned}
 	\]
 	
-	Ostatnią równość możemy zapisać w postaci zamkniętej:
+	Równoważnie możemy to zapisać jako
 	\[
 		W_{b,c}
 		=
 		\left\{
 		(\sigma,\sigma)
 		\;\middle|\;
-		\sigma(\texttt{foo})\geq5
+		\sigma(\mathtt{foo})\geq5
 		\right\}
 		\cup
 		\left\{
 		\left(
 		\sigma,
-		\sigma[\texttt{foo}\mapsto\sigma(\texttt{foo})+n]
+		\sigma[\mathtt{foo}\mapsto\sigma(\mathtt{foo})+n]
 		\right)
 		\;\middle|\;
-		n=5-\sigma(\texttt{foo})
+		n=5-\sigma(\mathtt{foo})
 		\land
 		n\geq1
 		\right\}.
@@ -3882,7 +3917,7 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 	
 	W szczególności, jeżeli początkowo
 	\[
-	\sigma(\texttt{foo})=1,
+	\sigma(\mathtt{foo})=1,
 	\]
 	to
 	\[
@@ -3890,10 +3925,10 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 	\]
 	a więc
 	\[
-	\Cc\sem{\kw{while}\ \texttt{foo}<5\ \kw{do}\
-		\texttt{foo}:=\texttt{foo}+1}(\sigma)
+	\Cc\sem{\kw{while}\ \mathtt{foo}<\mathtt{5}\ \kw{do}\
+		\mathtt{foo}:=\mathtt{foo}+\mathtt{1}}(\sigma)
 	=
-	\sigma[\texttt{foo}\mapsto5].
+	\sigma[\mathtt{foo}\mapsto5].
 	\]
 \end{przyklad}
 
@@ -3901,406 +3936,270 @@ Ostatecznie otrzymujemy jawną postać denotacji:
 \subsection{Rekurencyjna definicja silni}
 %==============================================================================
 
-Konstrukcję najmniejszego punktu stałego można zastosować również do
-rekurencyjnych definicji funkcji. 
-
-Rozważmy klasyczną definicję silni:
+Twierdzenie Kleenego pozwala nadać ścisły sens nie tylko pętlom, ale
+także rekurencyjnym definicjom funkcji. Silnię definiuje się zwykle
+wzorami
 \[
-\operatorname{silnia}(0)=1,
+0!=1,
 \qquad
-\operatorname{silnia}(n+1)
-=
-(n+1)\cdot\operatorname{silnia}(n).
+(n+1)!=(n+1)\cdot n!
+\qquad(n\in\mathbb N_0).
 \]
-
-Dziedziną funkcji silnia jest zbiór
+Z punktu widzenia tego referatu jest to \emph{równanie}, w którym
+niewiadomą jest funkcja. Szukamy funkcji $S$ spełniającej
 \[
-\mathbb{N}_0=\{0,1,2,\ldots\}.
-\]
-Oznaczmy wartość silni dla argumentu $n$ przez
-\[
-S_n:=n!.
-\]
-Wówczas
-\[
-S_0=1,
+S(0)=1,
 \qquad
-S_{n+1}=(n+1) \cdot S_n.
+S(n+1)=(n+1)\cdot S(n)
+\qquad(n\in\mathbb N_0).
 \]
+Podobnie jak w przypadku pętli \kw{while}, szukana funkcja występuje po
+obu stronach równania. Rozwiązanie otrzymamy jako najmniejszy punkt stały
+odpowiedniego funkcjonału, a kolejne przybliżenia będą funkcjami, które
+znają wartości silni tylko dla początkowych argumentów.
 
-Niech
+Pętlę \kw{while} opisaliśmy za pomocą funkcji częściowych. Silnię
+opiszemy w analogicznym języku funkcji całkowitych o wartościach w zbiorze
+płaskim (por.\ Twierdzenie~\ref{tw:izomorfizm_czesciowe_calkowite}).
+Nieokreśloność wyrażamy wtedy jawnie elementem $\bt$, oznaczającym
+,,brak określenia''. Rozważamy płaski zbiór łańcuchowo zupełny
 \[
-D:=\mathbb{N}_{0,\bt}
-=
-\mathbb{N}_0\cup\{\bt\}
+D\coloneqq\mathbb N_0\cup\{\bt\}
 \]
-będzie płaskim zbiorem łańcuchowo zupełnym otrzymanym przez dodanie
-elementu najmniejszego $\bt$.
-
-Rozważamy przestrzeń wszystkich funkcji całkowitych
-\[
-D\to D
-\]
-uporządkowaną porządkiem pionowym
+oraz zbiór funkcji całkowitych $D\to D$ z porządkiem pionowym
 \[
 f\sqsubseteq g
 \iff
 \forall x\in D\quad
 f(x)\sqsubseteq_D g(x).
 \]
-Na mocy Twierdzenia~\ref{tw:funkcje_calkowite_cpo} przestrzeń
+Na mocy Twierdzenia~\ref{tw:funkcje_calkowite_cpo} zbiór
 \[
 \boldsymbol{D\to D}
 =
 (D\to D,\sqsubseteq,\varphi)
 \]
-jest zbiorem łańcuchowo zupełnym, gdzie elementem najmniejszym jest
-funkcja stała
-\[
-\varphi(x)=\bt \quad (x \in D).
-\]
+jest łańcuchowo zupełny, jego elementem najmniejszym jest funkcja stała
+$\varphi(x)\coloneqq\bt$ dla $x\in D$, a kresy górne łańcuchów wyznaczamy punktowo.
 
-Niech
+Równanie silni zapisujemy jako równanie stałopunktowe
 \[
-S:D\to D
+S=\mathcal T(S),
 \]
-oznacza poszukiwaną denotację funkcji $\operatorname{silnia}$. Z jej
-definicji rekurencyjnej oczekujemy
+gdzie funkcjonał $\mathcal{T}:(D\to D)\to(D\to D)$ jest określony
+wzorem
 \[
-S(0)=1
-\]
-oraz
-\[
-S(n+1)=(n+1)\cdot S(n).
-\]
-Możemy zatem zapisać tę definicję jako równanie stałopunktowe
-\[
-S=\mathcal{F}(S),
-\]
-gdzie
-\[
-\mathcal{F}:
-(D\to D)
-\longrightarrow
-(D\to D)
-\]
-jest funkcjonałem określonym wzorem
-\[
-\mathcal{F}(f)(x)
-=
+\mathcal{T}(f)(x)\coloneqq
 \begin{cases}
-	\bt,&x=\bt,\\
-	1,&x=0,\\
-	(n+1)\cdot f(n),&x=n+1,\quad n\in\mathbb{N}_0.
+	\bt, & x=\bt,\\
+	1, & x=0,\\
+	(n+1)\cdot f(n), & x=n+1,\ f(n)\neq\bt,\\
+	\bt, & x=n+1,\ f(n)=\bt,
 \end{cases}
+\qquad(n\in\mathbb N_0).
 \]
-W powyższym wzorze przyjmujemy dodatkowo
-\[
-(n+1)\cdot\bt=\bt
-\qquad(n\in\mathbb{N}_0).
-\]
-Dzięki temu dla każdej funkcji
-\[
-f:D\to D
-\]
-funkcja $\mathcal{F}(f)$ jest również funkcją całkowitą
-\[
-\mathcal{F}(f):D\to D.
-\]
+Ostatni wiersz mówi, że jeżeli nie znamy jeszcze wartości $f(n)$, to nie
+znamy też wartości w punkcie $n+1$. Pierwszy wiersz wyraża to samo dla
+nieokreślonego argumentu.
 
-Aby zastosować twierdzenie Kleenego, musimy wykazać, że funkcjonał
-$\mathcal{F}$ jest ciągły względem porządku pionowego.
-
-\begin{twierdzenie}\label{tw:silnia_funkcjonal_ciagly}
-	Funkcjonał
+\begin{uwaga}\label{uw:silnia_bt}
+	Wybór wartości $\bt$ w ostatnim wierszu jest wymuszony przez
+	monotoniczność funkcjonału $\mathcal T$. Przypuśćmy, że w ostatnim
+	wierszu zamiast $\bt$ przyjęlibyśmy pewną wartość $k\in\mathbb N_0$.
+	Ustalmy $n\in\mathbb N_0$ i rozważmy funkcje $f,g,g':D\to D$ równe
+	$\varphi$ wszędzie poza punktem $n$, przy czym
 	\[
-	\mathcal{F}:(D\to D)\longrightarrow(D\to D)
+	f(n)\coloneqq\bt,
+	\qquad
+	g(n)\coloneqq1,
+	\qquad
+	g'(n)\coloneqq2.
 	\]
-	określony powyższym wzorem jest ciągły.
-\end{twierdzenie}
+	Wtedy $f\sqsubseteq g$ oraz $f\sqsubseteq g'$, więc z monotoniczności
+	$\mathcal T$
+	\[
+	k=\mathcal T(f)(n+1)\sqsubseteq_D\mathcal T(g)(n+1)=n+1
+	\qquad\text{oraz}\qquad
+	k=\mathcal T(f)(n+1)\sqsubseteq_D\mathcal T(g')(n+1)=2(n+1).
+	\]
+	W porządku płaskim liczba jest mniejsza lub równa tylko samej sobie,
+	więc $k=n+1$ oraz $k=2(n+1)$, co jest sprzecznością, bo $n+1\neq0$.
+	Jedynym wyborem zgodnym z monotonicznością jest zatem $\bt$.
+\end{uwaga}
+
+\begin{lemat}\label{lem:silnia_F}
+	Funkcjonał $\mathcal T$ jest dobrze określony, monotoniczny i ciągły.
+\end{lemat}
 
 \begin{proof}
-	\emph{Krok 1: pomocnicza funkcja $h_n$.} Ustalmy $n\in\mathbb N_0$
-	i rozważmy funkcję $h_n:D\to D$ ,,mnożenia przez $n+1$'':
-	\[
-	h_n(d)=
-	\begin{cases}
-		\bt,&d=\bt,\\
-		(n+1)\cdot d,&d\in\mathbb N_0.
-	\end{cases}
-	\]
-	Zgodnie z przyjętą konwencją $(n+1)\cdot\bt=\bt$ możemy pisać krótko
-	$h_n(d)=(n+1)\cdot d$ dla wszystkich $d\in D$. W szczególności
-	\[
-	h_n(\bt)=\bt,
-	\]
-	czyli $h_n$ zachowuje element najmniejszy. Ponieważ $D$ jest płaskim
-	zbiorem łańcuchowo zupełnym, na mocy
-	Wniosku~\ref{wn:plaskie_monotoniczne_ciagle} funkcja $h_n$ jest
-	monotoniczna i ciągła.
+	\emph{Dobre określenie.} Dla każdej $f:D\to D$ i każdego $x\in D$
+	dokładnie jeden z czterech przypadków w definicji $\mathcal T(f)(x)$
+	zachodzi, a przypisana wartość należy do $D$, bo
+	$(n+1)\cdot f(n)\in\mathbb N_0$, gdy $f(n)\in\mathbb N_0$. Zatem
+	$\mathcal T(f)$ jest funkcją całkowitą $D\to D$.
 	
-	Za pomocą funkcji $h_n$ wzór na $\mathcal{F}$ możemy zapisać jako
-	\[
-	\mathcal{F}(f)(\bt)=\bt,
-	\qquad
-	\mathcal{F}(f)(0)=1,
-	\qquad
-	\mathcal{F}(f)(n+1)=(n+1)\cdot f(n)=h_n\big(f(n)\big)
-	\quad(n\in\mathbb N_0).
-	\]
-	
-	\emph{Krok 2: monotoniczność $\mathcal{F}$.} Niech
-	$g,g':D\to D$ oraz $g\sqsubseteq g'$, tzn.\
-	$g(x)\sqsubseteq_D g'(x)$ dla każdego $x\in D$. Porównajmy wartości
-	$\mathcal{F}(g)$ i $\mathcal{F}(g')$ w dowolnym punkcie $x\in D$.
+	\emph{Monotoniczność.} Niech $g\sqsubseteq g'$, tzn.\
+	$g(x)\sqsubseteq_D g'(x)$ dla każdego $x\in D$. Ustalmy $x\in D$
+	i porównajmy $\mathcal T(g)(x)$ z $\mathcal T(g')(x)$.
 	\begin{itemize}
-		\item Dla $x=\bt$: $\mathcal{F}(g)(\bt)=\bt=\mathcal{F}(g')(\bt)$.
-		\item Dla $x=0$: $\mathcal{F}(g)(0)=1=\mathcal{F}(g')(0)$.
-		\item Dla $x=n+1$: z założenia $g(n)\sqsubseteq_D g'(n)$, a z
-		monotoniczności $h_n$
+		\item Dla $x=\bt$ obie wartości są równe $\bt$, a dla $x=0$ obie są
+		równe $1$.
+		\item Niech $x=n+1$. Jeżeli $g(n)=\bt$, to
 		\[
-		\mathcal{F}(g)(n+1)
-		=
-		h_n\big(g(n)\big)
-		\sqsubseteq_D
-		h_n\big(g'(n)\big)
-		=
-		\mathcal{F}(g')(n+1).
+		\mathcal T(g)(n+1)=\bt\sqsubseteq_D\mathcal T(g')(n+1).
+		\]
+		Jeżeli $g(n)=m\in\mathbb N_0$, to z $g(n)\sqsubseteq_D g'(n)$ i płaskości
+		$D$ wynika $g'(n)=m$, więc
+		\[
+		\mathcal T(g)(n+1)=(n+1)\cdot m=\mathcal T(g')(n+1).
 		\]
 	\end{itemize}
-	W każdym przypadku $\mathcal{F}(g)(x)\sqsubseteq_D\mathcal{F}(g')(x)$,
-	więc $\mathcal{F}(g)\sqsubseteq\mathcal{F}(g')$. Funkcjonał
-	$\mathcal{F}$ jest zatem monotoniczny.
+	W każdym przypadku $\mathcal T(g)(x)\sqsubseteq_D\mathcal T(g')(x)$, czyli
+	\[
+	\mathcal T(g)\sqsubseteq\mathcal T(g').
+	\]
 	
-	\emph{Krok 3: obraz łańcucha jest łańcuchem.} Niech
+	\emph{Ciągłość.} Monotoniczność to warunek~(1) definicji ciągłości.
+	Dla warunku~(2) niech
 	\[
 	f_1\sqsubseteq f_2\sqsubseteq f_3\sqsubseteq\ldots
 	\]
-	będzie łańcuchem w $\boldsymbol{D\to D}$. Z kroku 2 i
-	Lematu~\ref{lem:monotoniczna_lancuchy}(a) ciąg
+	będzie łańcuchem w $\boldsymbol{D\to D}$ i niech
 	\[
-	\mathcal{F}(f_1)\sqsubseteq\mathcal{F}(f_2)\sqsubseteq\mathcal{F}(f_3)\sqsubseteq\ldots
+	f\coloneqq\bigsqcup_{i=1}^{\infty}f_i.
 	\]
-	jest łańcuchem, a więc ma kres górny. Jest to warunek~(1) definicji
-	ciągłości.
-	
-	\emph{Krok 4: zachowanie kresów górnych.} Oznaczmy
+	Na mocy Twierdzenia~\ref{tw:funkcje_calkowite_cpo} kresy wyznaczamy
+	punktowo, więc $f(x)=\bigsqcup_i f_i(x)$ dla $x\in D$, a ponadto
 	\[
-	f=\bigsqcup_{i=1}^{\infty}f_i.
-	\]
-	Na mocy Twierdzenia~\ref{tw:funkcje_calkowite_cpo} kresy górne w
-	$\boldsymbol{D\to D}$ wyznaczamy punktowo, więc
-	\[
-	f(x)=\bigsqcup_{i=1}^{\infty}f_i(x)
-	\qquad\text{oraz}\qquad
-	\Big(\bigsqcup_{i=1}^{\infty}\mathcal{F}(f_i)\Big)(x)
+	\Big(\bigsqcup_{i=1}^{\infty}\mathcal T(f_i)\Big)(x)
 	=
-	\bigsqcup_{i=1}^{\infty}\mathcal{F}(f_i)(x)
-	\qquad(x\in D).
+	\bigsqcup_{i=1}^{\infty}\mathcal T(f_i)(x),
 	\]
-	Musimy wykazać, że
-	$\mathcal{F}(f)(x)=\bigsqcup_{i}\mathcal{F}(f_i)(x)$ dla każdego
-	$x\in D$.
+	gdzie z monotoniczności $\mathcal T(f_1)\sqsubseteq\mathcal T(f_2)\sqsubseteq\ldots$
+	jest łańcuchem. Musimy pokazać, że
+	$\mathcal T(f)(x)=\bigsqcup_i\mathcal T(f_i)(x)$ dla każdego $x\in D$.
 	\begin{itemize}
-		\item Dla $x=\bt$: $\mathcal{F}(f)(\bt)=\bt$ oraz
-		$\mathcal{F}(f_i)(\bt)=\bt$ dla każdego $i$. Kresem górnym łańcucha
-		stałego $\bt,\bt,\ldots$ jest $\bt$, więc obie strony są równe $\bt$.
-		\item Dla $x=0$: analogicznie obie strony są równe $1$.
-		\item Dla $x=n+1$: ciąg $\big(f_i(n)\big)_{i\in\mathbb N}$ jest
-		łańcuchem w $D$ (bo $f_i\sqsubseteq f_{i+1}$ w porządku pionowym),
-		a jego kresem jest $f(n)$. Korzystając z ciągłości $h_n$, otrzymujemy
+		\item Dla $x=\bt$ wszystkie wartości $\mathcal T(f)(\bt)$ oraz
+		$\mathcal T(f_i)(\bt)$ są równe $\bt$, a kresem łańcucha stałego
+		$\bt,\bt,\ldots$ jest $\bt$. Tak samo dla $x=0$, gdzie wszystkie
+		wartości są równe $1$.
+		\item Niech $x=n+1$. Ciąg $f_1(n)\sqsubseteq_D f_2(n)\sqsubseteq_D\ldots$
+		jest łańcuchem w płaskim zbiorze $D$, więc
+		(Uwaga~\ref{uw:lancuchy_plaskie}) zachodzi jeden z dwóch przypadków.
+		
+		Jeżeli $f_i(n)=\bt$ dla wszystkich $i$, to $f(n)=\bt$, a zatem
 		\[
-		\mathcal{F}(f)(n+1)
-		=
-		h_n\big(f(n)\big)
-		=
-		h_n\Big(\bigsqcup_{i=1}^{\infty}f_i(n)\Big)
-		=
-		\bigsqcup_{i=1}^{\infty}h_n\big(f_i(n)\big)
-		=
-		\bigsqcup_{i=1}^{\infty}\mathcal{F}(f_i)(n+1).
+		\mathcal T(f)(n+1)=\bt
+		\qquad\text{oraz}\qquad
+		\mathcal T(f_i)(n+1)=\bt\quad(i\in\mathbb N),
 		\]
+		więc obie strony są równe $\bt$.
+		
+		W przeciwnym razie istnieje $k$ takie, że $f_i(n)=m\in\mathbb N_0$
+		dla $i\geq k$ oraz $f_i(n)=\bt$ dla $i<k$. Wtedy $f(n)=m$ i
+		\[
+		\mathcal T(f)(n+1)=(n+1)\cdot m.
+		\]
+		Z drugiej strony ciąg $\mathcal T(f_i)(n+1)$ ma postać
+		\[
+		\underbrace{\bt,\ldots,\bt}_{i<k},\ (n+1)\cdot m,\ (n+1)\cdot m,\ \ldots,
+		\]
+		więc jego kresem jest $(n+1)\cdot m$.
 	\end{itemize}
-	Wartości funkcji $\mathcal{F}(f)$ i $\bigsqcup_{i}\mathcal{F}(f_i)$ są
-	równe w każdym punkcie, więc
+	W każdym przypadku $\mathcal T(f)(x)=\bigsqcup_i\mathcal T(f_i)(x)$, czyli
 	\[
-	\mathcal{F}\Big(\bigsqcup_{i=1}^{\infty}f_i\Big)
+	\mathcal T\Big(\bigsqcup_{i=1}^{\infty}f_i\Big)
 	=
-	\bigsqcup_{i=1}^{\infty}\mathcal{F}(f_i).
+	\bigsqcup_{i=1}^{\infty}\mathcal T(f_i).
 	\]
-	Jest to warunek~(2) definicji ciągłości. Zatem funkcjonał
-	$\mathcal{F}$ jest ciągły.
+	Funkcjonał $\mathcal T$ spełnia więc oba warunki definicji ciągłości.
 \end{proof}
 
 Możemy teraz zastosować twierdzenie Kleenego. Otrzymujemy
 \[
-\lfp(\mathcal{F})
+\lfp(\mathcal{T})
 =
-\bigsqcup_{i=1}^{\infty}\mathcal{F}^i(\varphi).
+\bigsqcup_{i=1}^{\infty}\mathcal{T}^i(\varphi).
 \]
-
 Oznaczmy kolejne przybliżenia przez
 \[
-f_i=\mathcal{F}^i(\varphi).
+f_i\coloneqq \mathcal{T}^i(\varphi)
+\qquad(i\in\mathbb N).
 \]
-Otrzymujemy wówczas następującą tabelę:
+Obliczmy kilka pierwszych z nich. Ponieważ $\varphi(n)=\bt$ dla każdego
+$n$, z definicji $\mathcal T$ mamy
 \[
-\begin{array}{c|ccccccc}
-	x
-	&\bt&0&1&2&3&4&\cdots\\
-	\hline
-	\varphi
-	&\bt&\bt&\bt&\bt&\bt&\bt&\cdots\\
-	f_1
-	&\bt&1&\bt&\bt&\bt&\bt&\cdots\\
-	f_2
-	&\bt&1&1&\bt&\bt&\bt&\cdots\\
-	f_3
-	&\bt&1&1&2&\bt&\bt&\cdots\\
-	f_4
-	&\bt&1&1&2&6&\bt&\cdots\\
-	f_5
-	&\bt&1&1&2&6&24&\cdots\\
-	\vdots
-	&\vdots&\vdots&\vdots&\vdots&\vdots&\vdots&\ddots
-\end{array}
+f_1(\bt)=\bt,
+\qquad
+f_1(0)=1,
+\qquad
+f_1(n+1)=\bt\quad(n\in\mathbb N_0).
 \]
-
-Wprowadzona wcześniej notacja $S_n=n!$ pozwala zapisać tę tabelę bardziej
-symbolicznie:
-\[
-\begin{array}{c|ccccccc}
-	x
-	&\bt&0&1&2&3&4&\cdots\\
-	\hline
-	\varphi
-	&\bt&\bt&\bt&\bt&\bt&\bt&\cdots\\
-	f_1
-	&\bt&S_0&\bt&\bt&\bt&\bt&\cdots\\
-	f_2
-	&\bt&S_0&S_1&\bt&\bt&\bt&\cdots\\
-	f_3
-	&\bt&S_0&S_1&S_2&\bt&\bt&\cdots\\
-	f_4
-	&\bt&S_0&S_1&S_2&S_3&\bt&\cdots\\
-	f_5
-	&\bt&S_0&S_1&S_2&S_3&S_4&\cdots\\
-	\vdots
-	&\vdots&\vdots&\vdots&\vdots&\vdots&\vdots&\ddots
-\end{array}
-\]
-
-Pierwsze przybliżenie ma postać
-\[
-f_1=\mathcal{F}(\varphi).
-\]
-Dla argumentu $0$ otrzymujemy
-\[
-f_1(0)=1=S_0,
-\]
-natomiast dla $n\geq1$
-\[
-f_1(n)
-=
-n\cdot\varphi(n-1)
-=
-\bt.
-\]
-
-Dla drugiego przybliżenia mamy
-\[
-f_2(0)=1=S_0,
-\]
-oraz
-\[
-f_2(1)
-=
-1\cdot f_1(0)
-=
-1
-=
-S_1.
-\]
-Natomiast
-\[
-f_2(2)
-=
-2\cdot f_1(1)
-=
-\bt.
-\]
-
+Dalej $f_2(1)=1\cdot f_1(0)=1$, ale $f_2(2)=\bt$, bo $f_1(1)=\bt$.
 Analogicznie
 \[
-f_3(2)
-=
-2\cdot f_2(1)
-=
-2
-=
-S_2,
+f_3(2)=2\cdot f_2(1)=2,
+\qquad
+f_4(3)=3\cdot f_3(2)=6,
+\qquad
+f_5(4)=4\cdot f_4(3)=24.
 \]
-a następnie
-\[
-f_4(3)
-=
-3\cdot f_3(2)
-=
-6
-=
-S_3
-\]
-oraz
-\[
-f_5(4)
-=
-4\cdot f_4(3)
-=
-24
-=
-S_4.
-\]
+Wartości przybliżeń zbiera Tabela~\ref{tab:silnia_N}.
+\begin{table}[H]
+	\centering
+	\[
+	\begin{array}{c|ccccccc}
+		x & \bt & 0 & 1 & 2 & 3 & 4 & \cdots\\
+		\hline
+		\varphi & \bt & \bt & \bt & \bt & \bt & \bt & \cdots\\
+		f_1 & \bt & 1 & \bt & \bt & \bt & \bt & \cdots\\
+		f_2 & \bt & 1 & 1 & \bt & \bt & \bt & \cdots\\
+		f_3 & \bt & 1 & 1 & 2 & \bt & \bt & \cdots\\
+		f_4 & \bt & 1 & 1 & 2 & 6 & \bt & \cdots\\
+		f_5 & \bt & 1 & 1 & 2 & 6 & 24 & \cdots\\
+		\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots
+	\end{array}
+	\]
+	\caption{Kolejne przybliżenia $f_i=\mathcal T^{\,i}(\varphi)$ silni na zbiorze $D=\mathbb N_0\cup\{\bt\}$.}
+	\label{tab:silnia_N}
+\end{table}
+Każde kolejne przybliżenie zna silnię dla o jeden argument więcej.
 
-Ponieważ $\mathcal{F}$ jest ciągły, na mocy
-Twierdzenia~\ref{tw:ciagla_monotoniczna} jest również monotoniczny.
-Ponieważ $\varphi$ jest elementem najmniejszym, mamy
+Pokażemy przez indukcję względem $i$, że dla każdego $i\in\mathbb N$
 \[
-\varphi\sqsubseteq\mathcal{F}(\varphi)=f_1.
+f_i(x)=
+\begin{cases}
+	x!, & x\in\mathbb N_0,\ x<i,\\
+	\bt, & x=\bt\ \text{lub}\ x\geq i.
+\end{cases}
 \]
-Stosując monotoniczność $\mathcal{F}$ indukcyjnie, otrzymujemy łańcuch
-\[
-\varphi
-\sqsubseteq
-f_1
-\sqsubseteq
-f_2
-\sqsubseteq
-f_3
-\sqsubseteq
-\ldots.
-\]
+Dla $i=1$ wynika to z obliczeń powyżej. Załóżmy, że wzór zachodzi dla
+pewnego $i\in\mathbb N$, i obliczmy $f_{i+1}=\mathcal T(f_i)$. Mamy
+$f_{i+1}(\bt)=\bt$ oraz $f_{i+1}(0)=1=0!$. Dla $x=n+1$ rozważmy dwa
+przypadki.
+\begin{itemize}
+	\item Jeżeli $n<i$, to z założenia indukcyjnego $f_i(n)=n!\neq\bt$,
+	więc
+	\[
+	f_{i+1}(n+1)=(n+1)\cdot n!=(n+1)!.
+	\]
+	\item Jeżeli $n\geq i$, to z założenia indukcyjnego $f_i(n)=\bt$, więc
+	\[
+	f_{i+1}(n+1)=\bt.
+	\]
+\end{itemize}
+Ponieważ $n<i$ wtedy i tylko wtedy, gdy $n+1<i+1$, wzór zachodzi dla
+$i+1$.
 
-W granicy otrzymujemy
+Kres górny łańcucha $(f_i)_{i\in\mathbb N}$ wyznaczamy punktowo.
+Dla ustalonego $x\in\mathbb N_0$ ciąg wartości $f_1(x),\,f_2(x),\,\ldots$
+ma postać
 \[
-\lfp(\mathcal{F})
-=
-\bigsqcup_{i=1}^{\infty}f_i.
+\underbrace{\bt,\ldots,\bt}_{i\leq x},\ x!,\ x!,\ \ldots,
 \]
-Ponieważ kres górny w przestrzeni funkcji całkowitych jest wyznaczany
-punktowo, dla każdego $n\in\mathbb{N}_0$ mamy
-\[
-\lfp(\mathcal{F})(n)=S_n=n!,
-\]
-a ponadto
-\[
-\lfp(\mathcal{F})(\bt)=\bt.
-\]
-
-Zatem najmniejszy punkt stały funkcjonału $\mathcal{F}$ jest funkcją
-\[
-S:D\to D
-\]
-określoną przez
+bo $f_i(x)=x!$ dla $i>x$. Jego kresem jest więc $x!$. Dla $x=\bt$
+wszystkie wyrazy są równe $\bt$. Zatem najmniejszym punktem stałym
+funkcjonału $\mathcal{T}$ jest funkcja $S\coloneqq\lfp(\mathcal T):D\to D$,
 \[
 S(x)
 =
@@ -4309,22 +4208,121 @@ S(x)
 	x!,&x\in\mathbb{N}_0.
 \end{cases}
 \]
+Na $\mathbb N_0$ pokrywa się ona ze zwykłą silnią. Ponieważ $S(\bt)=\bt$,
+a $D$ jest płaskim zbiorem łańcuchowo zupełnym, na mocy
+Wniosku~\ref{wn:plaskie_monotoniczne_ciagle} funkcja $S$ jest ciągła.
 
-W szczególności
-\[
-S(\bt)=\bt.
-\]
-Ponieważ $D$ jest płaskim zbiorem łańcuchowo zupełnym, z
-Wniosku~\ref{wn:plaskie_monotoniczne_ciagle} wynika, że funkcja $S$
-jest ciągła.
+\begin{uwaga}\label{uw:silnia_Z}
+	Dziedzinę można wziąć większą, na przykład wszystkie liczby całkowite.
+	Rozważmy płaski zbiór $E\coloneqq\mathbb Z\cup\{\bt\}$ i funkcjonał
+	$\mathcal G:(E\to E)\to(E\to E)$,
+	\[
+	\mathcal{G}(f)(x)\coloneqq
+	\begin{cases}
+		1, & x=0,\\
+		x\cdot f(x-1), & x\in\mathbb Z\setminus\{0\},\ f(x-1)\neq\bt,\\
+		\bt, & x=\bt\ \text{lub}\ \big(x\in\mathbb Z\setminus\{0\},\ f(x-1)=\bt\big).
+	\end{cases}
+	\]
+	Dowód, że $\mathcal G$ jest dobrze określony, monotoniczny i ciągły,
+	przebiega tak samo jak w Lemacie~\ref{lem:silnia_F}.
+	
+	Niech $\psi:E\to E$ będzie funkcją stale równą $\bt$, czyli najmniejszym
+	elementem zbioru $E\to E$. Kolejne przybliżenia oznaczmy
+	\[
+	g_i\coloneqq\mathcal G^{\,i}(\psi),\qquad i\in\mathbb N_0.
+	\]
+	Liczymy je tak samo jak wyżej. Na przykład
+	\[
+	\begin{aligned}
+		g_1(0)&=1, & g_1(-1)&=\bt,\ \text{bo}\ \psi(-2)=\bt,\\
+		g_2(1)&=1\cdot g_1(0)=1, & g_2(-1)&=\bt,\ \text{bo}\ g_1(-2)=\bt.
+	\end{aligned}
+	\]
+	Wartości przybliżeń zbiera Tabela~\ref{tab:silnia_Z}.
+	\begin{table}[H]
+		\centering
+		\[
+		\begin{array}{c|cccccccccc}
+			x & \bt & \cdots & -2 & -1 & 0 & 1 & 2 & 3 & 4 & \cdots\\
+			\hline
+			\psi & \bt & \cdots & \bt & \bt & \bt & \bt & \bt & \bt & \bt & \cdots\\
+			g_1 & \bt & \cdots & \bt & \bt & 1 & \bt & \bt & \bt & \bt & \cdots\\
+			g_2 & \bt & \cdots & \bt & \bt & 1 & 1 & \bt & \bt & \bt & \cdots\\
+			g_3 & \bt & \cdots & \bt & \bt & 1 & 1 & 2 & \bt & \bt & \cdots\\
+			g_4 & \bt & \cdots & \bt & \bt & 1 & 1 & 2 & 6 & \bt & \cdots\\
+			g_5 & \bt & \cdots & \bt & \bt & 1 & 1 & 2 & 6 & 24 & \cdots\\
+			\vdots & \vdots & & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots
+		\end{array}
+		\]
+		\caption{Kolejne przybliżenia $g_i=\mathcal G^{\,i}(\psi)$ silni na zbiorze $E=\mathbb Z\cup\{\bt\}$. Dla argumentów ujemnych wszystkie przybliżenia mają wartość $\bt$.}
+		\label{tab:silnia_Z}
+	\end{table}
+	
+	Pokażmy, że $g_i(x)=\bt$ dla wszystkich $x<0$ i wszystkich $i$. Dla $i=0$
+	jest to jasne, bo $g_0=\psi\equiv\bt$. Jeżeli teza zachodzi dla $i$ i
+	$x<0$, to $x-1<0$, więc $g_i(x-1)=\bt$ i z ostatniego wiersza definicji
+	\[
+	g_{i+1}(x)=\mathcal G(g_i)(x)=\bt.
+	\]
+	Intuicyjnie, dla $x<0$ rekurencja $x\mapsto x-1\mapsto x-2\mapsto\ldots$
+	nigdy nie dochodzi do $0$. Dla $x\geq0$ rachunek jest taki sam jak
+	powyżej, więc najmniejszy punkt stały to
+	\[
+	\lfp(\mathcal G)(x)=
+	\begin{cases}
+		x!, & x\in\mathbb Z,\ x\geq0,\\
+		\bt, & x\in\mathbb Z,\ x<0\ \text{lub}\ x=\bt.
+	\end{cases}
+	\]
+	W szczególności $\lfp(\mathcal G)(-1)=\bt$ --- silnia liczby ujemnej
+	jest nieokreślona, bo obliczenie według definicji rekurencyjnej nigdy
+	się nie kończy.
+	
+	Warto zauważyć, że $\mathcal G$ ma także inne punkty stałe. Na przykład
+	funkcja
+	\[
+	h(x)\coloneqq
+	\begin{cases}
+		x!, & x\in\mathbb Z,\ x\geq0,\\
+		0, & x\in\mathbb Z,\ x<0,\\
+		\bt, & x=\bt
+	\end{cases}
+	\]
+	spełnia $\mathcal G(h)=h$. Istotnie, dla $x<0$ mamy $h(x-1)=0\neq\bt$,
+	więc
+	\[
+	\mathcal G(h)(x)=x\cdot h(x-1)=x\cdot0=0=h(x),
+	\]
+	a dla $x\geq0$ rachunek jest taki sam jak dla zwykłej silni. Ponieważ
+	$\bt\sqsubseteq_E 0$, mamy bezpośrednio $\lfp(\mathcal G)\sqsubseteq h$. Twierdzenie
+	Kleenego wybiera rozwiązanie najmniejsze, które w punktach, gdzie
+	rekurencja się nie kończy, przyjmuje wartość $\bt$ --- podobnie jak w
+	przypadku pętli $\kw{while}\ \kw{true}\ \kw{do}\ \kw{skip}$.
+\end{uwaga}
 
-Otrzymaliśmy zatem funkcję ciągłą, która dla każdego
-$n\in\mathbb{N}_0$ przyjmuje wartość
-\[
-S(n)=n!,
-\]
-a więc stanowi rozszerzenie zwykłej funkcji silnia na zbiorze łańcuchowo zupełnym.
-
+\begin{uwaga}\label{uw:silnia_czesciowe}
+	Silnię można opisać analogicznie za pomocą funkcji częściowych, tak jak
+	pętlę $\kw{while}$. W zbiorze
+	$(\mathbb N_0\rightharpoonup\mathbb N_0,\subseteq,\varnothing)$
+	rozważamy funkcjonał
+	$\mathcal H:(\mathbb N_0\rightharpoonup\mathbb N_0)\to(\mathbb N_0\rightharpoonup\mathbb N_0)$,
+	\[
+	\mathcal H(f)\coloneqq\{(0,1)\}\cup\{(n+1,\,(n+1)\cdot m)\mid (n,m)\in f\}.
+	\]
+	Zbiór $\mathcal H(f)$ jest funkcją częściową, bo $f$ nią jest. Brak
+	określenia oznacza tu po prostu, że argument nie należy do dziedziny,
+	więc element $\bt$ nie jest potrzebny. Dowód monotoniczności i ciągłości
+	przebiega tak samo jak dla funkcjonału pętli $\kw{while}$
+	(Lemat~\ref{lemat:F_monotoniczny} i Twierdzenie~\ref{tw:F_ciagly}),
+	a kolejne przybliżenia to
+	$\mathcal H^{\,i}(\varnothing)=\{(k,k!)\mid k<i\}$. Stąd
+	\[
+	\lfp(\mathcal H)=\{(n,n!)\mid n\in\mathbb N_0\}.
+	\]
+	Przez izomorfizm z Twierdzenia~\ref{tw:izomorfizm_czesciowe_calkowite}
+	funkcja ta odpowiada obcięciu funkcji $S$ do zbioru $\mathbb N_0$.
+\end{uwaga}
 %==============================================================================
 \section{Podejście alternatywne}
 %==============================================================================
@@ -4342,10 +4340,10 @@ Pozwala ono również wykorzystać narzędzia analizy klasycznej, w szczególno�
 pojęcie ciągu Cauchy'ego oraz twierdzenie o odwzorowaniu zwężającym.
 
 W pracy \emph{Partial Metric Topology}~\cite{matthews1994}
-S.~G.~Matthews wprowadza w tym celu pojęcie \emph{metryki częściowej}
+S.\,G.~Matthews wprowadza w tym celu pojęcie \emph{metryki częściowej}
 (ang.\ \emph{partial metric}). Jej istotną cechą jest to, że obiekt może mieć
 niezerową odległość od samego siebie. Wartość $p(x,x)$ może dzięki temu
-opisywać stopień określenia obiektu: obiekty o wartości $p(x,x)=0$ są
+opisywać stopień określenia obiektu. Obiekty o wartości $p(x,x)=0$ są
 całkowicie określone, natomiast dodatnia wartość wskazuje na obecność
 nieokreśloności.
 
@@ -4392,7 +4390,7 @@ ta zostanie osłabiona. Odległość obiektu od samego siebie może być dodatni
 i może służyć do opisu stopnia jego określenia.
 
 Prowadzi to do pojęcia metryki częściowej, wprowadzonego przez
-S.~G.~Matthewsa~\cite{matthews1994}.
+S.\,G.~Matthewsa~\cite{matthews1994}.
 
 %==============================================================================
 \subsection{Metryka częściowa}
@@ -4410,6 +4408,8 @@ S.~G.~Matthewsa~\cite{matthews1994}.
 		\item[(P3)] $p(x,y)=p(y,x)$;
 		\item[(P4)] $p(x,z)\leq p(x,y)+p(y,z)-p(y,y)$.
 	\end{itemize}
+	Metrykę częściową będziemy w skrócie nazywać \emph{pmetryką}, a parę
+	$(U,p)$ --- \emph{przestrzenią metryczną częściową}.
 \end{definicja}
 
 Warunek (P1) zastępuje pierwszy aksjomat zwykłej metryki. W szczególności
@@ -4422,8 +4422,9 @@ Możliwe jest więc, że
 p(x,x)>0,
 \]
 a wartość ta może być interpretowana jako miara stopnia nieokreśloności
-obiektu $x$. Obiekt o własnej odległości równej zero jest natomiast
-całkowicie określony.
+obiektu $x$. Liczbę $p(x,x)$ nazywamy \emph{rozmiarem} elementu $x$
+(ang.\ \emph{size}). Obiekt o rozmiarze równym zero jest całkowicie
+określony.
 
 Warunek (P2) oznacza, że własna odległość $p(x,x)$ jest najmniejszą
 odległością, jaką obiekt $x$ może mieć od dowolnego elementu:
@@ -4458,7 +4459,7 @@ w której uwzględniona zostaje własna odległość punktu pośredniego.
 	\]
 	wzorem
 	\[
-	p(x,y)=
+	p(x,y)\coloneqq 
 	\begin{cases}
 		0,&x=y\in D,\\
 		1,&\text{w przeciwnym przypadku}.
@@ -4769,8 +4770,8 @@ pojęcia ciągu Cauchy'ego. Zupełność metryki częściowej będzie oznaczała
 Istotne jest przy tym, że porządek indukowany przez metrykę częściową
 pozwala połączyć oba sposoby opisu. Łańcuch względem tego porządku okazuje
 się szczególnym przypadkiem ciągu Cauchy'ego. W przypadku zupełnej
-metryki częściowej jego granica odpowiada następnie kresowi górnemu
-łańcucha.
+metryki częściowej odpowiednio wybrana granica łańcucha okazuje się jego
+kresem górnym.
 
 Wprowadzimy najpierw pojęcie ciągu Cauchy'ego i zupełności metryki
 częściowej, a następnie pokażemy bezpośrednio, w jaki sposób wcześniejsze
@@ -4789,16 +4790,54 @@ częściowej, a następnie pokażemy bezpośrednio, w jaki sposób wcześniejsze
 	\]
 \end{definicja}
 
+Rozpisując definicję granicy ciągu liczbowego, otrzymujemy równoważne
+sformułowanie
+\[
+x_n\longrightarrow x
+\iff
+\forall\varepsilon>0\ \exists N\in\mathbb N\ \forall n\geq N\quad
+\big|p(x_n,x)-p(x,x)\big|<\varepsilon.
+\]
+Na mocy warunku (P2) mamy $p(x,x)\leq p(x_n,x)$, więc wyrażenie pod
+wartością bezwzględną jest nieujemne i warunek można zapisać prościej
+\[
+x_n\longrightarrow x
+\iff
+\forall\varepsilon>0\ \exists N\in\mathbb N\ \forall n\geq N\quad
+p(x_n,x)<p(x,x)+\varepsilon.
+\]
+Dla zwykłej metryki $d$ mamy $d(x,x)=0$ i otrzymujemy klasyczny warunek
+$d(x_n,x)<\varepsilon$ dla $n\geq N$. W przypadku metryki częściowej
+wyrazy ciągu nie muszą zbliżać się do $x$ ,,na odległość zero'', lecz na
+odległość równą rozmiarowi $p(x,x)$ granicy.
+
 Wprowadźmy teraz odpowiednik klasycznego pojęcia ciągu Cauchy'ego.
 
 \begin{definicja}\label{def:cauchy_pmetryka}
 	Niech $p$ będzie metryką częściową na zbiorze $U$. Ciąg
 	$(x_n)_{n\in\mathbb{N}}$ nazywamy \emph{ciągiem Cauchy'ego}, jeżeli
-	istnieje granica
+	istnieje (skończona) granica
 	\[
 	\lim_{n,m\to\infty}p(x_n,x_m).
 	\]
 \end{definicja}
+
+Granicę podwójną rozumiemy tu w zwykłym sensie, tzn.\ ciąg
+$(x_n)_{n\in\mathbb N}$ jest ciągiem Cauchy'ego wtedy i tylko wtedy, gdy
+istnieje liczba $L\geq0$ taka, że
+\[
+\forall\varepsilon>0\ \exists N\in\mathbb N\ \forall n,m\geq N\quad
+\big|p(x_n,x_m)-L\big|<\varepsilon.
+\]
+Wówczas $L=\lim_{n,m\to\infty}p(x_n,x_m)$. Dla zwykłej metryki $d$
+z ciągu Cauchy'ego w sensie klasycznym, czyli
+\[
+\forall\varepsilon>0\ \exists N\in\mathbb N\ \forall n,m\geq N\quad
+d(x_n,x_m)<\varepsilon,
+\]
+otrzymujemy powyższy warunek z $L=0$. W przypadku metryki częściowej
+wzajemne odległości wyrazów ciągu nie muszą dążyć do zera, a jedynie
+stabilizować się wokół pewnej liczby $L$.
 
 W zwykłej przestrzeni metrycznej zbieżność ciągu Cauchy'ego prowadzi do
 granicy, której odległość od samej siebie wynosi zero. W przypadku
@@ -4827,8 +4866,8 @@ i wymagaliśmy istnienia ich kresu górnego. Teraz pokażemy, że w obecnym
 ujęciu łańcuch względem porządku $\sqsubseteq_p$ jest jednocześnie
 ciągiem Cauchy'ego względem metryki częściowej $p$.
 
-Jest to pierwszy bezpośredni związek pomiędzy obiema konstrukcjami:
-porządek informacyjny może być odczytywany z pmetryki, a rosnący ciąg
+Jest to pierwszy bezpośredni związek pomiędzy obiema konstrukcjami.
+Porządek informacyjny może być odczytywany z pmetryki, a rosnący ciąg
 informacyjnie coraz bardziej określonych przybliżeń staje się ciągiem
 Cauchy'ego.
 
@@ -4870,7 +4909,7 @@ Cauchy'ego.
 	jest nierosnący. Ponieważ wartości pmetryki są nieujemne, ciąg ten
 	jest ograniczony z dołu przez $0$. Istnieje zatem granica
 	\[
-	L:=\lim_{n\to\infty}p(x_n,x_n).
+	L\coloneqq \lim_{n\to\infty}p(x_n,x_n).
 	\]
 	
 	Pokażemy teraz, że
@@ -4886,7 +4925,7 @@ Cauchy'ego.
 	
 	Jeżeli $n,m\geq N$, to rozważamy mniejszy z indeksów
 	\[
-	k=\min\{n,m\}.
+	k\coloneqq\min\{n,m\}.
 	\]
 	Mamy $k\geq N$. Jeżeli $n\leq m$, to
 	\[
@@ -4935,8 +4974,13 @@ takich ograniczeń. Okazuje się, że obie własności zachodzą.
 	\[
 	x_1\sqsubseteq_p x_2\sqsubseteq_p x_3\sqsubseteq_p\ldots
 	\]
-	posiada kres górny względem porządku $\sqsubseteq_p$, równy granicy
-	tego łańcucha w sensie Definicji~\ref{def:zbieznosc_pmetryka}.
+	posiada kres górny względem porządku $\sqsubseteq_p$. Jest nim granica
+	$x$ tego łańcucha w sensie Definicji~\ref{def:zbieznosc_pmetryka}
+	spełniająca dodatkowo
+	\[
+	p(x,x)=\lim_{n,m\to\infty}p(x_n,x_m).
+	\]
+	Istnienie takiej granicy gwarantuje zupełność pmetryki $p$.
 \end{twierdzenie}
 
 \begin{proof}
@@ -4946,13 +4990,13 @@ takich ograniczeń. Okazuje się, że obie własności zachodzą.
 	\]
 	będzie łańcuchem względem $\sqsubseteq_p$.
 	
-	\emph{Krok 1: istnienie granicy.} Na mocy
+	\emph{Krok 1 --- istnienie granicy.} Na mocy
 	Twierdzenia~\ref{tw:lanuch_jest_cauchy} ciąg $(x_n)_{n\in\mathbb N}$
 	jest ciągiem Cauchy'ego. W dowodzie tego twierdzenia pokazaliśmy
 	ponadto, że ciąg $\big(p(x_n,x_n)\big)_{n\in\mathbb N}$ jest
 	nierosnący i ograniczony z dołu przez $0$, więc ma granicę
 	\[
-	L=\lim_{n\to\infty}p(x_n,x_n),
+	L\coloneqq\lim_{n\to\infty}p(x_n,x_n),
 	\]
 	oraz że
 	\[
@@ -4968,7 +5012,7 @@ takich ograniczeń. Okazuje się, że obie własności zachodzą.
 	p(x,x)=\lim_{n,m\to\infty}p(x_n,x_m)=L.
 	\]
 	
-	\emph{Krok 2: $x$ jest ograniczeniem górnym łańcucha.} Ustalmy
+	\emph{Krok 2 --- $x$ jest ograniczeniem górnym łańcucha.} Ustalmy
 	$n\in\mathbb N$ i weźmy dowolne $m\geq n$. Ponieważ
 	$x_n\sqsubseteq_p x_m$, z definicji porządku indukowanego
 	\[
@@ -5009,7 +5053,7 @@ takich ograniczeń. Okazuje się, że obie własności zachodzą.
 	czyli z definicji porządku indukowanego $x_n\sqsubseteq_p x$.
 	Ponieważ $n$ było dowolne, $x$ jest ograniczeniem górnym łańcucha.
 	
-	\emph{Krok 3: $x$ jest najmniejszym ograniczeniem górnym.} Niech
+	\emph{Krok 3 --- $x$ jest najmniejszym ograniczeniem górnym.} Niech
 	$y\in U$ będzie dowolnym ograniczeniem górnym łańcucha, tzn.\
 	$x_n\sqsubseteq_p y$ dla każdego $n$. Z definicji porządku
 	indukowanego
@@ -5047,13 +5091,24 @@ takich ograniczeń. Okazuje się, że obie własności zachodzą.
 	\[
 	x=\bigsqcup_{n=1}^{\infty}x_n,
 	\]
-	czyli kres górny łańcucha istnieje i jest równy jego granicy.
+	czyli kres górny łańcucha istnieje i jest równy granicy $x$
+	wyznaczonej w kroku~1.
 \end{proof}
 
 \begin{uwaga}
+	Granica ciągu w przestrzeni metrycznej częściowej nie musi być
+	jedyna. Na przykład dla $p(x,y)\coloneqq\max\{x,y\}$ na $[0,\infty)$
+	stały ciąg $x_n=1$ zbiega do każdego $x\geq1$, bo
+	$p(1,x)=x=p(x,x)$. Dlatego w twierdzeniu mowa o tej granicy, której
+	rozmiar jest równy $\lim_{n,m}p(x_n,x_m)$. W powyższym przykładzie jest
+	to $x=1$.
+\end{uwaga}
+
+\begin{uwaga}
 	Powyższe twierdzenie pokazuje, w jakim sensie zupełność metryki
-	częściowej odtwarza zupełność porządkową: w zbiorze $(U,\sqsubseteq_p)$
-	każdy łańcuch ma kres górny, a jest nim granica łańcucha.
+	częściowej odtwarza zupełność porządkową. W zbiorze $(U,\sqsubseteq_p)$
+	każdy łańcuch ma kres górny, a jest nim granica łańcucha o rozmiarze
+	$\lim_{n,m}p(x_n,x_m)$.
 	
 	Nie oznacza to jednak, że $(U,\sqsubseteq_p)$ jest zbiorem łańcuchowo
 	zupełnym w sensie rozdziału~\ref{sec:cpo},
@@ -5106,26 +5161,27 @@ Kontrakcja pozwala kontrolować odległości pomiędzy kolejnymi iteracjami
 funkcji. Ustalmy zatem dowolny element początkowy $x_0\in U$ i rozważmy
 ciąg określony rekurencyjnie przez
 \[
-x_{n+1}=f(x_n),
+x_{n+1}\coloneqq f(x_n),
 \qquad n\in\mathbb N_0.
 \]
-Równoważnie,
-\[
-x_n=f^n(x_0).
-\]
+Równoważnie, $x_n=f^n(x_0)$, gdzie $f^0\coloneqq\mathrm{id}_U$ oraz
+$f^{n+1}\coloneqq f\circ f^n$.
 
 W pierwszej kolejności pokażemy, że tak otrzymany ciąg jest ciągiem
 Cauchy'ego.
 
 \begin{lemat}\label{lem:iteracje_kontrakcji_cauchy}
-	Niech $(U,p)$ będzie przestrzenią częściowo metryczną, a
+	Niech $(U,p)$ będzie przestrzenią metryczną częściową, a
 	$f:U\to U$ kontrakcją względem $p$ ze współczynnikiem
 	$c\in[0,1)$. Dla ustalonego $x_0\in U$ niech
 	\[
-	x_{n+1}=f(x_n),
+	x_{n+1}\coloneqq f(x_n),
 	\qquad n\in\mathbb N_0.
 	\]
-	Wówczas ciąg $(x_n)_{n\in\mathbb N_0}$ jest ciągiem Cauchy'ego.
+	Wówczas ciąg $(x_n)_{n\in\mathbb N_0}$ jest ciągiem Cauchy'ego oraz
+	\[
+	\lim_{n,m\to\infty}p(x_n,x_m)=0.
+	\]
 \end{lemat}
 
 \begin{proof}
@@ -5146,9 +5202,10 @@ Cauchy'ego.
 	\leq
 	c^n p(x_1,x_0)
 	\]
-	dla każdego $n\in\mathbb N_0$.
+	dla każdego $n\in\mathbb N_0$. Z symetrii (P3) jest to równoważne
+	nierówności $p(x_n,x_{n+1})\leq c^n p(x_0,x_1)$.
 	
-	Niech teraz $m>n$. Wielokrotne zastosowanie warunku (P4) daje
+	Niech teraz $m>n$. Zastosowanie warunku (P4) daje
 	\[
 	\begin{aligned}
 		p(x_n,x_m)
@@ -5192,15 +5249,19 @@ Cauchy'ego.
 	\[
 	p(x_0,x_1)\frac{c^n}{1-c}<\varepsilon.
 	\]
-	Jeżeli $n,m\geq N$, to bez straty ogólności możemy założyć, że
-	$n\leq m$. Wówczas
+	Dla $n=m$ z warunku (P2) mamy
+	\[
+	p(x_n,x_n)\leq p(x_n,x_{n+1})\leq c^n p(x_0,x_1)\leq p(x_0,x_1)\frac{c^n}{1-c}.
+	\]
+	Oszacowanie $p(x_n,x_m)\leq p(x_0,x_1)\frac{c^n}{1-c}$ zachodzi więc
+	dla wszystkich $n\leq m$. Jeżeli $n,m\geq N$, to z symetrii pmetryki
+	możemy założyć, że $n\leq m$. Wówczas
 	\[
 	p(x_n,x_m)
 	\leq
 	p(x_0,x_1)\frac{c^n}{1-c}
 	<\varepsilon.
 	\]
-	Z symetrii pmetryki ten sam wniosek zachodzi również dla $m<n$.
 	Otrzymujemy zatem
 	\[
 	\forall\varepsilon>0\;\exists N\in\mathbb N\;
@@ -5227,8 +5288,8 @@ $f$.
 
 \begin{twierdzenie}[Matthews, \cite{matthews1994}]
 	\label{tw:punkt_staly_matthews}
-	Niech $(U,p)$ będzie zupełną przestrzenią metryczną częściową, a
-	$f:U\to U$ będzie kontrakcją względem $p$, tzn. istnieje
+	Niech $(U,p)$ będzie przestrzenią metryczną częściową z zupełną pmetryką $p$, a
+	$f:U\to U$ będzie kontrakcją względem $p$, tzn.\ istnieje
 	$c\in[0,1)$ takie, że
 	\[
 	p(f(x),f(y))\leq c\,p(x,y)
@@ -5249,7 +5310,7 @@ $f$.
 	Wybierzmy dowolny element $x_0\in U$ i zdefiniujmy ciąg
 	$(x_n)_{n\in\mathbb N_0}$ przez
 	\[
-	x_{n+1}=f(x_n).
+	x_{n+1}\coloneqq f(x_n).
 	\]
 	
 	Z Lematu~\ref{lem:iteracje_kontrakcji_cauchy} wynika, że
@@ -5295,7 +5356,9 @@ $f$.
 		c\,p(x^*,x_n)+p(x_{n+1},x^*).
 	\end{aligned}
 	\]
-	Przechodząc z $n$ do nieskończoności, otrzymujemy
+	Ponieważ $x_n\to x^*$ oraz $p(x^*,x^*)=0$, mamy
+	$p(x^*,x_n)\to0$ i $p(x_{n+1},x^*)\to0$. Przechodząc z $n$ do
+	nieskończoności, otrzymujemy
 	\[
 	p(f(x^*),x^*)\leq 0.
 	\]
@@ -5345,11 +5408,11 @@ $f$.
 	\[
 	p(x^*,y)=0.
 	\]
-	Z warunku (P2) wynika
+	Z warunków (P2) i (P3) wynika
 	\[
-	p(x^*,x^*)=0,
+	p(x^*,x^*)\leq p(x^*,y)=0,
 	\qquad
-	p(y,y)=0,
+	p(y,y)\leq p(y,x^*)=p(x^*,y)=0,
 	\]
 	a więc z (P1)
 	\[
@@ -5419,9 +5482,10 @@ Warunek ten oznacza, że dowolne dwa elementy zbioru skierowanego mają wspólne
 	b\not\sqsubseteq a.
 	\]
 	
-	Strukturę tego porządku można przedstawić za pomocą diagramu Hassego:
+	Strukturę tego porządku przedstawia diagram Hassego na Rysunku~\ref{fig:hasse_skierowany}.
 	
-	\[
+	\begin{figure}[H]
+	\centering
 	\begin{tikzpicture}[
 		every node/.style={circle, fill=white, inner sep=2pt},
 		>=stealth
@@ -5436,7 +5500,10 @@ Warunek ten oznacza, że dowolne dwa elementy zbioru skierowanego mają wspólne
 		\draw (a) -- (c);
 		\draw (b) -- (c);
 	\end{tikzpicture}
-	\]
+	\caption{Diagram Hassego porządku na zbiorze $\{\bot,a,b,c\}$. Elementy
+		$a$ i $b$ są nieporównywalne, a $c$ jest ich wspólnym ograniczeniem górnym.}
+	\label{fig:hasse_skierowany}
+	\end{figure}
 	
 	Zbiór
 	\[
@@ -6344,7 +6411,7 @@ pomiarów do metryk częściowych
 
 	Wprowadzenie metryk częściowych pozwoliło otrzymać alternatywny sposób
 	konstrukcji punktów stałych. Wcześniej punkt stały otrzymywaliśmy za
-	pomocą struktury porządkowej: ciąg kolejnych przybliżeń był rosnącym
+	pomocą struktury porządkowej. Ciąg kolejnych przybliżeń był rosnącym
 	łańcuchem, a jego kres górny był punktem stałym funkcjonału. W podejściu
 	Matthewsa podstawową rolę odgrywa natomiast kontrakcja oraz zupełność
 	metryki częściowej.
@@ -6354,7 +6421,7 @@ pomiarów do metryk częściowych
 	twierdzenie Matthewsa nie jest po prostu innym sformułowaniem
 	twierdzenia Kleenego.
 	
-	\begin{table}[h]
+	\begin{table}[H]
 		\centering
 		\begin{tabular}{p{0.42\textwidth}p{0.42\textwidth}}
 			\hline
@@ -6395,7 +6462,7 @@ pomiarów do metryk częściowych
 	x_0,\quad f(x_0),\quad f^2(x_0),\quad\ldots,
 	\]
 	którego element graniczny okazuje się punktem stałym. Różnica pojawia
-	się już na tym etapie: w twierdzeniu Kleenego iterację trzeba rozpocząć
+	się już na tym etapie. W twierdzeniu Kleenego iterację trzeba rozpocząć
 	od elementu najmniejszego $\bt$ (tylko wtedy otrzymujemy łańcuch
 	i najmniejszy punkt stały), natomiast w twierdzeniu Matthewsa punkt
 	początkowy $x_0$ może być dowolny.
@@ -6419,7 +6486,7 @@ pomiarów do metryk częściowych
 	nieskończoną.
 	
 	Warunki ciągłości i kontrakcji nie są przy tym porównywalne wprost,
-	ponieważ odnoszą się do różnych struktur: pierwszy do porządku,
+	ponieważ odnoszą się do różnych struktur --- pierwszy do porządku,
 	drugi do metryki częściowej. Twierdzenie Matthewsa nie zastępuje więc
 	twierdzenia Kleenego w ogólnym przypadku. Stanowi natomiast inne
 	narzędzie konstrukcji punktu stałego, szczególnie użyteczne wtedy,
@@ -6432,41 +6499,30 @@ pomiarów do metryk częściowych
 \begin{thebibliography}{99}
 
 \bibitem{gordon1979}
-  M.~J.~C.~Gordon, \emph{The Denotational Description of Programming Languages: An Introduction}. Springer-Verlag, 1979.
-  
+  M.\,J.\,C.~Gordon, \emph{The Denotational Description of Programming Languages: An Introduction}. Springer-Verlag, 1979.
+
+\bibitem{kleene1952}
+  S.\,C.~Kleene, \emph{Introduction to Metamathematics}. North-Holland, Amsterdam; D.~Van Nostrand, New York, 1952.
+
 \bibitem{matthews1994}
   S.\,G.~Matthews, \emph{Partial Metric Topology}. W: \emph{Papers on General Topology and Applications} (Eighth Summer Conference at Queens College), Annals of the New York Academy of Sciences, vol.~728, 1994, s.~183--197.
+
+\bibitem{naur1960}
+  P.~Naur (red.), \emph{Report on the Algorithmic Language ALGOL 60}. Communications of the ACM, 3(5), 1960, s.~299--314.
 
 \bibitem{cs152denot}
   \emph{Denotational Semantics}, CS~152: Programming Languages, wykład~6, Harvard School of Engineering and Applied Sciences, 9~lutego 2023.
 
 \bibitem{cs4110denot}
   \emph{Denotational Semantics}, CS~4110: Programming Languages and Logics, wykład~8, Cornell University, jesień 2012.
-  
+
 % Pozycje cytowane wyłącznie w wykomentowanym fragmencie o teorii dziedzin:
 % \bibitem{Waszkiewicz2001}
-% P.~Waszkiewicz,
-% \emph{Distance and Measurement in Domain Theory},
-% Electronic Notes in Theoretical Computer Science,
-% 45 (2001), 448--462.
-% DOI: 10.1016/S1571-0661(04)80975-7.
-
+% P.~Waszkiewicz, \emph{Distance and Measurement in Domain Theory},
+% Electronic Notes in Theoretical Computer Science, 45 (2001), 448--462.
 % \bibitem{Waszkiewicz2003}
-% P.~Waszkiewicz,
-% \emph{Quantitative Continuous Domains},
-% Applied Categorical Structures,
-% 11(1) (2003), 41--67.
-% DOI: 10.1023/A:1023012924892.
-
-\bibitem{naur1960}
-P. Naur (red.),
-\emph{Report on the Algorithmic Language ALGOL 60},
-Communications of the ACM, 3(5), 1960, s.~299--314.
-
-\bibitem{kleene1952}
-S.\,C.~Kleene,
-\emph{Introduction to Metamathematics},
-North-Holland, Amsterdam; D.~Van Nostrand, New York, 1952.
+% P.~Waszkiewicz, \emph{Quantitative Continuous Domains},
+% Applied Categorical Structures, 11(1) (2003), 41--67.
 
 \end{thebibliography}
 
